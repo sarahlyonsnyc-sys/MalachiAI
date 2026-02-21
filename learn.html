@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Malachi AI — Learn Chess</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:  #0a0a0a;
+      --dark:   #111111;
+      --panel:  #161616;
+      --panel2: #1c1c1c;
+      --border: #2a2a2a;
+      --gold:   #c9a84c;
+      --gold2:  #e8c97a;
+      --cream:  #f5f0e8;
+      --muted:  #6b6b6b;
+      --white:  #ffffff;
+      --green:  #4caf50;
+      --red:    #e05068;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--black); color: var(--cream); font-family: 'Outfit', sans-serif; overflow-x: hidden; cursor: none; min-height: 100vh; }
+    .cursor { position:fixed; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:difference; }
+    .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid var(--gold); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:0.4; transition:left 0.12s ease-out,top 0.12s ease-out; }
+    .chess-bg { position:fixed; inset:0; z-index:0; opacity:0.025; background-image:repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%); background-size:48px 48px; pointer-events:none; }
+
+    /* NAV */
+    nav { position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:18px 40px; border-bottom:1px solid var(--border); background:rgba(10,10,10,0.96); backdrop-filter:blur(12px); }
+    .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .logo-icon { width:28px; height:28px; display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+    .logo-icon span { background:var(--gold); border-radius:1px; display:block; }
+    .logo-icon span:nth-child(2),.logo-icon span:nth-child(3) { background:transparent; border:1px solid var(--gold); }
+    .logo-text { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:700; color:var(--white); }
+    .logo-text span { color:var(--gold); }
+    .nav-links { display:flex; gap:8px; }
+    .nav-link { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); text-decoration:none; padding:8px 14px; border:1px solid transparent; transition:all 0.2s; }
+    .nav-link:hover,.nav-link.active { color:var(--gold); border-color:var(--border); }
+    .xp-bar-nav { display:flex; align-items:center; gap:12px; }
+    .xp-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--gold); letter-spacing:0.1em; }
+    .xp-track { width:120px; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+    .xp-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold2)); border-radius:3px; transition:width 0.6s ease; }
+    .level-badge { background:var(--gold); color:var(--black); font-family:'DM Mono',monospace; font-size:10px; font-weight:500; padding:4px 10px; letter-spacing:0.1em; }
+
+    /* MAIN LAYOUT */
+    .main { position:relative; z-index:1; display:grid; grid-template-columns:260px 1fr; min-height:calc(100vh - 61px); }
+
+    /* SIDEBAR */
+    .sidebar { background:var(--panel); border-right:1px solid var(--border); padding:28px 0; position:sticky; top:61px; height:calc(100vh - 61px); overflow-y:auto; }
+    .sidebar::-webkit-scrollbar { width:3px; }
+    .sidebar::-webkit-scrollbar-thumb { background:var(--border); }
+    .sidebar-section { margin-bottom:8px; }
+    .sidebar-heading { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); padding:12px 24px 8px; }
+    .lesson-btn { width:100%; background:transparent; border:none; text-align:left; padding:12px 24px; cursor:none; display:flex; align-items:center; gap:12px; transition:background 0.2s; position:relative; }
+    .lesson-btn:hover { background:rgba(201,168,76,0.05); }
+    .lesson-btn.active { background:rgba(201,168,76,0.1); border-left:2px solid var(--gold); }
+    .lesson-btn.completed .lesson-dot { background:var(--green); }
+    .lesson-dot { width:8px; height:8px; border-radius:50%; background:var(--border); flex-shrink:0; transition:background 0.3s; }
+    .lesson-btn.active .lesson-dot { background:var(--gold); }
+    .lesson-btn-text { flex:1; }
+    .lesson-btn-title { font-size:13px; color:var(--cream); font-weight:400; line-height:1.3; }
+    .lesson-btn.completed .lesson-btn-title { color:var(--muted); }
+    .lesson-btn-type { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.05em; margin-top:2px; }
+    .lesson-check { color:var(--green); font-size:12px; }
+
+    /* CONTENT AREA */
+    .content { padding:48px 56px; max-width:860px; }
+
+    /* PROGRESS HEADER */
+    .progress-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:48px; padding:28px 32px; border:1px solid var(--border); background:var(--panel); }
+    .progress-left h1 { font-family:'Cormorant Garamond',serif; font-size:36px; font-weight:700; color:var(--white); margin-bottom:4px; }
+    .progress-left p { font-size:14px; color:var(--muted); font-weight:300; }
+    .progress-stats { display:flex; gap:32px; }
+    .prog-stat { text-align:center; }
+    .prog-stat-num { font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:700; color:var(--gold); line-height:1; }
+    .prog-stat-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-top:4px; }
+
+    /* BADGES */
+    .badges-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:48px; }
+    .badge-item { display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .badge-circle { width:56px; height:56px; border-radius:50%; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:24px; transition:all 0.3s; }
+    .badge-circle.earned { border-color:var(--gold); background:rgba(201,168,76,0.1); box-shadow:0 0 20px rgba(201,168,76,0.2); }
+    .badge-circle.locked { opacity:0.3; filter:grayscale(1); }
+    .badge-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; text-align:center; }
+    .badge-label.earned { color:var(--gold); }
+
+    /* LESSON CARD */
+    .lesson-card { display:none; }
+    .lesson-card.active { display:block; animation:fadeIn 0.4s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    .lesson-eyebrow { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+    .lesson-eyebrow::before { content:''; width:24px; height:1px; background:var(--gold); }
+    .lesson-title { font-family:'Cormorant Garamond',serif; font-size:clamp(32px,4vw,52px); font-weight:700; color:var(--white); line-height:1; margin-bottom:16px; }
+    .lesson-desc { font-size:16px; line-height:1.7; color:var(--muted); margin-bottom:36px; max-width:600px; font-weight:300; }
+
+    /* LESSON CONTENT BLOCKS */
+    .lesson-block { margin-bottom:32px; }
+    .block-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
+
+    /* DIAGRAM BOARD */
+    .diagram-board { display:inline-grid; grid-template-columns:repeat(8,48px); grid-template-rows:repeat(8,48px); border:2px solid var(--gold); box-shadow:0 0 40px rgba(201,168,76,0.1); margin-bottom:8px; }
+    .diagram-board.small { grid-template-columns:repeat(8,38px); grid-template-rows:repeat(8,38px); }
+    .dsq { display:flex; align-items:center; justify-content:center; font-size:26px; }
+    .diagram-board.small .dsq { font-size:20px; }
+    .dsq.dl { background:#e8d5a3; }
+    .dsq.dd { background:#8b6914; }
+    .dsq.highlight { background:rgba(201,168,76,0.5) !important; }
+    .dsq.red-hl { background:rgba(220,50,80,0.4) !important; }
+    .diagram-caption { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:0.08em; margin-top:8px; }
+
+    /* TEXT CONTENT */
+    .lesson-text { font-size:15px; line-height:1.8; color:#9a9a9a; font-weight:300; }
+    .lesson-text strong { color:var(--cream); font-weight:500; }
+    .lesson-text .highlight-box { background:var(--panel2); border-left:3px solid var(--gold); padding:16px 20px; margin:16px 0; font-size:14px; color:var(--cream); }
+
+    /* PIECE MOVES GRID */
+    .pieces-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+    .piece-card { background:var(--panel); border:1px solid var(--border); padding:20px; transition:all 0.3s; }
+    .piece-card:hover { border-color:var(--gold); }
+    .piece-card-icon { font-size:36px; margin-bottom:8px; }
+    .piece-card-name { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--white); margin-bottom:4px; }
+    .piece-card-val { font-family:'DM Mono',monospace; font-size:10px; color:var(--gold); letter-spacing:0.1em; margin-bottom:8px; }
+    .piece-card-desc { font-size:13px; color:var(--muted); line-height:1.6; font-weight:300; }
+
+    /* QUIZ */
+    .quiz-block { background:var(--panel); border:1px solid var(--border); padding:32px; }
+    .quiz-question { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:600; color:var(--white); margin-bottom:24px; line-height:1.3; }
+    .quiz-options { display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
+    .quiz-option { background:transparent; border:1px solid var(--border); color:var(--cream); font-family:'Outfit',sans-serif; font-size:14px; padding:14px 20px; text-align:left; cursor:none; transition:all 0.2s; display:flex; align-items:center; gap:12px; }
+    .quiz-option:hover:not(.answered) { border-color:var(--gold); color:var(--gold); }
+    .quiz-option.correct { border-color:var(--green); background:rgba(76,175,80,0.1); color:var(--green); }
+    .quiz-option.wrong { border-color:var(--red); background:rgba(220,80,104,0.1); color:var(--red); }
+    .quiz-option.answered { cursor:not-allowed; }
+    .option-letter { width:24px; height:24px; border:1px solid currentColor; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:11px; flex-shrink:0; }
+    .quiz-feedback { padding:16px; font-size:14px; line-height:1.6; border-radius:2px; display:none; }
+    .quiz-feedback.show { display:block; }
+    .quiz-feedback.correct { background:rgba(76,175,80,0.1); border:1px solid var(--green); color:#81c784; }
+    .quiz-feedback.wrong { background:rgba(220,80,104,0.1); border:1px solid var(--red); color:#f48fb1; }
+
+    /* PUZZLE */
+    .puzzle-block { }
+    .puzzle-board-wrap { display:flex; gap:32px; align-items:flex-start; flex-wrap:wrap; }
+    .puzzle-info { flex:1; min-width:200px; }
+    .puzzle-prompt { font-size:15px; color:var(--muted); line-height:1.7; margin-bottom:20px; font-weight:300; }
+    .puzzle-hint-btn { background:transparent; border:1px solid var(--border); color:var(--muted); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; padding:10px 20px; cursor:none; transition:all 0.2s; }
+    .puzzle-hint-btn:hover { border-color:var(--gold); color:var(--gold); }
+    .puzzle-hint { font-size:13px; color:var(--gold); margin-top:12px; display:none; padding:12px; background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.2); }
+    .puzzle-hint.show { display:block; }
+    .puzzle-result { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; margin-top:12px; display:none; }
+    .puzzle-result.show { display:block; }
+    .puzzle-result.correct { color:var(--green); }
+    .puzzle-result.wrong { color:var(--red); }
+
+    /* NEXT BUTTON */
+    .lesson-footer { display:flex; justify-content:space-between; align-items:center; margin-top:48px; padding-top:32px; border-top:1px solid var(--border); }
+    .btn-primary { background:var(--gold); color:var(--black); border:none; padding:14px 36px; font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; cursor:none; font-weight:500; transition:all 0.25s; }
+    .btn-primary:hover { background:var(--gold2); transform:translateY(-1px); }
+    .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--muted); padding:14px 36px; font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; cursor:none; transition:all 0.25s; }
+    .btn-ghost:hover { border-color:var(--gold); color:var(--gold); }
+    .lesson-progress-text { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:0.08em; }
+
+    /* BADGE TOAST */
+    .badge-toast { position:fixed; bottom:32px; right:32px; background:var(--panel); border:1px solid var(--gold); padding:20px 24px; display:flex; align-items:center; gap:16px; z-index:1000; transform:translateX(200%); transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1); box-shadow:0 0 40px rgba(201,168,76,0.2); }
+    .badge-toast.show { transform:translateX(0); }
+    .toast-icon { font-size:32px; }
+    .toast-text h4 { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600; color:var(--gold); }
+    .toast-text p { font-size:13px; color:var(--muted); }
+
+    /* COMPLETE SCREEN */
+    .complete-screen { display:none; text-align:center; padding:80px 40px; }
+    .complete-screen.show { display:block; animation:fadeIn 0.5s ease; }
+    .complete-icon { font-size:80px; margin-bottom:24px; }
+    .complete-screen h2 { font-family:'Cormorant Garamond',serif; font-size:52px; font-weight:700; color:var(--gold); margin-bottom:16px; }
+    .complete-screen p { font-size:16px; color:var(--muted); max-width:400px; margin:0 auto 40px; line-height:1.7; }
+
+    @media(max-width:900px) {
+      .main { grid-template-columns:1fr; }
+      .sidebar { position:relative; top:0; height:auto; }
+      .content { padding:28px 20px; }
+      .progress-header { flex-direction:column; gap:24px; }
+      .puzzle-board-wrap { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="chess-bg"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- BADGE TOAST -->
+<div class="badge-toast" id="badgeToast">
+  <div class="toast-icon" id="toastIcon">🏅</div>
+  <div class="toast-text">
+    <h4 id="toastTitle">Badge Earned!</h4>
+    <p id="toastDesc">Keep going!</p>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
+    <div class="logo-text">Malachi <span>AI</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="play.html" class="nav-link">Play</a>
+    <a href="learn.html" class="nav-link active">Learn</a>
+  </div>
+  <div class="xp-bar-nav">
+    <div class="xp-label" id="xpLabel">0 XP</div>
+    <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+    <div class="level-badge" id="levelBadge">LVL 1</div>
+  </div>
+</nav>
+
+<div class="main">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar"></div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- PROGRESS HEADER -->
+    <div class="progress-header">
+      <div class="progress-left">
+        <h1>Chess Academy</h1>
+        <p>Master chess step by step — from first moves to advanced tactics.</p>
+      </div>
+      <div class="progress-stats">
+        <div class="prog-stat"><div class="prog-stat-num" id="statCompleted">0</div><div class="prog-stat-label">Completed</div></div>
+        <div class="prog-stat"><div class="prog-stat-num" id="statXP">0</div><div class="prog-stat-label">XP Earned</div></div>
+        <div class="prog-stat"><div class="prog-stat-num" id="statBadges">0</div><div class="prog-stat-label">Badges</div></div>
+      </div>
+    </div>
+
+    <!-- BADGES -->
+    <div class="lesson-block">
+      <div class="block-label">Your Badges</div>
+      <div class="badges-row" id="badgesRow"></div>
+    </div>
+
+    <!-- LESSON CARDS -->
+    <div id="lessonArea"></div>
+
+  </div>
+</div>
+
+<script>
+// ── CURSOR ──
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px'; cursor.style.top = e.clientY + 'px';
+  setTimeout(() => { ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px'; }, 80);
+});
+
+// ── STATE ──
+let xp = 0;
+let currentLesson = 0;
+let completed = new Set();
+let earnedBadges = new Set();
+
+// ── CURRICULUM DATA ──
+const BADGES = [
+  { id:'first_step', icon:'👣', label:'First Step', desc:'Complete your first lesson', req: () => completed.size >= 1 },
+  { id:'pawn_star',  icon:'♟', label:'Pawn Star',  desc:'Complete the Basics module', req: () => completed.has(0) && completed.has(1) && completed.has(2) },
+  { id:'tactician',  icon:'⚔️', label:'Tactician',  desc:'Complete the Tactics module', req: () => completed.has(3) && completed.has(4) && completed.has(5) },
+  { id:'strategist', icon:'🧠', label:'Strategist', desc:'Complete the Openings module', req: () => completed.has(6) && completed.has(7) },
+  { id:'endgame',    icon:'👑', label:'Endgame King', desc:'Complete the Endgames module', req: () => completed.has(8) && completed.has(9) },
+  { id:'scholar',    icon:'🎓', label:'Scholar',    desc:'Complete all 10 lessons', req: () => completed.size >= 10 },
+];
+
+const LESSONS = [
+  // ── BASICS ──
+  {
+    category: 'Basics',
+    title: 'Meet the Pieces',
+    type: 'Lesson',
+    xp: 50,
+    render: () => `
+      <div class="lesson-eyebrow">Module 1 — Basics</div>
+      <h2 class="lesson-title">Meet the Pieces</h2>
+      <p class="lesson-desc">Before you can play chess, you need to know your army. Each piece has a unique power — learn them and you'll be dangerous from day one.</p>
+      <div class="lesson-block">
+        <div class="block-label">Your Six Pieces</div>
+        <div class="pieces-grid">
+          <div class="piece-card"><div class="piece-card-icon">♔</div><div class="piece-card-name">King</div><div class="piece-card-val">∞ Value — Protect at all costs</div><div class="piece-card-desc">Moves one square in any direction. If your king is captured, you lose. Everything else is secondary.</div></div>
+          <div class="piece-card"><div class="piece-card-icon">♕</div><div class="piece-card-name">Queen</div><div class="piece-card-val">9 Points — Your most powerful piece</div><div class="piece-card-desc">Moves any number of squares in any direction — horizontal, vertical, or diagonal. Guard her carefully.</div></div>
+          <div class="piece-card"><div class="piece-card-icon">♖</div><div class="piece-card-name">Rook</div><div class="piece-card-val">5 Points — Controls open files</div><div class="piece-card-desc">Moves any number of squares horizontally or vertically. Rooks become very powerful in the endgame.</div></div>
+          <div class="piece-card"><div class="piece-card-icon">♗</div><div class="piece-card-name">Bishop</div><div class="piece-card-val">3 Points — Diagonal ruler</div><div class="piece-card-desc">Moves any number of squares diagonally. Each bishop stays on its own color for the whole game.</div></div>
+          <div class="piece-card"><div class="piece-card-icon">♘</div><div class="piece-card-name">Knight</div><div class="piece-card-val">3 Points — The trickster</div><div class="piece-card-desc">Moves in an L-shape: 2 squares one way and 1 square the other. The ONLY piece that can jump over others.</div></div>
+          <div class="piece-card"><div class="piece-card-icon">♙</div><div class="piece-card-name">Pawn</div><div class="piece-card-val">1 Point — Small but mighty</div><div class="piece-card-desc">Moves forward one square (or two on its first move). Captures diagonally. Reach the other side and promote to any piece!</div></div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-0">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">Which piece can jump over other pieces?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(0,0,1,'The Knight is the ONLY piece that can jump — it leaps in an L-shape right over anything in its way!')">
+            <div class="option-letter">A</div> The Bishop
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(0,1,1,'The Knight is the ONLY piece that can jump — it leaps in an L-shape right over anything in its way!')">
+            <div class="option-letter">B</div> The Knight ✓
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(0,2,1,'The Knight is the ONLY piece that can jump — it leaps in an L-shape right over anything in its way!')">
+            <div class="option-letter">C</div> The Rook
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(0,3,1,'The Knight is the ONLY piece that can jump — it leaps in an L-shape right over anything in its way!')">
+            <div class="option-letter">D</div> The Queen
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-0"></div>
+      </div>`
+  },
+  {
+    category: 'Basics',
+    title: 'The Chessboard',
+    type: 'Lesson + Diagram',
+    xp: 50,
+    render: () => `
+      <div class="lesson-eyebrow">Module 1 — Basics</div>
+      <h2 class="lesson-title">The Chessboard</h2>
+      <p class="lesson-desc">The board is your battlefield. 64 squares, 8 files (a–h) and 8 ranks (1–8). Knowing where you are is the first step to going where you want.</p>
+      <div class="lesson-block">
+        <div class="block-label">Board Diagram</div>
+        <div id="board-lesson-1"></div>
+        <div class="diagram-caption">The board — White always starts at the bottom. Rank 1 is White's home. Rank 8 is Black's home.</div>
+      </div>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>Every square has a name made of a <strong>file letter</strong> (a through h, left to right from White's side) and a <strong>rank number</strong> (1 through 8, bottom to top for White).</p>
+          <div class="highlight-box">💡 Key rule: White always sits at ranks 1 and 2. Black sits at ranks 7 and 8. The queen always starts on her own color — White queen on d1 (a light square), Black queen on d8 (a dark square).</div>
+          <p>At the start of the game, each side has 16 pieces: 1 king, 1 queen, 2 rooks, 2 bishops, 2 knights, and 8 pawns.</p>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-1">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">Where does the White queen start at the beginning of a game?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(1,0,0,'d1 is correct! The queen starts on her own color — and for White, that\\'s the light square d1.')">
+            <div class="option-letter">A</div> d1 ✓
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(1,1,0,'d1 is correct! The queen starts on her own color — and for White, that\\'s the light square d1.')">
+            <div class="option-letter">B</div> e1
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(1,2,0,'d1 is correct! The queen starts on her own color — and for White, that\\'s the light square d1.')">
+            <div class="option-letter">C</div> d8
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(1,3,0,'d1 is correct! The queen starts on her own color — and for White, that\\'s the light square d1.')">
+            <div class="option-letter">D</div> a1
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-1"></div>
+      </div>`
+  },
+  {
+    category: 'Basics',
+    title: 'Check, Checkmate & Draw',
+    type: 'Lesson',
+    xp: 75,
+    render: () => `
+      <div class="lesson-eyebrow">Module 1 — Basics</div>
+      <h2 class="lesson-title">Check, Checkmate & Draw</h2>
+      <p class="lesson-desc">The three most important words in chess. Understand these and you understand the whole game.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p><strong>Check</strong> means your king is being attacked. You MUST get out of check on your next move — you can't just ignore it. You can escape by moving the king, blocking the attack, or capturing the attacking piece.</p>
+          <div class="highlight-box">⚠️ You can never make a move that leaves your own king in check. The game will not allow it.</div>
+          <p style="margin-top:16px"><strong>Checkmate</strong> is when the king is in check AND there is no legal way to escape. The game ends immediately — the side that delivers checkmate wins.</p>
+          <div class="highlight-box">♛ You don't actually capture the king in chess — the game ends the moment checkmate is reached.</div>
+          <p style="margin-top:16px"><strong>Stalemate</strong> is a draw. It happens when a player is NOT in check but has no legal moves. The game ends in a tie — even if one side is way ahead in pieces! Avoid giving your opponent a stalemate when you're winning.</p>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-2">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">Your opponent is NOT in check, but has no legal moves. What happens?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(2,0,1,'Stalemate! When the player to move has no legal moves and is not in check, the game is a draw — even if you have way more pieces.')">
+            <div class="option-letter">A</div> You win automatically
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(2,1,1,'Stalemate! When the player to move has no legal moves and is not in check, the game is a draw — even if you have way more pieces.')">
+            <div class="option-letter">B</div> Stalemate — the game is a draw ✓
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(2,2,1,'Stalemate! When the player to move has no legal moves and is not in check, the game is a draw — even if you have way more pieces.')">
+            <div class="option-letter">C</div> The opponent must pass their turn
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(2,3,1,'Stalemate! When the player to move has no legal moves and is not in check, the game is a draw — even if you have way more pieces.')">
+            <div class="option-letter">D</div> Checkmate
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-2"></div>
+      </div>`
+  },
+
+  // ── TACTICS ──
+  {
+    category: 'Tactics',
+    title: 'The Fork',
+    type: 'Lesson + Puzzle',
+    xp: 100,
+    render: () => `
+      <div class="lesson-eyebrow">Module 2 — Tactics</div>
+      <h2 class="lesson-title">The Fork</h2>
+      <p class="lesson-desc">A fork is one of the most powerful moves in chess — one piece attacks two enemy pieces at the same time. The opponent can only save one.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>Any piece can fork, but <strong>knights are the best forks</strong> because of their unique L-shaped movement — they're unpredictable and hard to block.</p>
+          <div class="highlight-box">♞ Classic knight fork: place your knight so it attacks the king AND queen at the same time. The opponent must move their king out of check — and you take the queen for free!</div>
+        </div>
+      </div>
+      <div class="lesson-block">
+        <div class="block-label">Puzzle — Find the Fork</div>
+        <div class="puzzle-block">
+          <div class="puzzle-board-wrap">
+            <div id="board-puzzle-3"></div>
+            <div class="puzzle-info">
+              <p class="puzzle-prompt">White to move. Find the knight move that forks the Black king and queen at the same time. White wins a queen!</p>
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+                <button class="quiz-option" onclick="puzzleAnswer(3,0,1,'✓ Nc7+ is the fork! The knight attacks both the king on e8 and the queen on a6. Black must escape check, and White takes the queen.')">Nc7+</button>
+                <button class="quiz-option" onclick="puzzleAnswer(3,1,1,'✓ Nc7+ is the fork! The knight attacks both the king on e8 and the queen on a6. Black must escape check, and White takes the queen.')">Nf4</button>
+                <button class="quiz-option" onclick="puzzleAnswer(3,2,1,'✓ Nc7+ is the fork! The knight attacks both the king on e8 and the queen on a6. Black must escape check, and White takes the queen.')">Nd6</button>
+              </div>
+              <div class="puzzle-hint-btn" onclick="showHint(3)" style="margin-top:16px;display:inline-block;padding:10px 20px;border:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Show Hint</div>
+              <div class="puzzle-hint" id="hint-3">Look for a square where the knight can attack both the king AND queen in one move. The king is on e8, the queen is on a6.</div>
+              <div class="quiz-feedback" id="qfeedback-3" style="margin-top:12px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>`
+  },
+  {
+    category: 'Tactics',
+    title: 'The Pin',
+    type: 'Lesson',
+    xp: 100,
+    render: () => `
+      <div class="lesson-eyebrow">Module 2 — Tactics</div>
+      <h2 class="lesson-title">The Pin</h2>
+      <p class="lesson-desc">A pin freezes an enemy piece in place. Move it, and something even more valuable behind it gets captured.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>There are two types of pins. An <strong>absolute pin</strong> is when a piece is pinned to the king — it literally cannot move because that would expose the king to check. A <strong>relative pin</strong> is when moving the piece would lose something valuable (like a queen) behind it.</p>
+          <div class="highlight-box">♗ Bishops and rooks are the most common pinning pieces. A bishop can pin a knight to a king diagonally. A rook can pin a piece to a king along a rank or file.</div>
+          <p style="margin-top:16px">Once you've pinned a piece, <strong>attack it again</strong> with pawns or other pieces. The pinned piece can't defend itself by moving!</p>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-4">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">A knight is pinned to the king by a bishop. Can the knight move?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(4,0,1,'Correct! An absolute pin means the piece legally CANNOT move — doing so would put the king in check, which is illegal.')">
+            <div class="option-letter">A</div> No — moving would put the king in check ✓
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(4,1,1,'Correct! An absolute pin means the piece legally CANNOT move — doing so would put the king in check, which is illegal.')">
+            <div class="option-letter">B</div> Yes, it can always move
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(4,2,1,'Correct! An absolute pin means the piece legally CANNOT move — doing so would put the king in check, which is illegal.')">
+            <div class="option-letter">C</div> Only if it captures something
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-4"></div>
+      </div>`
+  },
+  {
+    category: 'Tactics',
+    title: 'The Skewer',
+    type: 'Lesson',
+    xp: 100,
+    render: () => `
+      <div class="lesson-eyebrow">Module 2 — Tactics</div>
+      <h2 class="lesson-title">The Skewer</h2>
+      <p class="lesson-desc">A skewer is like a pin in reverse — you attack a valuable piece directly, forcing it to move, and capture the less valuable piece hiding behind it.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>In a pin, the more valuable piece is <em>behind</em> the attacked piece. In a skewer, the more valuable piece is <em>in front</em>. You attack the king or queen directly, and when it moves away, you capture the rook or bishop it was protecting.</p>
+          <div class="highlight-box">♖ Example: Your rook attacks the enemy king along a rank. The king must move. Behind the king is a rook — now unprotected. You take it for free.</div>
+          <p style="margin-top:16px">Skewers are especially common in endgames when there are fewer pieces on the board and kings become more active.</p>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-5">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">In a skewer, which piece is attacked first?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(5,0,2,'Correct! In a skewer, you attack the MORE valuable piece first (like the king or queen), forcing it to move and exposing something behind it.')">
+            <div class="option-letter">A</div> The less valuable piece
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(5,1,2,'Correct! In a skewer, you attack the MORE valuable piece first (like the king or queen), forcing it to move and exposing something behind it.')">
+            <div class="option-letter">B</div> The more valuable piece ✓
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(5,2,2,'Correct! In a skewer, you attack the MORE valuable piece first (like the king or queen), forcing it to move and exposing something behind it.')">
+            <div class="option-letter">C</div> Both at the same time
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-5"></div>
+      </div>`
+  },
+
+  // ── OPENINGS ──
+  {
+    category: 'Openings',
+    title: 'Opening Principles',
+    type: 'Lesson',
+    xp: 75,
+    render: () => `
+      <div class="lesson-eyebrow">Module 3 — Openings</div>
+      <h2 class="lesson-title">Opening Principles</h2>
+      <p class="lesson-desc">You don't need to memorize 50 openings to play well. Master these three principles and you'll start every game strong.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Principle 1: Control the Center</strong><br>
+            The four central squares — e4, d4, e5, d5 — are the most powerful on the board. Pieces in the center control more squares and have more options. Open with e4 or d4 to claim center space immediately.
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Principle 2: Develop Your Pieces</strong><br>
+            Get your knights and bishops off the back rank and into the game. Don't move the same piece twice in the opening unless you have to. Every move should bring a new piece into action.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">Principle 3: Castle Early</strong><br>
+            Castling moves your king to safety behind a wall of pawns and connects your rooks. Try to castle within the first 10 moves. A king stuck in the center is a target.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-6">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">Which is the best first move for White according to opening principles?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(6,0,0,'e4 is the most popular first move in chess! It immediately controls the center, opens lines for the bishop and queen, and follows all three opening principles.')">
+            <div class="option-letter">A</div> e4 — Advance the king's pawn ✓
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(6,1,0,'e4 is the most popular first move in chess! It immediately controls the center, opens lines for the bishop and queen, and follows all three opening principles.')">
+            <div class="option-letter">B</div> h4 — Advance the edge pawn
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(6,2,0,'e4 is the most popular first move in chess! It immediately controls the center, opens lines for the bishop and queen, and follows all three opening principles.')">
+            <div class="option-letter">C</div> Na3 — Move the knight to the edge
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-6"></div>
+      </div>`
+  },
+  {
+    category: 'Openings',
+    title: "The Scholar's Mate",
+    type: 'Lesson + Puzzle',
+    xp: 75,
+    render: () => `
+      <div class="lesson-eyebrow">Module 3 — Openings</div>
+      <h2 class="lesson-title">The Scholar's Mate</h2>
+      <p class="lesson-desc">The fastest checkmate in chess — and the most common trap beginners fall into. Learn how it works so you can use it AND defend against it.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>The Scholar's Mate tries to checkmate on f7 (or f2 for Black) — the weakest square in the starting position because it's only defended by the king. The attack uses the queen and bishop together.</p>
+          <div class="highlight-box">The moves: 1. e4 e5 2. Bc4 Nc6 3. Qh5 Nf6?? 4. Qxf7# — Checkmate in 4 moves! The queen on f7 is protected by the bishop on c4, and the king can't escape.</div>
+          <p style="margin-top:16px"><strong>How to defend:</strong> When you see the queen and bishop aimed at f7, play Nf6 to attack the queen, then g6 to chase it away. Or simply develop pieces to block the attack.</p>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-7">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">The Scholar's Mate targets which square for checkmate?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(7,0,1,'f7! It\\'s the weakest square for Black at the start of the game — only defended by the king, and vulnerable to a queen + bishop attack from White.')">
+            <div class="option-letter">A</div> e8
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(7,1,1,'f7! It\\'s the weakest square for Black at the start of the game — only defended by the king, and vulnerable to a queen + bishop attack from White.')">
+            <div class="option-letter">B</div> f7 ✓
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(7,2,1,'f7! It\\'s the weakest square for Black at the start of the game — only defended by the king, and vulnerable to a queen + bishop attack from White.')">
+            <div class="option-letter">C</div> g8
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-7"></div>
+      </div>`
+  },
+
+  // ── ENDGAMES ──
+  {
+    category: 'Endgames',
+    title: 'King & Pawn Endgames',
+    type: 'Lesson',
+    xp: 125,
+    render: () => `
+      <div class="lesson-eyebrow">Module 4 — Endgames</div>
+      <h2 class="lesson-title">King & Pawn Endgames</h2>
+      <p class="lesson-desc">When most pieces are traded off, pawns decide who wins. The king — passive in the opening — becomes your most powerful piece in the endgame.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">The Opposition</strong><br>
+            When two kings face each other with one square between them, they are "in opposition." The player who does NOT have to move has the opposition — a major advantage in pawn endgames.
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Passed Pawns</strong><br>
+            A passed pawn has no enemy pawns blocking its path to promotion. These pawns must be pushed! In the endgame, a passed pawn that reaches the 7th rank becomes an unstoppable threat.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">The Rule of the Square</strong><br>
+            Draw a diagonal square from the pawn to the promotion square. If the defending king can step into that square, it can catch the pawn. If not, the pawn promotes!
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-8">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">In the endgame, how does the king's role change compared to the opening?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(8,0,0,'Exactly right! In the endgame, the king transforms from a piece you protect into an aggressive fighter. Activate your king early in the endgame!')">
+            <div class="option-letter">A</div> It becomes an active attacking piece ✓
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(8,1,0,'Exactly right! In the endgame, the king transforms from a piece you protect into an aggressive fighter. Activate your king early in the endgame!')">
+            <div class="option-letter">B</div> It stays hidden behind pawns
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(8,2,0,'Exactly right! In the endgame, the king transforms from a piece you protect into an aggressive fighter. Activate your king early in the endgame!')">
+            <div class="option-letter">C</div> It becomes less important
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-8"></div>
+      </div>`
+  },
+  {
+    category: 'Endgames',
+    title: 'Rook Endgames',
+    type: 'Lesson',
+    xp: 125,
+    render: () => `
+      <div class="lesson-eyebrow">Module 4 — Endgames</div>
+      <h2 class="lesson-title">Rook Endgames</h2>
+      <p class="lesson-desc">Rook endgames are the most common in chess. Mastering just a few key principles will save and win countless games.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Rooks Belong Behind Passed Pawns</strong><br>
+            Whether it's your pawn or your opponent's — put your rook behind it. Your rook gains power as the pawn advances. Their rook gains power as their pawn advances (which you want to stop).
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">The Lucena Position</strong><br>
+            The key winning position in rook endgames. The attacking king escorts its pawn to the 7th rank, cuts off the defending king, and uses a "bridge building" technique to win.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">The Philidor Position</strong><br>
+            The key drawing technique for the defender. Keep your rook on the 6th rank until the attacking pawn advances, then switch to checking from behind. Master this and you'll never lose a drawn rook endgame.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-9">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">Where should your rook be placed relative to a passed pawn?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(9,0,1,'Behind the passed pawn! This is the most important rook endgame principle. The rook gains more and more power as the pawn pushes forward.')">
+            <div class="option-letter">A</div> In front of it
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(9,1,1,'Behind the passed pawn! This is the most important rook endgame principle. The rook gains more and more power as the pawn pushes forward.')">
+            <div class="option-letter">B</div> Behind it ✓
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(9,2,1,'Behind the passed pawn! This is the most important rook endgame principle. The rook gains more and more power as the pawn pushes forward.')">
+            <div class="option-letter">C</div> On the opposite side of the board
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-9"></div>
+      </div>`
+  },
+];
+
+// ── QUIZ LOGIC ──
+const quizAnswered = {};
+function answerQuiz(lessonIdx, chosen, correct, feedback) {
+  if (quizAnswered[lessonIdx]) return;
+  quizAnswered[lessonIdx] = true;
+  const block = document.getElementById('quiz-' + lessonIdx);
+  if (!block) return;
+  const opts = block.querySelectorAll('.quiz-option');
+  opts.forEach((o, i) => {
+    o.classList.add('answered');
+    if (i === correct) o.classList.add('correct');
+    else if (i === chosen && chosen !== correct) o.classList.add('wrong');
+  });
+  const fb = document.getElementById('qfeedback-' + lessonIdx);
+  fb.textContent = (chosen === correct ? '✓ ' : '✗ ') + feedback;
+  fb.className = 'quiz-feedback show ' + (chosen === correct ? 'correct' : 'wrong');
+  if (chosen === correct) addXP(20);
+}
+
+function puzzleAnswer(lessonIdx, chosen, correct, feedback) {
+  answerQuiz(lessonIdx, chosen, correct, feedback);
+}
+
+function showHint(id) {
+  const h = document.getElementById('hint-' + id);
+  if (h) h.classList.add('show');
+}
+
+// ── BOARD DIAGRAMS ──
+function renderDiagram(containerId, pieces, highlights = []) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.className = 'diagram-board';
+  el.innerHTML = '';
+  for (let rank = 8; rank >= 1; rank--) {
+    for (let fi = 0; fi < 8; fi++) {
+      const file = 'abcdefgh'[fi];
+      const sq = file + rank;
+      const isLight = (fi + rank) % 2 !== 0;
+      const div = document.createElement('div');
+      div.className = 'dsq ' + (isLight ? 'dl' : 'dd');
+      if (highlights.includes(sq)) div.classList.add('highlight');
+      if (pieces[sq]) div.textContent = pieces[sq];
+      el.appendChild(div);
+    }
+  }
+}
+
+function renderStartingBoard(containerId) {
+  renderDiagram(containerId, {
+    a8:'♜',b8:'♞',c8:'♝',d8:'♛',e8:'♚',f8:'♝',g8:'♞',h8:'♜',
+    a7:'♟',b7:'♟',c7:'♟',d7:'♟',e7:'♟',f7:'♟',g7:'♟',h7:'♟',
+    a2:'♙',b2:'♙',c2:'♙',d2:'♙',e2:'♙',f2:'♙',g2:'♙',h2:'♙',
+    a1:'♖',b1:'♘',c1:'♗',d1:'♕',e1:'♔',f1:'♗',g1:'♘',h1:'♖',
+  });
+}
+
+function renderForkPuzzle(containerId) {
+  renderDiagram(containerId, {
+    e8:'♚', a6:'♛', e5:'♘', h2:'♔'
+  }, ['c7']);
+}
+
+// ── XP & LEVELS ──
+const LEVELS = [
+  { min:0,   label:'Pawn',    lvl:1  },
+  { min:100, label:'Knight',  lvl:2  },
+  { min:250, label:'Bishop',  lvl:3  },
+  { min:500, label:'Rook',    lvl:4  },
+  { min:750, label:'Queen',   lvl:5  },
+  { min:1000,label:'King',    lvl:6  },
+];
+
+function addXP(amount) {
+  xp += amount;
+  const nextLevelXP = 1000;
+  const pct = Math.min(100, (xp / nextLevelXP) * 100);
+  document.getElementById('xpFill').style.width = pct + '%';
+  document.getElementById('xpLabel').textContent = xp + ' XP';
+  document.getElementById('statXP').textContent = xp;
+  const level = LEVELS.slice().reverse().find(l => xp >= l.min) || LEVELS[0];
+  document.getElementById('levelBadge').textContent = 'LVL ' + level.lvl;
+  checkBadges();
+}
+
+// ── BADGES ──
+function checkBadges() {
+  BADGES.forEach(b => {
+    if (!earnedBadges.has(b.id) && b.req()) {
+      earnedBadges.add(b.id);
+      showBadgeToast(b);
+      document.getElementById('statBadges').textContent = earnedBadges.size;
+      renderBadges();
+    }
+  });
+}
+
+function showBadgeToast(badge) {
+  document.getElementById('toastIcon').textContent = badge.icon;
+  document.getElementById('toastTitle').textContent = badge.label + ' Badge Earned!';
+  document.getElementById('toastDesc').textContent = badge.desc;
+  const toast = document.getElementById('badgeToast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+function renderBadges() {
+  const row = document.getElementById('badgesRow');
+  row.innerHTML = BADGES.map(b => `
+    <div class="badge-item">
+      <div class="badge-circle ${earnedBadges.has(b.id) ? 'earned' : 'locked'}">${b.icon}</div>
+      <div class="badge-label ${earnedBadges.has(b.id) ? 'earned' : ''}">${b.label}</div>
+    </div>`).join('');
+}
+
+// ── SIDEBAR ──
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const categories = [...new Set(LESSONS.map(l => l.category))];
+  sidebar.innerHTML = categories.map(cat => {
+    const catLessons = LESSONS.filter(l => l.category === cat);
+    return `<div class="sidebar-section">
+      <div class="sidebar-heading">${cat}</div>
+      ${catLessons.map(l => {
+        const idx = LESSONS.indexOf(l);
+        const isDone = completed.has(idx);
+        const isActive = idx === currentLesson;
+        return `<button class="lesson-btn ${isActive ? 'active' : ''} ${isDone ? 'completed' : ''}" onclick="goToLesson(${idx})">
+          <div class="lesson-dot"></div>
+          <div class="lesson-btn-text">
+            <div class="lesson-btn-title">${l.title}</div>
+            <div class="lesson-btn-type">${l.type}</div>
+          </div>
+          ${isDone ? '<span class="lesson-check">✓</span>' : ''}
+        </button>`;
+      }).join('')}
+    </div>`;
+  }).join('');
+}
+
+// ── LESSON RENDERING ──
+function renderLesson(idx) {
+  const area = document.getElementById('lessonArea');
+  const lesson = LESSONS[idx];
+  const total = LESSONS.length;
+  area.innerHTML = `
+    <div class="lesson-card active" id="lesson-${idx}">
+      ${lesson.render()}
+      <div class="lesson-footer">
+        <button class="btn-ghost" onclick="prevLesson()" ${idx === 0 ? 'disabled style="opacity:0.3"' : ''}>← Previous</button>
+        <div class="lesson-progress-text">Lesson ${idx + 1} of ${total}</div>
+        <button class="btn-primary" onclick="completeLesson(${idx})">Complete & Continue →</button>
+      </div>
+    </div>`;
+
+  // Render any diagrams
+  if (idx === 1) setTimeout(() => renderStartingBoard('board-lesson-1'), 50);
+  if (idx === 3) setTimeout(() => renderForkPuzzle('board-puzzle-3'), 50);
+}
+
+function goToLesson(idx) {
+  currentLesson = idx;
+  renderLesson(idx);
+  renderSidebar();
+  document.querySelector('.content').scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function completeLesson(idx) {
+  if (!completed.has(idx)) {
+    completed.add(idx);
+    addXP(LESSONS[idx].xp);
+    document.getElementById('statCompleted').textContent = completed.size;
+    checkBadges();
+  }
+  if (idx + 1 < LESSONS.length) {
+    goToLesson(idx + 1);
+  } else {
+    showComplete();
+  }
+}
+
+function prevLesson() {
+  if (currentLesson > 0) goToLesson(currentLesson - 1);
+}
+
+function showComplete() {
+  document.getElementById('lessonArea').innerHTML = `
+    <div class="complete-screen show">
+      <div class="complete-icon">♔</div>
+      <h2>Course Complete!</h2>
+      <p>You've completed all 10 lessons in the Malachi AI Chess Academy. You've earned ${xp} XP and ${earnedBadges.size} badges. Now go practice what you've learned!</p>
+      <a href="play.html"><button class="btn-primary" style="margin-right:12px">Play a Game →</button></a>
+      <button class="btn-ghost" onclick="goToLesson(0)">Review Lessons</button>
+    </div>`;
+}
+
+// ── INIT ──
+renderBadges();
+renderSidebar();
+renderLesson(0);
+</script>
+</body>
+</html>

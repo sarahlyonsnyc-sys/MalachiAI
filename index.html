@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Malachi AI — Chess. Intelligence. Future.</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:   #0a0a0a;
+      --dark:    #111111;
+      --panel:   #161616;
+      --border:  #2a2a2a;
+      --gold:    #c9a84c;
+      --gold2:   #e8c97a;
+      --cream:   #f5f0e8;
+      --muted:   #6b6b6b;
+      --white:   #ffffff;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--cream);
+      font-family: 'Outfit', sans-serif;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom cursor */
+    .cursor {
+      position: fixed;
+      width: 12px; height: 12px;
+      background: var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s, width 0.2s, height 0.2s;
+      mix-blend-mode: difference;
+    }
+    .cursor-ring {
+      position: fixed;
+      width: 36px; height: 36px;
+      border: 1px solid var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.15s ease-out, width 0.3s, height 0.3s, opacity 0.3s;
+      opacity: 0.5;
+    }
+
+    /* Chess grid background */
+    .chess-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      opacity: 0.03;
+      background-image:
+        repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 60px;
+      border-bottom: 1px solid transparent;
+      transition: background 0.4s, border-color 0.4s;
+    }
+    nav.scrolled {
+      background: rgba(10,10,10,0.92);
+      border-color: var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 12px;
+      text-decoration: none;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+    }
+    .logo-icon span {
+      background: var(--gold);
+      display: block;
+      border-radius: 2px;
+      animation: pulse-block 3s ease-in-out infinite;
+    }
+    .logo-icon span:nth-child(2) { background: transparent; border: 1px solid var(--gold); animation-delay: 0.5s; }
+    .logo-icon span:nth-child(3) { background: transparent; border: 1px solid var(--gold); animation-delay: 1s; }
+    .logo-icon span:nth-child(4) { background: var(--gold); animation-delay: 1.5s; }
+    @keyframes pulse-block {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .logo-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: 0.05em;
+    }
+    .logo-text span { color: var(--gold); }
+
+    .nav-links { display: flex; gap: 36px; list-style: none; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-family: 'DM Mono', monospace;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+
+    .nav-cta {
+      background: var(--gold);
+      color: var(--black);
+      border: none;
+      padding: 10px 24px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: none;
+      font-weight: 500;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .nav-cta:hover { background: var(--gold2); transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 120px 60px 80px;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .hero-content {
+      max-width: 700px;
+      animation: fadeUp 1s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 28px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      width: 32px; height: 1px;
+      background: var(--gold);
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(56px, 8vw, 104px);
+      font-weight: 700;
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      color: var(--white);
+      margin-bottom: 32px;
+    }
+    h1 em {
+      font-style: italic;
+      color: var(--gold);
+      display: block;
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      line-height: 1.7;
+      color: #9a9a9a;
+      max-width: 520px;
+      margin-bottom: 52px;
+      font-weight: 300;
+    }
+
+    .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    .btn-primary {
+      background: var(--gold);
+      color: var(--black);
+      border: none;
+      padding: 16px 40px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: none;
+      font-weight: 500;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: white;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .btn-primary:hover::after { opacity: 0.1; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(201,168,76,0.3); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--cream);
+      border: 1px solid var(--border);
+      padding: 16px 40px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: none;
+      transition: all 0.25s;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* Floating chess piece art */
+    .hero-visual {
+      position: absolute;
+      right: 60px; top: 50%;
+      transform: translateY(-50%);
+      animation: fadeUp 1.2s 0.3s ease both;
+    }
+    .chess-board-mini {
+      display: grid;
+      grid-template-columns: repeat(6, 56px);
+      grid-template-rows: repeat(6, 56px);
+      gap: 2px;
+      opacity: 0.6;
+      transform: perspective(600px) rotateX(20deg) rotateZ(-8deg);
+    }
+    .sq {
+      border-radius: 3px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      transition: all 0.3s;
+    }
+    .sq.light { background: #1e1e1e; }
+    .sq.dark-sq  { background: #2d2a20; }
+    .sq.gold-sq  { background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.3); }
+    .sq:hover { transform: translateY(-4px) scale(1.05); opacity: 1; }
+
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      background: var(--panel);
+    }
+    .stat {
+      padding: 48px 60px;
+      border-right: 1px solid var(--border);
+      animation: fadeUp 0.8s ease both;
+    }
+    .stat:last-child { border-right: none; }
+    .stat-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 64px;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── SECTION BASE ── */
+    section {
+      position: relative; z-index: 1;
+      padding: 120px 60px;
+    }
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(40px, 5vw, 68px);
+      font-weight: 700;
+      line-height: 1;
+      color: var(--white);
+      margin-bottom: 20px;
+    }
+    .section-sub {
+      font-size: 17px;
+      line-height: 1.7;
+      color: #7a7a7a;
+      max-width: 560px;
+      margin-bottom: 72px;
+      font-weight: 300;
+    }
+
+    /* ── PILLARS ── */
+    .pillars { background: var(--black); }
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2px;
+    }
+    .pillar {
+      background: var(--panel);
+      padding: 48px 40px;
+      border-top: 2px solid transparent;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .pillar::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+    .pillar:hover::before { transform: scaleX(1); }
+    .pillar:hover { background: #1a1a1a; }
+
+    .pillar-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--border);
+      line-height: 1;
+      margin-bottom: 24px;
+      transition: color 0.3s;
+    }
+    .pillar:hover .pillar-num { color: var(--gold); }
+    .pillar-icon { font-size: 32px; margin-bottom: 20px; }
+    .pillar h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+    .pillar p {
+      font-size: 15px;
+      line-height: 1.7;
+      color: var(--muted);
+      font-weight: 300;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how { background: var(--panel); }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0;
+      border: 1px solid var(--border);
+    }
+    .step {
+      padding: 56px 40px;
+      border-right: 1px solid var(--border);
+      position: relative;
+      transition: background 0.3s;
+    }
+    .step:last-child { border-right: none; }
+    .step:hover { background: rgba(201,168,76,0.03); }
+    .step-arrow {
+      position: absolute;
+      right: -14px; top: 50%;
+      transform: translateY(-50%);
+      width: 28px; height: 28px;
+      background: var(--black);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      color: var(--gold);
+      z-index: 2;
+      border-radius: 50%;
+    }
+    .step:last-child .step-arrow { display: none; }
+    .step-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--gold);
+      letter-spacing: 0.15em;
+      margin-bottom: 24px;
+    }
+    .step h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--white);
+      margin-bottom: 12px;
+    }
+    .step p {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    /* ── FOR WHO ── */
+    .audience { background: var(--black); }
+    .audience-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+    }
+    .audience-card {
+      border: 1px solid var(--border);
+      padding: 48px 36px;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .audience-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-6px);
+    }
+    .audience-card .badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--black);
+      background: var(--gold);
+      display: inline-block;
+      padding: 4px 12px;
+      margin-bottom: 28px;
+    }
+    .audience-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 16px;
+    }
+    .audience-card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .audience-card ul li {
+      font-size: 14px;
+      color: var(--muted);
+      padding-left: 20px;
+      position: relative;
+      font-weight: 300;
+    }
+    .audience-card ul li::before {
+      content: '—';
+      position: absolute;
+      left: 0;
+      color: var(--gold);
+    }
+
+    /* ── PHILOSOPHY ── */
+    .philosophy {
+      background: var(--gold);
+      color: var(--black);
+    }
+    .philosophy h2 { color: var(--black); }
+    .philosophy-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .chess-lesson {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .lesson-item {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .lesson-piece {
+      width: 48px; height: 48px;
+      background: rgba(0,0,0,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      border-radius: 4px;
+    }
+    .lesson-text h4 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 4px;
+    }
+    .lesson-text p {
+      font-size: 14px;
+      color: rgba(0,0,0,0.6);
+      font-weight: 300;
+      line-height: 1.6;
+    }
+    .philosophy-quote {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--black);
+    }
+    .philosophy-quote em {
+      font-style: italic;
+      opacity: 0.5;
+    }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: var(--black);
+      text-align: center;
+      padding: 140px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '♔';
+      position: absolute;
+      font-size: 400px;
+      color: rgba(201,168,76,0.04);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      line-height: 1;
+    }
+    .cta-section h2 {
+      margin: 0 auto 20px;
+      max-width: 700px;
+    }
+    .cta-section .section-sub {
+      margin: 0 auto 52px;
+      text-align: center;
+    }
+    .cta-actions { display: flex; gap: 16px; justify-content: center; }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 48px 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .footer-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-copy {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+    .footer-tagline {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    /* ── SCROLL ANIMATIONS ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      nav { padding: 20px 24px; }
+      .nav-links { display: none; }
+      .hero { padding: 100px 24px 60px; }
+      .hero-visual { display: none; }
+      section { padding: 80px 24px; }
+      .stats-strip { grid-template-columns: 1fr; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); padding: 36px 24px; }
+      .audience-grid { grid-template-columns: 1fr; }
+      .philosophy-grid { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 16px; text-align: center; padding: 36px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="chess-bg"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="logo">
+    <div class="logo-icon">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div class="logo-text">Malachi <span>AI</span></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#pillars">Platform</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#audience">Who It's For</a></li>
+    <li><a href="#philosophy">Philosophy</a></li>
+  </ul>
+  <button class="nav-cta">Join Waitlist</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">Chess × AI × Education</div>
+    <h1>Think Deeper.<br><em>Move Smarter.</em></h1>
+    <p class="hero-sub">
+      Malachi AI transforms chess into a complete learning platform — combining AI coaching, structured curriculum, and real-time progress tracking to develop the next generation of critical thinkers.
+    </p>
+    <div class="hero-actions">
+      <button class="btn-primary">Join the Waitlist</button>
+      <button class="btn-ghost">See the Platform</button>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="chess-board-mini" id="chessBoard"></div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-strip">
+  <div class="stat reveal">
+    <div class="stat-number">K–12</div>
+    <div class="stat-label">All grade levels supported</div>
+  </div>
+  <div class="stat reveal">
+    <div class="stat-number">3-in-1</div>
+    <div class="stat-label">Learn · Play · Grow</div>
+  </div>
+  <div class="stat reveal">
+    <div class="stat-number">AI</div>
+    <div class="stat-label">Personalized coaching every game</div>
+  </div>
+</div>
+
+<!-- PILLARS -->
+<section class="pillars" id="pillars">
+  <div class="section-label">The Platform</div>
+  <h2>Everything a student needs<br>to grow.</h2>
+  <p class="section-sub">Four pillars that work together to build chess skill, cognitive ability, and real-world thinking.</p>
+
+  <div class="pillars-grid">
+    <div class="pillar reveal">
+      <div class="pillar-num">01</div>
+      <div class="pillar-icon">♟</div>
+      <h3>Learn</h3>
+      <p>Structured lessons from beginner to advanced. Puzzles, videos, and interactive challenges organized by skill — just like Khan Academy, but for chess.</p>
+    </div>
+    <div class="pillar reveal">
+      <div class="pillar-num">02</div>
+      <div class="pillar-icon">♜</div>
+      <h3>Play</h3>
+      <p>Practice against AI opponents or other students. Every game is tracked, analyzed, and turned into a personalized learning opportunity.</p>
+    </div>
+    <div class="pillar reveal">
+      <div class="pillar-num">03</div>
+      <div class="pillar-icon">♛</div>
+      <h3>AI Coaching</h3>
+      <p>After every game, Malachi AI analyzes patterns, spots recurring mistakes, and assigns targeted exercises — like having a grandmaster in your corner.</p>
+    </div>
+    <div class="pillar reveal">
+      <div class="pillar-num">04</div>
+      <div class="pillar-icon">♚</div>
+      <h3>Dashboard</h3>
+      <p>Teachers and parents see real-time progress — chess rating, lessons completed, cognitive skill growth, and flags when a student needs attention.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-label">How It Works</div>
+  <h2>From first move<br>to mastery.</h2>
+  <p class="section-sub">A clear path for every student, no matter where they start.</p>
+
+  <div class="steps">
+    <div class="step reveal">
+      <div class="step-arrow">→</div>
+      <div class="step-num">STEP 01</div>
+      <h3>Student Joins</h3>
+      <p>Create a profile, complete a quick skill assessment, and Malachi AI builds a personalized learning path on day one.</p>
+    </div>
+    <div class="step reveal">
+      <div class="step-arrow">→</div>
+      <div class="step-num">STEP 02</div>
+      <h3>Learn &amp; Play</h3>
+      <p>Work through lessons, tackle puzzles, and play games — all inside one platform built for kids.</p>
+    </div>
+    <div class="step reveal">
+      <div class="step-arrow">→</div>
+      <div class="step-num">STEP 03</div>
+      <h3>AI Analyzes</h3>
+      <p>Every game is reviewed. Malachi AI identifies patterns, strengths, and gaps — then assigns the right next lesson automatically.</p>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">STEP 04</div>
+      <h3>Adults Track Growth</h3>
+      <p>Teachers and parents log in to see clear, visual progress reports — not just chess rating, but cognitive development metrics.</p>
+    </div>
+  </div>
+</section>
+
+<!-- AUDIENCE -->
+<section class="audience" id="audience">
+  <div class="section-label">Built For</div>
+  <h2>One platform.<br>Three perspectives.</h2>
+  <p class="section-sub">Designed for students, but built so teachers and parents are never left in the dark.</p>
+
+  <div class="audience-grid">
+    <div class="audience-card reveal">
+      <div class="badge">Student</div>
+      <h3>The Player</h3>
+      <ul>
+        <li>Interactive lessons at their pace</li>
+        <li>Play vs. AI or classmates</li>
+        <li>Personal AI coach after every game</li>
+        <li>Achievements and chess rating</li>
+        <li>Fun, focused, distraction-free</li>
+      </ul>
+    </div>
+    <div class="audience-card reveal">
+      <div class="badge">Teacher</div>
+      <h3>The Coach</h3>
+      <ul>
+        <li>Class-wide progress dashboard</li>
+        <li>Assign lessons and tournaments</li>
+        <li>Spot struggling students early</li>
+        <li>Built-in curriculum framework</li>
+        <li>After-school club ready</li>
+      </ul>
+    </div>
+    <div class="audience-card reveal">
+      <div class="badge">Parent</div>
+      <h3>The Supporter</h3>
+      <ul>
+        <li>Weekly progress reports</li>
+        <li>See cognitive skills developing</li>
+        <li>Safe, COPPA-compliant platform</li>
+        <li>Understand what chess teaches</li>
+        <li>Celebrate milestones together</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- PHILOSOPHY -->
+<section class="philosophy" id="philosophy">
+  <div class="philosophy-grid">
+    <div>
+      <div class="section-label" style="color: rgba(0,0,0,0.5)">Our Philosophy</div>
+      <h2 style="color: var(--black); margin-bottom: 40px;">Chess isn't just a game.<br>It's a curriculum.</h2>
+      <div class="chess-lesson">
+        <div class="lesson-item">
+          <div class="lesson-piece">♙</div>
+          <div class="lesson-text">
+            <h4>Planning Ahead</h4>
+            <p>Every move has consequences. Students learn to think 3 steps forward — a skill that transfers to school, work, and life.</p>
+          </div>
+        </div>
+        <div class="lesson-item">
+          <div class="lesson-piece">♞</div>
+          <div class="lesson-text">
+            <h4>Recovering from Mistakes</h4>
+            <p>Losing a piece isn't the end of the game. Students build resilience by finding opportunity in adversity.</p>
+          </div>
+        </div>
+        <div class="lesson-item">
+          <div class="lesson-piece">♝</div>
+          <div class="lesson-text">
+            <h4>Delayed Gratification</h4>
+            <p>Sacrificing now for a better position later. The most important lesson chess teaches — and one of the hardest to learn.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="philosophy-quote">
+        "Every game is a classroom. Every move is a lesson. <em>Malachi AI just helps you see it."</em>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="section-label">Get Early Access</div>
+  <h2>Ready to build the future<br>of education?</h2>
+  <p class="section-sub">Malachi AI is launching with a select group of schools and after-school programs. Join the waitlist today.</p>
+  <div class="cta-actions">
+    <button class="btn-primary">Join the Waitlist</button>
+    <button class="btn-ghost">Learn More</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Malachi <span>AI</span></div>
+  <div class="footer-copy">© 2025 Malachi AI. All rights reserved.</div>
+  <div class="footer-tagline">Chess · Intelligence · Future</div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursor-ring');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+    setTimeout(() => {
+      ring.style.left = e.clientX + 'px';
+      ring.style.top = e.clientY + 'px';
+    }, 80);
+  });
+
+  // Nav scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 100);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => observer.observe(el));
+
+  // Build chess board visual
+  const board = document.getElementById('chessBoard');
+  const pieces = ['♜','♞','♝','♛','♚','♝','♞','♜','♟','♟','♟','♟','♟','♟','♟','♟','','','','♙','','','','','','♙','♙','♙','♙','♙','♙','♙','♖','♘','♗','♕','♔'];
+  const positions = [
+    [0,null,null,null,'♛',null],[null,null,'♙',null,null,'♞'],[null,null,null,'♝',null,null],
+    ['♟',null,null,null,'♙',null],[null,'♜',null,null,null,'♗'],[null,null,'♚',null,null,null]
+  ];
+  for (let r = 0; r < 6; r++) {
+    for (let c = 0; c < 6; c++) {
+      const sq = document.createElement('div');
+      const isLight = (r + c) % 2 === 0;
+      const piece = positions[r][c];
+      sq.className = `sq ${piece ? 'gold-sq' : (isLight ? 'light' : 'dark-sq')}`;
+      if (piece) sq.textContent = piece;
+      board.appendChild(sq);
+    }
+  }
+</script>
+</body>
+</html>
