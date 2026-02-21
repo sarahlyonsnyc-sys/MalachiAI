@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Malachi AI — Teacher Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:   #0a0a0a;
+      --dark:    #111111;
+      --panel:   #161616;
+      --panel2:  #1c1c1c;
+      --border:  #2a2a2a;
+      --gold:    #c9a84c;
+      --gold2:   #e8c97a;
+      --cream:   #f5f0e8;
+      --muted:   #6b6b6b;
+      --white:   #ffffff;
+      --green:   #4caf50;
+      --red:     #e05068;
+      --blue:    #5b8dee;
+      --purple:  #9c6fe4;
+      --orange:  #f0924a;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--black); color: var(--cream); font-family: 'Outfit', sans-serif; overflow-x: hidden; min-height: 100vh; cursor: none; }
+    .cursor { position:fixed; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:difference; }
+    .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid var(--gold); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:0.4; transition:left 0.12s ease-out,top 0.12s ease-out; }
+    .chess-bg { position:fixed; inset:0; z-index:0; opacity:0.02; background-image:repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%); background-size:48px 48px; pointer-events:none; }
+
+    /* NAV */
+    nav { position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:16px 40px; border-bottom:1px solid var(--border); background:rgba(10,10,10,0.97); backdrop-filter:blur(12px); }
+    .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .logo-icon { width:28px; height:28px; display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+    .logo-icon span { background:var(--gold); border-radius:1px; display:block; }
+    .logo-icon span:nth-child(2),.logo-icon span:nth-child(3) { background:transparent; border:1px solid var(--gold); }
+    .logo-text { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:700; color:var(--white); }
+    .logo-text span { color:var(--gold); }
+    .nav-center { display:flex; align-items:center; gap:4px; background:var(--panel); border:1px solid var(--border); padding:4px; }
+    .nav-tab { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); padding:8px 18px; cursor:none; border:none; background:transparent; transition:all 0.2s; }
+    .nav-tab.active { background:var(--gold); color:var(--black); font-weight:500; }
+    .nav-tab:hover:not(.active) { color:var(--cream); }
+    .nav-right { display:flex; align-items:center; gap:16px; }
+    .teacher-info { text-align:right; }
+    .teacher-name { font-size:13px; color:var(--cream); font-weight:500; }
+    .teacher-role { font-family:'DM Mono',monospace; font-size:10px; color:var(--gold); letter-spacing:0.1em; }
+    .alert-bell { position:relative; font-size:18px; cursor:none; }
+    .alert-count { position:absolute; top:-4px; right:-4px; width:16px; height:16px; background:var(--red); border-radius:50%; font-family:'DM Mono',monospace; font-size:9px; display:flex; align-items:center; justify-content:center; color:white; }
+
+    /* LAYOUT */
+    .app { position:relative; z-index:1; display:grid; grid-template-columns:240px 1fr; min-height:calc(100vh - 61px); }
+
+    /* SIDEBAR */
+    .sidebar { background:var(--panel); border-right:1px solid var(--border); padding:24px 0; position:sticky; top:61px; height:calc(100vh - 61px); overflow-y:auto; display:flex; flex-direction:column; }
+    .sidebar-section { margin-bottom:24px; }
+    .sidebar-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); padding:0 20px 8px; }
+    .sidebar-btn { width:100%; background:transparent; border:none; text-align:left; padding:10px 20px; cursor:none; display:flex; align-items:center; gap:10px; transition:all 0.2s; color:var(--muted); font-size:13px; font-family:'Outfit',sans-serif; }
+    .sidebar-btn:hover { background:rgba(201,168,76,0.05); color:var(--cream); }
+    .sidebar-btn.active { background:rgba(201,168,76,0.1); border-left:2px solid var(--gold); color:var(--cream); }
+    .sidebar-icon { width:20px; text-align:center; font-size:14px; }
+    .class-tag { margin-left:auto; font-family:'DM Mono',monospace; font-size:9px; background:var(--border); padding:2px 7px; border-radius:2px; color:var(--muted); }
+    .class-tag.gold { background:rgba(201,168,76,0.15); color:var(--gold); }
+
+    .sidebar-divider { height:1px; background:var(--border); margin:8px 20px; }
+
+    .sidebar-footer { margin-top:auto; padding:20px; border-top:1px solid var(--border); }
+    .week-label { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; margin-bottom:8px; }
+    .week-days { display:flex; gap:4px; }
+    .week-day { flex:1; height:32px; border-radius:2px; background:var(--border); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); flex-direction:column; gap:2px; }
+    .week-day.active-day { background:rgba(201,168,76,0.2); color:var(--gold); }
+    .week-day.today { background:var(--gold); color:var(--black); }
+
+    /* MAIN */
+    .main { padding:36px 40px; overflow-y:auto; }
+
+    /* PAGE VIEWS */
+    .page { display:none; animation:fadeIn 0.3s ease; }
+    .page.active { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+    /* PAGE HEADER */
+    .page-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:36px; }
+    .page-title { font-family:'Cormorant Garamond',serif; font-size:40px; font-weight:700; color:var(--white); line-height:1; margin-bottom:6px; }
+    .page-subtitle { font-size:14px; color:var(--muted); font-weight:300; }
+    .page-actions { display:flex; gap:10px; }
+    .btn { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; padding:10px 20px; cursor:none; border:none; transition:all 0.2s; }
+    .btn-gold { background:var(--gold); color:var(--black); font-weight:500; }
+    .btn-gold:hover { background:var(--gold2); }
+    .btn-outline { background:transparent; border:1px solid var(--border); color:var(--muted); }
+    .btn-outline:hover { border-color:var(--gold); color:var(--gold); }
+
+    /* STAT CARDS ROW */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; margin-bottom:32px; border:1px solid var(--border); }
+    .stat-card { background:var(--panel); padding:24px 28px; border-right:1px solid var(--border); position:relative; overflow:hidden; }
+    .stat-card:last-child { border-right:none; }
+    .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--border); transition:background 0.3s; }
+    .stat-card:hover::before { background:var(--gold); }
+    .stat-icon { font-size:20px; margin-bottom:12px; }
+    .stat-num { font-family:'Cormorant Garamond',serif; font-size:42px; font-weight:700; line-height:1; margin-bottom:4px; }
+    .stat-num.gold { color:var(--gold); }
+    .stat-num.green { color:var(--green); }
+    .stat-num.blue { color:var(--blue); }
+    .stat-num.purple { color:var(--purple); }
+    .stat-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
+    .stat-delta { font-family:'DM Mono',monospace; font-size:10px; color:var(--green); margin-top:6px; }
+    .stat-delta.down { color:var(--red); }
+
+    /* ALERTS STRIP */
+    .alerts-strip { margin-bottom:32px; display:flex; flex-direction:column; gap:8px; }
+    .alert-item { display:flex; align-items:center; gap:16px; padding:14px 20px; border:1px solid var(--border); background:var(--panel); transition:all 0.2s; }
+    .alert-item:hover { border-color:var(--gold); }
+    .alert-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .alert-dot.red { background:var(--red); box-shadow:0 0 8px var(--red); }
+    .alert-dot.orange { background:var(--orange); box-shadow:0 0 8px var(--orange); }
+    .alert-dot.green { background:var(--green); box-shadow:0 0 8px var(--green); }
+    .alert-dot.blue { background:var(--blue); box-shadow:0 0 8px var(--blue); }
+    .alert-text { flex:1; font-size:13px; color:var(--cream); }
+    .alert-text strong { color:var(--gold); }
+    .alert-time { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
+    .alert-action { font-family:'DM Mono',monospace; font-size:10px; color:var(--gold); letter-spacing:0.05em; cursor:none; background:transparent; border:1px solid rgba(201,168,76,0.3); padding:5px 12px; transition:all 0.2s; }
+    .alert-action:hover { background:rgba(201,168,76,0.1); }
+
+    /* GRID LAYOUTS */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:32px; }
+    .three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:32px; }
+    .full-col { margin-bottom:32px; }
+
+    /* PANEL CARD */
+    .card { background:var(--panel); border:1px solid var(--border); padding:28px; }
+    .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .card-title { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); }
+    .card-action { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); cursor:none; background:transparent; border:none; letter-spacing:0.08em; transition:color 0.2s; }
+    .card-action:hover { color:var(--gold); }
+
+    /* STUDENT TABLE */
+    .student-table { width:100%; border-collapse:collapse; }
+    .student-table th { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); padding:8px 12px; text-align:left; border-bottom:1px solid var(--border); }
+    .student-table td { padding:14px 12px; border-bottom:1px solid rgba(42,42,42,0.5); vertical-align:middle; }
+    .student-table tr:last-child td { border-bottom:none; }
+    .student-table tr { transition:background 0.15s; cursor:none; }
+    .student-table tr:hover td { background:rgba(201,168,76,0.04); }
+    .student-table tr.clickable { cursor:none; }
+    .student-name-cell { display:flex; align-items:center; gap:10px; }
+    .student-avatar { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600; font-family:'Cormorant Garamond',serif; flex-shrink:0; }
+    .student-fullname { font-size:13px; color:var(--cream); font-weight:500; }
+    .student-grade { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
+
+    /* MINI PROGRESS BAR */
+    .mini-bar-wrap { display:flex; align-items:center; gap:8px; }
+    .mini-bar { flex:1; height:4px; background:var(--border); border-radius:2px; overflow:hidden; max-width:80px; }
+    .mini-bar-fill { height:100%; border-radius:2px; transition:width 0.6s ease; }
+    .mini-bar-fill.gold { background:var(--gold); }
+    .mini-bar-fill.green { background:var(--green); }
+    .mini-bar-fill.blue { background:var(--blue); }
+    .mini-bar-pct { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); width:32px; text-align:right; }
+
+    /* STATUS PILL */
+    .pill { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; padding:3px 10px; border-radius:2px; display:inline-block; }
+    .pill-green { background:rgba(76,175,80,0.15); color:var(--green); }
+    .pill-orange { background:rgba(240,146,74,0.15); color:var(--orange); }
+    .pill-red { background:rgba(220,80,104,0.15); color:var(--red); }
+    .pill-blue { background:rgba(91,141,238,0.15); color:var(--blue); }
+    .pill-gold { background:rgba(201,168,76,0.15); color:var(--gold); }
+    .pill-muted { background:rgba(107,107,107,0.15); color:var(--muted); }
+
+    /* WHOLE CHILD RADAR */
+    .radar-wrap { display:flex; align-items:center; gap:32px; }
+    .radar-svg { flex-shrink:0; }
+    .radar-legend { display:flex; flex-direction:column; gap:12px; }
+    .radar-item { display:flex; align-items:center; gap:10px; }
+    .radar-color { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .radar-label { font-size:13px; color:var(--cream); }
+    .radar-val { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); margin-left:auto; }
+
+    /* ACTIVITY HEATMAP */
+    .heatmap { display:flex; flex-direction:column; gap:4px; }
+    .heatmap-row { display:flex; gap:4px; align-items:center; }
+    .heatmap-label { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); width:24px; }
+    .heatmap-cell { width:20px; height:20px; border-radius:2px; background:var(--border); transition:all 0.2s; }
+    .heatmap-cell:hover { transform:scale(1.2); }
+    .heatmap-cell.l1 { background:rgba(201,168,76,0.2); }
+    .heatmap-cell.l2 { background:rgba(201,168,76,0.4); }
+    .heatmap-cell.l3 { background:rgba(201,168,76,0.65); }
+    .heatmap-cell.l4 { background:var(--gold); }
+
+    /* CHART BAR */
+    .bar-chart { display:flex; align-items:flex-end; gap:8px; height:80px; }
+    .bar-col { display:flex; flex-direction:column; align-items:center; gap:4px; flex:1; }
+    .bar { width:100%; border-radius:2px 2px 0 0; transition:height 0.6s ease; min-height:4px; }
+    .bar-day { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); }
+
+    /* WHOLE CHILD SCORES */
+    .whole-child-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+    .wc-metric { background:var(--panel2); border:1px solid var(--border); padding:16px; text-align:center; transition:all 0.3s; }
+    .wc-metric:hover { border-color:var(--gold); }
+    .wc-icon { font-size:24px; margin-bottom:8px; }
+    .wc-score { font-family:'Cormorant Garamond',serif; font-size:28px; font-weight:700; line-height:1; margin-bottom:4px; }
+    .wc-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .wc-bar { height:3px; background:var(--border); border-radius:2px; overflow:hidden; }
+    .wc-bar-fill { height:100%; border-radius:2px; }
+
+    /* STUDENT DETAIL PANEL */
+    .student-detail { display:none; }
+    .student-detail.active { display:block; animation:fadeIn 0.3s ease; }
+    .detail-header { display:flex; align-items:center; gap:20px; margin-bottom:32px; padding:28px; background:var(--panel); border:1px solid var(--border); }
+    .detail-avatar { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; font-family:'Cormorant Garamond',serif; font-weight:700; border:2px solid var(--gold); }
+    .detail-info { flex:1; }
+    .detail-name { font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:700; color:var(--white); margin-bottom:4px; }
+    .detail-meta { display:flex; gap:16px; }
+    .detail-meta-item { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
+    .detail-meta-item span { color:var(--gold); }
+    .back-btn { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); background:transparent; border:1px solid var(--border); padding:8px 16px; cursor:none; letter-spacing:0.08em; transition:all 0.2s; }
+    .back-btn:hover { border-color:var(--gold); color:var(--gold); }
+
+    /* CLASS GROUPS */
+    .class-group { margin-bottom:32px; }
+    .class-group-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+    .class-group-name { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:600; color:var(--white); }
+    .class-group-count { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); }
+    .class-group-avg { margin-left:auto; font-family:'DM Mono',monospace; font-size:11px; color:var(--gold); }
+
+    /* STUDENT CARDS GRID */
+    .student-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+    .student-card { background:var(--panel); border:1px solid var(--border); padding:20px; cursor:none; transition:all 0.25s; }
+    .student-card:hover { border-color:var(--gold); transform:translateY(-2px); }
+    .sc-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .sc-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; }
+    .sc-name { font-size:14px; font-weight:500; color:var(--white); margin-bottom:2px; }
+    .sc-grade { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-bottom:12px; }
+    .sc-metrics { display:flex; flex-direction:column; gap:6px; }
+    .sc-metric-row { display:flex; align-items:center; justify-content:space-between; }
+    .sc-metric-label { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:0.05em; }
+    .sc-metric-val { font-family:'DM Mono',monospace; font-size:10px; color:var(--cream); }
+
+    @media(max-width:1100px) {
+      .app { grid-template-columns:1fr; }
+      .sidebar { position:relative; top:0; height:auto; flex-direction:row; flex-wrap:wrap; padding:12px; }
+      .stats-row { grid-template-columns:1fr 1fr; }
+      .two-col { grid-template-columns:1fr; }
+      .whole-child-grid { grid-template-columns:repeat(2,1fr); }
+    }
+    @media(max-width:700px) {
+      .main { padding:20px; }
+      nav { padding:14px 20px; }
+      .nav-center { display:none; }
+      .stats-row { grid-template-columns:1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="chess-bg"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
+    <div class="logo-text">Malachi <span>AI</span></div>
+  </a>
+  <div class="nav-center">
+    <button class="nav-tab active" onclick="showPage('overview')">Overview</button>
+    <button class="nav-tab" onclick="showPage('students')">Students</button>
+    <button class="nav-tab" onclick="showPage('classes')">Classes</button>
+    <button class="nav-tab" onclick="showPage('wholechild')">Whole Child</button>
+  </div>
+  <div class="nav-right">
+    <div class="teacher-info">
+      <div class="teacher-name">Ms. Johnson</div>
+      <div class="teacher-role">Chess Instructor</div>
+    </div>
+    <div class="alert-bell" onclick="showPage('overview')">
+      🔔 <div class="alert-count">4</div>
+    </div>
+  </div>
+</nav>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <button class="sidebar-btn active" onclick="showPage('overview')"><span class="sidebar-icon">⊞</span> Overview</button>
+      <button class="sidebar-btn" onclick="showPage('students')"><span class="sidebar-icon">♟</span> All Students</button>
+      <button class="sidebar-btn" onclick="showPage('classes')"><span class="sidebar-icon">♜</span> Classes</button>
+      <button class="sidebar-btn" onclick="showPage('wholechild')"><span class="sidebar-icon">♛</span> Whole Child</button>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">My Classes</div>
+      <button class="sidebar-btn" onclick="showPage('classes')"><span class="sidebar-icon">🏫</span> Morning Club <span class="class-tag gold">12</span></button>
+      <button class="sidebar-btn" onclick="showPage('classes')"><span class="sidebar-icon">🏫</span> After School A <span class="class-tag gold">9</span></button>
+      <button class="sidebar-btn" onclick="showPage('classes')"><span class="sidebar-icon">🏫</span> After School B <span class="class-tag gold">8</span></button>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Quick Links</div>
+      <button class="sidebar-btn" onclick="window.location='learn.html'"><span class="sidebar-icon">📖</span> Curriculum</button>
+      <button class="sidebar-btn" onclick="window.location='play.html'"><span class="sidebar-icon">♞</span> Play Demo</button>
+      <button class="sidebar-btn" onclick="window.location='index.html'"><span class="sidebar-icon">🏠</span> Home</button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="week-label">This Week</div>
+      <div class="week-days">
+        <div class="week-day active-day"><span>M</span><span style="width:6px;height:6px;border-radius:50%;background:var(--gold);display:block"></span></div>
+        <div class="week-day active-day"><span>T</span><span style="width:6px;height:6px;border-radius:50%;background:var(--gold);display:block"></span></div>
+        <div class="week-day today"><span>W</span></div>
+        <div class="week-day"><span>T</span></div>
+        <div class="week-day"><span>F</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ── OVERVIEW PAGE ── -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Good morning, Ms. Johnson</div>
+          <div class="page-subtitle">Wednesday · 29 students across 3 classes · 4 alerts need your attention</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline">Export Report</button>
+          <button class="btn btn-gold">+ Add Student</button>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon">♟</div>
+          <div class="stat-num gold">29</div>
+          <div class="stat-label">Total Students</div>
+          <div class="stat-delta">↑ 3 this month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📖</div>
+          <div class="stat-num green">847</div>
+          <div class="stat-label">Lessons Completed</div>
+          <div class="stat-delta">↑ 124 this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⏱</div>
+          <div class="stat-num blue">38m</div>
+          <div class="stat-label">Avg Session Length</div>
+          <div class="stat-delta">↑ 6m from last week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🧠</div>
+          <div class="stat-num purple">74</div>
+          <div class="stat-label">Avg Whole Child Score</div>
+          <div class="stat-delta">↑ 5pts this month</div>
+        </div>
+      </div>
+
+      <!-- ALERTS -->
+      <div class="card full-col">
+        <div class="card-header">
+          <div class="card-title">Alerts & Notifications</div>
+          <button class="card-action">Mark all read</button>
+        </div>
+        <div class="alerts-strip">
+          <div class="alert-item">
+            <div class="alert-dot green"></div>
+            <div class="alert-text"><strong>Marcus T.</strong> is ready to advance — completed all Basics lessons with 100% quiz score. Consider moving to Tactics.</div>
+            <div class="alert-time">2h ago</div>
+            <button class="alert-action" onclick="viewStudent('Marcus T.')">View →</button>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot red"></div>
+            <div class="alert-text"><strong>Aisha K.</strong> hasn't logged in for 8 days. Last session ended after only 4 minutes — possible disengagement.</div>
+            <div class="alert-time">8d ago</div>
+            <button class="alert-action" onclick="viewStudent('Aisha K.')">View →</button>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot orange"></div>
+            <div class="alert-text"><strong>Devon R.</strong> is struggling — failed the Fork puzzle 4 times. High impulsivity score detected (moves without thinking).</div>
+            <div class="alert-time">Yesterday</div>
+            <button class="alert-action" onclick="viewStudent('Devon R.')">View →</button>
+          </div>
+          <div class="alert-item">
+            <div class="alert-dot blue"></div>
+            <div class="alert-text"><strong>Zoe M.</strong> has shown a 40% improvement in average thinking time per move over the last 2 weeks — strong attention growth.</div>
+            <div class="alert-time">Today</div>
+            <button class="alert-action" onclick="viewStudent('Zoe M.')">View →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITY + CLASS PROGRESS -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Weekly Activity</div>
+            <button class="card-action">Last 7 days</button>
+          </div>
+          <div class="bar-chart" id="activityChart"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:8px">
+            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">Sessions per day across all students</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Class Progress</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;color:var(--cream)">Morning Club</span>
+                <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)">68%</span>
+              </div>
+              <div class="mini-bar" style="max-width:100%;height:6px"><div class="mini-bar-fill gold" style="width:68%"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;color:var(--cream)">After School A</span>
+                <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)">52%</span>
+              </div>
+              <div class="mini-bar" style="max-width:100%;height:6px"><div class="mini-bar-fill gold" style="width:52%"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                <span style="font-size:13px;color:var(--cream)">After School B</span>
+                <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)">41%</span>
+              </div>
+              <div class="mini-bar" style="max-width:100%;height:6px"><div class="mini-bar-fill gold" style="width:41%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOP STUDENTS + ACTIVITY HEATMAP -->
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Top Students This Week</div>
+          </div>
+          <table class="student-table">
+            <thead><tr><th>Student</th><th>XP</th><th>Lessons</th><th>Status</th></tr></thead>
+            <tbody id="topStudentsTable"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Login Activity Heatmap</div>
+            <button class="card-action">4 weeks</button>
+          </div>
+          <div class="heatmap" id="heatmap"></div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:12px">
+            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">Less</span>
+            <div style="width:14px;height:14px;border-radius:2px;background:var(--border)"></div>
+            <div style="width:14px;height:14px;border-radius:2px" class="heatmap-cell l1"></div>
+            <div style="width:14px;height:14px;border-radius:2px" class="heatmap-cell l2"></div>
+            <div style="width:14px;height:14px;border-radius:2px" class="heatmap-cell l3"></div>
+            <div style="width:14px;height:14px;border-radius:2px" class="heatmap-cell l4"></div>
+            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">More</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STUDENTS PAGE ── -->
+    <div class="page" id="page-students">
+      <div id="studentListView">
+        <div class="page-header">
+          <div>
+            <div class="page-title">All Students</div>
+            <div class="page-subtitle">29 students · Click any student to see their full profile</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-outline">Export CSV</button>
+            <button class="btn btn-gold">+ Add Student</button>
+          </div>
+        </div>
+        <div class="card">
+          <table class="student-table" id="allStudentsTable">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Class</th>
+                <th>Lessons</th>
+                <th>Quiz Avg</th>
+                <th>Time This Week</th>
+                <th>W/L Record</th>
+                <th>Whole Child</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- STUDENT DETAIL VIEW -->
+      <div class="student-detail" id="studentDetailView">
+        <button class="back-btn" onclick="backToStudents()" style="margin-bottom:24px">← Back to Students</button>
+        <div class="detail-header">
+          <div class="detail-avatar" id="detailAvatar"></div>
+          <div class="detail-info">
+            <div class="detail-name" id="detailName"></div>
+            <div class="detail-meta" id="detailMeta"></div>
+          </div>
+          <div id="detailStatusPill"></div>
+        </div>
+        <div class="stats-row" id="detailStats" style="margin-bottom:24px"></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Lesson Progress</div></div>
+            <div id="detailLessons" style="display:flex;flex-direction:column;gap:10px"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Whole Child Metrics</div></div>
+            <div class="whole-child-grid" id="detailWholeChild"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:24px">
+          <div class="card-header"><div class="card-title">Teacher Notes</div></div>
+          <textarea style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--cream);font-family:'Outfit',sans-serif;font-size:14px;padding:16px;resize:vertical;min-height:100px;outline:none;" placeholder="Add private notes about this student..."></textarea>
+          <div style="margin-top:10px"><button class="btn btn-gold">Save Notes</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CLASSES PAGE ── -->
+    <div class="page" id="page-classes">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Classes</div>
+          <div class="page-subtitle">3 active groups · 29 students total</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-gold">+ New Class</button>
+        </div>
+      </div>
+      <div id="classesContent"></div>
+    </div>
+
+    <!-- ── WHOLE CHILD PAGE ── -->
+    <div class="page" id="page-wholechild">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Whole Child Development</div>
+          <div class="page-subtitle">Holistic cognitive & emotional growth metrics — inspired by Waldorf education philosophy</div>
+        </div>
+      </div>
+
+      <!-- PHILOSOPHY BANNER -->
+      <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);padding:24px 28px;margin-bottom:32px;border-left:3px solid var(--gold)">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Malachi AI Philosophy</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--white);line-height:1.4">Chess is not measured by rating alone. Every game develops <em>attention</em>, <em>resilience</em>, <em>creative thinking</em>, and <em>emotional regulation</em> — the skills modern education overlooks. These metrics track the whole child.</div>
+      </div>
+
+      <!-- CLASS AVERAGE WHOLE CHILD -->
+      <div class="card full-col" style="margin-bottom:32px">
+        <div class="card-header">
+          <div class="card-title">Class Average — Whole Child Scores</div>
+          <button class="card-action">This Month</button>
+        </div>
+        <div class="whole-child-grid" id="classWholeChild"></div>
+      </div>
+
+      <!-- INDIVIDUAL BREAKDOWN -->
+      <div class="card full-col">
+        <div class="card-header">
+          <div class="card-title">Individual Whole Child Scores</div>
+        </div>
+        <table class="student-table" id="wholeChildTable">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>🎯 Focus</th>
+              <th>💪 Resilience</th>
+              <th>🧩 Creativity</th>
+              <th>😌 Regulation</th>
+              <th>⚡ Impulse Ctrl</th>
+              <th>📈 Growth</th>
+              <th>Overall</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<script>
+// ── CURSOR ──
+const cur = document.getElementById('cursor'), ring = document.getElementById('cursorRing');
+document.addEventListener('mousemove', e => {
+  cur.style.left = e.clientX+'px'; cur.style.top = e.clientY+'px';
+  setTimeout(() => { ring.style.left = e.clientX+'px'; ring.style.top = e.clientY+'px'; }, 80);
+});
+
+// ── DATA ──
+const COLORS = ['#c9a84c','#5b8dee','#4caf50','#9c6fe4','#f0924a','#e05068','#26c6da','#ef5350','#66bb6a','#ab47bc'];
+const CLASSES = ['Morning Club','After School A','After School B'];
+
+const STUDENTS = [
+  { name:'Marcus T.',   grade:'6th', class:'Morning Club',   lessons:10, quizAvg:98, timeWk:'2h 40m', wins:8, losses:2, status:'excelling',   wc:{focus:92,resilience:88,creativity:85,regulation:90,impulse:86,growth:94} },
+  { name:'Zoe M.',      grade:'4th', class:'Morning Club',   lessons:8,  quizAvg:87, timeWk:'2h 10m', wins:6, losses:4, status:'on-track',    wc:{focus:88,resilience:76,creativity:91,regulation:82,impulse:79,growth:85} },
+  { name:'Jordan B.',   grade:'5th', class:'Morning Club',   lessons:7,  quizAvg:81, timeWk:'1h 55m', wins:5, losses:5, status:'on-track',    wc:{focus:75,resilience:80,creativity:77,regulation:74,impulse:72,growth:78} },
+  { name:'Devon R.',    grade:'7th', class:'After School A', lessons:4,  quizAvg:54, timeWk:'1h 20m', wins:2, losses:8, status:'struggling',  wc:{focus:48,resilience:55,creativity:62,regulation:44,impulse:38,growth:52} },
+  { name:'Aisha K.',    grade:'5th', class:'After School A', lessons:2,  quizAvg:60, timeWk:'0h 12m', wins:1, losses:4, status:'inactive',    wc:{focus:55,resilience:60,creativity:58,regulation:62,impulse:55,growth:45} },
+  { name:'Caleb W.',    grade:'6th', class:'After School A', lessons:6,  quizAvg:75, timeWk:'1h 45m', wins:4, losses:4, status:'on-track',    wc:{focus:70,resilience:72,creativity:68,regulation:71,impulse:65,growth:73} },
+  { name:'Priya S.',    grade:'8th', class:'After School B', lessons:9,  quizAvg:91, timeWk:'2h 20m', wins:7, losses:2, status:'excelling',   wc:{focus:89,resilience:85,creativity:88,regulation:87,impulse:84,growth:91} },
+  { name:'Isaiah M.',   grade:'4th', class:'After School B', lessons:5,  quizAvg:70, timeWk:'1h 30m', wins:3, losses:5, status:'on-track',    wc:{focus:65,resilience:68,creativity:72,regulation:64,impulse:60,growth:67} },
+  { name:'Luna C.',     grade:'5th', class:'Morning Club',   lessons:8,  quizAvg:83, timeWk:'2h 00m', wins:5, losses:4, status:'on-track',    wc:{focus:80,resilience:77,creativity:84,regulation:79,impulse:75,growth:82} },
+  { name:'Theo A.',     grade:'7th', class:'After School B', lessons:3,  quizAvg:65, timeWk:'0h 55m', wins:2, losses:6, status:'struggling',  wc:{focus:55,resilience:58,creativity:60,regulation:52,impulse:48,growth:56} },
+];
+
+function statusPill(s) {
+  const map = { excelling:'pill-gold', 'on-track':'pill-green', struggling:'pill-orange', inactive:'pill-red' };
+  const labels = { excelling:'Excelling ⭐', 'on-track':'On Track', struggling:'Needs Help', inactive:'Inactive' };
+  return `<span class="pill ${map[s]}">${labels[s]}</span>`;
+}
+
+function wcColor(score) {
+  if (score >= 85) return 'var(--green)';
+  if (score >= 70) return 'var(--gold)';
+  if (score >= 55) return 'var(--orange)';
+  return 'var(--red)';
+}
+
+function wcOverall(wc) {
+  const vals = Object.values(wc);
+  return Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
+}
+
+function avatarColor(i) { return COLORS[i % COLORS.length]; }
+function initials(name) { return name.split(' ').map(n => n[0]).join(''); }
+
+// ── PAGE SWITCHING ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const tabs = { overview:0, students:1, classes:2, wholechild:3 };
+  document.querySelectorAll('.nav-tab')[tabs[id]]?.classList.add('active');
+  document.querySelectorAll('.sidebar-btn')[tabs[id]]?.classList.add('active');
+}
+
+// ── OVERVIEW: ACTIVITY CHART ──
+function buildActivityChart() {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const vals = [18, 22, 28, 0, 0, 8, 4];
+  const max = Math.max(...vals);
+  const chart = document.getElementById('activityChart');
+  chart.innerHTML = days.map((d, i) => `
+    <div class="bar-col">
+      <div class="bar" style="height:${vals[i] ? (vals[i]/max*72) : 4}px;background:${i===2?'var(--gold)':'rgba(201,168,76,0.3)'}"></div>
+      <div class="bar-day">${d}</div>
+    </div>`).join('');
+}
+
+// ── OVERVIEW: HEATMAP ──
+function buildHeatmap() {
+  const days = ['Mon','Tue','Wed','Thu','Fri'];
+  const hm = document.getElementById('heatmap');
+  const levels = [[0,1,2,3,2,1,0,2,3,2,1,0,2,3,2,1,0,2,3,2,0,1,2,3,2,1,0,2],[1,2,3,2,1,0,2,3,2,1,0,2,3,2,1,0,2,3,2,1,2,3,2,1,0,2,3,2],[2,3,2,1,0,2,3,1,1,0,2,3,2,1,0,0,2,3,2,1,2,1,2,1,0,2,3,2],[0,1,2,1,0,2,3,2,0,0,2,3,2,1,0,2,3,2,1,0,2,3,2,1,0,0,2,3],[1,2,3,2,1,0,2,3,2,1,0,0,2,1,0,2,3,2,1,0,2,3,2,1,0,2,0,2]];
+  hm.innerHTML = days.map((d,i) => `
+    <div class="heatmap-row">
+      <div class="heatmap-label">${d}</div>
+      ${levels[i].map(l => `<div class="heatmap-cell ${l>0?'l'+l:''}" title="${l} sessions"></div>`).join('')}
+    </div>`).join('');
+}
+
+// ── OVERVIEW: TOP STUDENTS ──
+function buildTopStudents() {
+  const top = [...STUDENTS].sort((a,b) => wcOverall(b.wc) - wcOverall(a.wc)).slice(0,5);
+  document.getElementById('topStudentsTable').innerHTML = top.map((s,i) => `
+    <tr onclick="viewStudent('${s.name}')" class="clickable">
+      <td><div class="student-name-cell">
+        <div class="student-avatar" style="background:${avatarColor(i)}22;color:${avatarColor(i)}">${initials(s.name)}</div>
+        <div><div class="student-fullname">${s.name}</div><div class="student-grade">${s.grade} · ${s.class}</div></div>
+      </div></td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--gold)">${s.lessons * 75 + s.quizAvg * 2} XP</td>
+      <td><div class="mini-bar-wrap"><div class="mini-bar"><div class="mini-bar-fill gold" style="width:${s.lessons*10}%"></div></div><span class="mini-bar-pct">${s.lessons}/10</span></div></td>
+      <td>${statusPill(s.status)}</td>
+    </tr>`).join('');
+}
+
+// ── ALL STUDENTS TABLE ──
+function buildAllStudents() {
+  document.querySelector('#allStudentsTable tbody').innerHTML = STUDENTS.map((s,i) => `
+    <tr onclick="viewStudent('${s.name}')" class="clickable">
+      <td><div class="student-name-cell">
+        <div class="student-avatar" style="background:${avatarColor(i)}22;color:${avatarColor(i)}">${initials(s.name)}</div>
+        <div><div class="student-fullname">${s.name}</div><div class="student-grade">${s.grade}</div></div>
+      </div></td>
+      <td><span style="font-size:12px;color:var(--muted)">${s.class}</span></td>
+      <td><div class="mini-bar-wrap"><div class="mini-bar"><div class="mini-bar-fill gold" style="width:${s.lessons*10}%"></div></div><span class="mini-bar-pct">${s.lessons}/10</span></div></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:12px;color:${s.quizAvg>=80?'var(--green)':s.quizAvg>=60?'var(--gold)':'var(--red)'}">${s.quizAvg}%</span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">${s.timeWk}</span></td>
+      <td><span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--cream)">${s.wins}W / ${s.losses}L</span></td>
+      <td>
+        <div class="mini-bar-wrap">
+          <div class="mini-bar" style="max-width:60px"><div class="mini-bar-fill" style="width:${wcOverall(s.wc)}%;background:${wcColor(wcOverall(s.wc))}"></div></div>
+          <span class="mini-bar-pct" style="color:${wcColor(wcOverall(s.wc))}">${wcOverall(s.wc)}</span>
+        </div>
+      </td>
+      <td>${statusPill(s.status)}</td>
+    </tr>`).join('');
+}
+
+// ── STUDENT DETAIL ──
+function viewStudent(name) {
+  const s = STUDENTS.find(x => x.name === name);
+  if (!s) return;
+  const i = STUDENTS.indexOf(s);
+  showPage('students');
+  document.getElementById('studentListView').style.display = 'none';
+  const dv = document.getElementById('studentDetailView');
+  dv.classList.add('active');
+
+  document.getElementById('detailAvatar').textContent = initials(s.name);
+  document.getElementById('detailAvatar').style.cssText += `background:${avatarColor(i)}22;color:${avatarColor(i)}`;
+  document.getElementById('detailName').textContent = s.name;
+  document.getElementById('detailMeta').innerHTML = `
+    <div class="detail-meta-item">Grade <span>${s.grade}</span></div>
+    <div class="detail-meta-item">Class <span>${s.class}</span></div>
+    <div class="detail-meta-item">W/L <span>${s.wins}–${s.losses}</span></div>
+    <div class="detail-meta-item">Time This Week <span>${s.timeWk}</span></div>`;
+  document.getElementById('detailStatusPill').innerHTML = statusPill(s.status);
+
+  document.getElementById('detailStats').innerHTML = `
+    <div class="stat-card"><div class="stat-icon">📖</div><div class="stat-num gold">${s.lessons}/10</div><div class="stat-label">Lessons Done</div></div>
+    <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-num ${s.quizAvg>=80?'green':s.quizAvg>=60?'gold':'red'}">${s.quizAvg}%</div><div class="stat-label">Quiz Average</div></div>
+    <div class="stat-card"><div class="stat-icon">♟</div><div class="stat-num blue">${s.wins + s.losses}</div><div class="stat-label">Games Played</div></div>
+    <div class="stat-card"><div class="stat-icon">🧠</div><div class="stat-num purple">${wcOverall(s.wc)}</div><div class="stat-label">Whole Child Score</div></div>`;
+
+  const lessonNames = ['Meet the Pieces','The Chessboard','Check & Checkmate','The Fork','The Pin','The Skewer','Opening Principles',"Scholar's Mate",'King & Pawn Endgames','Rook Endgames'];
+  document.getElementById('detailLessons').innerHTML = lessonNames.map((l,idx) => {
+    const done = idx < s.lessons;
+    const inprog = idx === s.lessons;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(42,42,42,0.5)">
+      <div style="width:20px;height:20px;border-radius:50%;background:${done?'var(--green)':inprog?'rgba(201,168,76,0.3)':'var(--border)'};display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">${done?'✓':inprog?'▶':''}</div>
+      <span style="font-size:13px;color:${done?'var(--muted)':inprog?'var(--cream)':'var(--border)'}">${l}</span>
+      ${done?`<span class="pill pill-green" style="margin-left:auto">Complete</span>`:inprog?`<span class="pill pill-gold" style="margin-left:auto">In Progress</span>`:`<span class="pill pill-muted" style="margin-left:auto">Locked</span>`}
+    </div>`;
+  }).join('');
+
+  const wcLabels = {focus:['🎯','Focus & Attention'],resilience:['💪','Resilience'],creativity:['🧩','Creativity'],regulation:['😌','Emotional Regulation'],impulse:['⚡','Impulse Control'],growth:['📈','Growth Mindset']};
+  document.getElementById('detailWholeChild').innerHTML = Object.entries(s.wc).map(([k,v]) => `
+    <div class="wc-metric">
+      <div class="wc-icon">${wcLabels[k][0]}</div>
+      <div class="wc-score" style="color:${wcColor(v)}">${v}</div>
+      <div class="wc-label">${wcLabels[k][1]}</div>
+      <div class="wc-bar"><div class="wc-bar-fill" style="width:${v}%;background:${wcColor(v)}"></div></div>
+    </div>`).join('');
+}
+
+function backToStudents() {
+  document.getElementById('studentListView').style.display = 'block';
+  document.getElementById('studentDetailView').classList.remove('active');
+}
+
+// ── CLASSES PAGE ──
+function buildClasses() {
+  const grouped = {};
+  STUDENTS.forEach(s => { if (!grouped[s.class]) grouped[s.class] = []; grouped[s.class].push(s); });
+  document.getElementById('classesContent').innerHTML = Object.entries(grouped).map(([cls, students]) => {
+    const avgWC = Math.round(students.reduce((a,s) => a + wcOverall(s.wc), 0) / students.length);
+    return `<div class="class-group">
+      <div class="class-group-header">
+        <div class="class-group-name">${cls}</div>
+        <div class="class-group-count">${students.length} students</div>
+        <div class="class-group-avg">Avg Whole Child: ${avgWC}</div>
+      </div>
+      <div class="student-cards">
+        ${students.map((s,i) => `
+          <div class="student-card" onclick="viewStudentFromClass('${s.name}')">
+            <div class="sc-top">
+              <div class="sc-avatar" style="background:${avatarColor(STUDENTS.indexOf(s))}22;color:${avatarColor(STUDENTS.indexOf(s))}">${initials(s.name)}</div>
+              ${statusPill(s.status)}
+            </div>
+            <div class="sc-name">${s.name}</div>
+            <div class="sc-grade">${s.grade} Grade</div>
+            <div class="sc-metrics">
+              <div class="sc-metric-row"><span class="sc-metric-label">Lessons</span><span class="sc-metric-val">${s.lessons}/10</span></div>
+              <div class="sc-metric-row"><span class="sc-metric-label">Quiz Avg</span><span class="sc-metric-val" style="color:${s.quizAvg>=80?'var(--green)':s.quizAvg>=60?'var(--gold)':'var(--red)'}">${s.quizAvg}%</span></div>
+              <div class="sc-metric-row"><span class="sc-metric-label">Record</span><span class="sc-metric-val">${s.wins}W/${s.losses}L</span></div>
+              <div class="sc-metric-row"><span class="sc-metric-label">Whole Child</span><span class="sc-metric-val" style="color:${wcColor(wcOverall(s.wc))}">${wcOverall(s.wc)}/100</span></div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function viewStudentFromClass(name) {
+  viewStudent(name);
+  showPage('students');
+}
+
+// ── WHOLE CHILD PAGE ──
+function buildWholeChildPage() {
+  const wcLabels = {focus:['🎯','Focus & Attention','Measures how long a student thinks before moving — proxy for sustained attention span.'],resilience:['💪','Resilience','How quickly students recover from blunders and continue playing without giving up.'],creativity:['🧩','Creativity','Tracks unconventional and unexpected moves that show original thinking.'],regulation:['😌','Emotional Regulation','Session completion rate + behavior after losses. High quitters score low.'],impulse:['⚡','Impulse Control','Average move time. Faster impulsive movers score lower. Improves with practice.'],growth:['📈','Growth Mindset','Improvement rate over time. Does the student get better after each session?']};
+  const avgs = {};
+  ['focus','resilience','creativity','regulation','impulse','growth'].forEach(k => {
+    avgs[k] = Math.round(STUDENTS.reduce((a,s) => a+s.wc[k], 0) / STUDENTS.length);
+  });
+  document.getElementById('classWholeChild').innerHTML = Object.entries(wcLabels).map(([k,[icon,label,desc]]) => `
+    <div class="wc-metric" style="text-align:left;padding:20px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span style="font-size:20px">${icon}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold)">${label}</span>
+      </div>
+      <div class="wc-score" style="color:${wcColor(avgs[k])};text-align:left">${avgs[k]}<span style="font-size:16px;color:var(--muted)">/100</span></div>
+      <div class="wc-bar" style="margin:8px 0"><div class="wc-bar-fill" style="width:${avgs[k]}%;background:${wcColor(avgs[k])}"></div></div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.5;font-weight:300">${desc}</div>
+    </div>`).join('');
+
+  document.querySelector('#wholeChildTable tbody').innerHTML = STUDENTS.map((s,i) => `
+    <tr onclick="viewStudent('${s.name}')" class="clickable">
+      <td><div class="student-name-cell">
+        <div class="student-avatar" style="background:${avatarColor(i)}22;color:${avatarColor(i)};width:28px;height:28px;font-size:12px">${initials(s.name)}</div>
+        <span style="font-size:13px;color:var(--cream)">${s.name}</span>
+      </div></td>
+      ${['focus','resilience','creativity','regulation','impulse','growth'].map(k => `
+        <td><span style="font-family:'DM Mono',monospace;font-size:12px;color:${wcColor(s.wc[k])}">${s.wc[k]}</span></td>`).join('')}
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div class="mini-bar" style="max-width:50px"><div class="mini-bar-fill" style="width:${wcOverall(s.wc)}%;background:${wcColor(wcOverall(s.wc))}"></div></div>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;color:${wcColor(wcOverall(s.wc))};font-weight:500">${wcOverall(s.wc)}</span>
+      </div></td>
+    </tr>`).join('');
+}
+
+// ── INIT ──
+buildActivityChart();
+buildHeatmap();
+buildTopStudents();
+buildAllStudents();
+buildClasses();
+buildWholeChildPage();
+</script>
+</body>
+</html>
