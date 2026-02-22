@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Malachi AI — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:  #0a0a0a;
+      --panel:  #161616;
+      --panel2: #1c1c1c;
+      --border: #2a2a2a;
+      --gold:   #c9a84c;
+      --gold2:  #e8c97a;
+      --cream:  #f5f0e8;
+      --muted:  #6b6b6b;
+      --white:  #ffffff;
+      --green:  #4caf50;
+      --red:    #e05068;
+    }
+    body { background:var(--black); color:var(--cream); font-family:'Outfit',sans-serif; min-height:100vh; display:flex; flex-direction:column; cursor:none; overflow-x:hidden; }
+    .cursor { position:fixed; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:difference; }
+    .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid var(--gold); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:0.4; transition:left 0.12s ease-out,top 0.12s ease-out; }
+    .chess-bg { position:fixed; inset:0; z-index:0; opacity:0.025; background-image:repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%); background-size:48px 48px; pointer-events:none; }
+
+    /* LAYOUT */
+    .page { position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; min-height:100vh; }
+
+    /* LEFT PANEL */
+    .left-panel { background:var(--panel); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:48px; position:relative; overflow:hidden; }
+    .left-panel::before { content:'♔'; position:absolute; font-size:320px; color:rgba(201,168,76,0.04); bottom:-40px; right:-40px; line-height:1; pointer-events:none; }
+    .left-logo { display:flex; align-items:center; gap:10px; margin-bottom:auto; text-decoration:none; }
+    .logo-icon { width:32px; height:32px; display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+    .logo-icon span { background:var(--gold); border-radius:1px; display:block; }
+    .logo-icon span:nth-child(2),.logo-icon span:nth-child(3) { background:transparent; border:1px solid var(--gold); }
+    .logo-text { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:700; color:var(--white); }
+    .logo-text span { color:var(--gold); }
+
+    .left-content { margin-top:auto; padding-bottom:40px; }
+    .left-eyebrow { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.25em; text-transform:uppercase; color:var(--gold); margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+    .left-eyebrow::before { content:''; width:24px; height:1px; background:var(--gold); }
+    .left-headline { font-family:'Cormorant Garamond',serif; font-size:clamp(36px,4vw,56px); font-weight:700; line-height:0.95; color:var(--white); margin-bottom:20px; }
+    .left-headline em { color:var(--gold); font-style:italic; display:block; }
+    .left-sub { font-size:15px; line-height:1.7; color:var(--muted); max-width:380px; font-weight:300; margin-bottom:36px; }
+
+    .features { display:flex; flex-direction:column; gap:12px; }
+    .feature { display:flex; align-items:center; gap:12px; }
+    .feature-icon { width:32px; height:32px; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.2); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+    .feature-text { font-size:13px; color:var(--muted); font-weight:300; }
+    .feature-text strong { color:var(--cream); font-weight:500; }
+
+    /* RIGHT PANEL - FORM */
+    .right-panel { display:flex; align-items:center; justify-content:center; padding:48px; }
+    .form-box { width:100%; max-width:420px; }
+    .form-tabs { display:flex; gap:0; margin-bottom:36px; border:1px solid var(--border); }
+    .form-tab { flex:1; background:transparent; border:none; color:var(--muted); font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; padding:12px; cursor:none; transition:all 0.2s; }
+    .form-tab.active { background:var(--gold); color:var(--black); font-weight:500; }
+    .form-tab:hover:not(.active) { color:var(--cream); background:rgba(255,255,255,0.03); }
+
+    .form-title { font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:700; color:var(--white); margin-bottom:6px; }
+    .form-subtitle { font-size:14px; color:var(--muted); margin-bottom:32px; font-weight:300; }
+
+    .form-group { margin-bottom:16px; }
+    .form-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:8px; }
+    .form-input { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--cream); font-family:'Outfit',sans-serif; font-size:14px; padding:13px 16px; outline:none; transition:border-color 0.2s; }
+    .form-input:focus { border-color:var(--gold); }
+    .form-input::placeholder { color:var(--muted); }
+    .form-input-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+    .form-select { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--cream); font-family:'Outfit',sans-serif; font-size:14px; padding:13px 16px; outline:none; appearance:none; cursor:none; transition:border-color 0.2s; }
+    .form-select:focus { border-color:var(--gold); }
+    .form-select option { background:var(--panel2); }
+
+    .role-selector { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:16px; }
+    .role-btn { background:var(--panel2); border:1px solid var(--border); color:var(--muted); font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.08em; text-transform:uppercase; padding:12px 8px; cursor:none; transition:all 0.2s; text-align:center; }
+    .role-btn:hover { border-color:var(--gold); color:var(--cream); }
+    .role-btn.selected { border-color:var(--gold); background:rgba(201,168,76,0.1); color:var(--gold); }
+    .role-icon { font-size:18px; display:block; margin-bottom:4px; }
+
+    .btn-submit { width:100%; background:var(--gold); color:var(--black); border:none; padding:15px; font-family:'DM Mono',monospace; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; font-weight:500; cursor:none; transition:all 0.25s; margin-top:8px; }
+    .btn-submit:hover { background:var(--gold2); transform:translateY(-1px); }
+    .btn-submit:disabled { opacity:0.5; transform:none; }
+
+    .form-divider { display:flex; align-items:center; gap:12px; margin:20px 0; }
+    .form-divider-line { flex:1; height:1px; background:var(--border); }
+    .form-divider-text { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.1em; }
+
+    .form-message { padding:12px 16px; font-size:13px; line-height:1.5; margin-bottom:16px; display:none; }
+    .form-message.show { display:block; }
+    .form-message.error { background:rgba(220,80,104,0.1); border:1px solid var(--red); color:#f48fb1; }
+    .form-message.success { background:rgba(76,175,80,0.1); border:1px solid var(--green); color:#81c784; }
+
+    .form-footer { text-align:center; margin-top:20px; font-size:13px; color:var(--muted); }
+    .form-footer a { color:var(--gold); text-decoration:none; }
+    .form-footer a:hover { text-decoration:underline; }
+
+    /* LOADING SPINNER */
+    .spinner { width:16px; height:16px; border:2px solid rgba(0,0,0,0.3); border-top-color:var(--black); border-radius:50%; animation:spin 0.7s linear infinite; display:inline-block; vertical-align:middle; margin-right:8px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* SUCCESS STATE */
+    .success-screen { display:none; text-align:center; padding:40px 20px; }
+    .success-screen.show { display:block; animation:fadeIn 0.5s ease; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .success-icon { font-size:64px; margin-bottom:20px; }
+    .success-title { font-family:'Cormorant Garamond',serif; font-size:36px; font-weight:700; color:var(--gold); margin-bottom:12px; }
+    .success-msg { font-size:14px; color:var(--muted); line-height:1.7; margin-bottom:28px; }
+    .btn-go { background:var(--gold); color:var(--black); border:none; padding:14px 36px; font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.1em; text-transform:uppercase; font-weight:500; cursor:none; transition:all 0.2s; text-decoration:none; display:inline-block; }
+    .btn-go:hover { background:var(--gold2); }
+
+    @media(max-width:768px) {
+      .page { grid-template-columns:1fr; }
+      .left-panel { display:none; }
+      .right-panel { padding:32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="chess-bg"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<div class="page">
+
+  <!-- LEFT -->
+  <div class="left-panel">
+    <a href="index.html" class="left-logo">
+      <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
+      <div class="logo-text">Malachi <span>AI</span></div>
+    </a>
+    <div class="left-content">
+      <div class="left-eyebrow">Chess × AI × Education</div>
+      <h1 class="left-headline">Your journey<br><em>starts here.</em></h1>
+      <p class="left-sub">Join Malachi AI and develop critical thinking, focus, and resilience through the world's greatest game.</p>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-icon">♟</div>
+          <div class="feature-text"><strong>Play & Learn</strong> — Structured lessons and real games against AI</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🧠</div>
+          <div class="feature-text"><strong>AI Coaching</strong> — Personalized feedback after every game</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">📈</div>
+          <div class="feature-text"><strong>Track Growth</strong> — Chess rating and whole child development scores</div>
+        </div>
+        <div class="feature">
+          <div class="feature-icon">🏅</div>
+          <div class="feature-text"><strong>Earn Badges</strong> — Unlock achievements as you master new skills</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <div class="form-box">
+
+      <!-- TABS -->
+      <div class="form-tabs">
+        <button class="form-tab active" id="signinTab" onclick="switchTab('signin')">Sign In</button>
+        <button class="form-tab" id="signupTab" onclick="switchTab('signup')">Create Account</button>
+      </div>
+
+      <!-- MESSAGE -->
+      <div class="form-message" id="formMessage"></div>
+
+      <!-- SIGN IN FORM -->
+      <div id="signinForm">
+        <div class="form-title">Welcome back.</div>
+        <div class="form-subtitle">Sign in to continue your chess journey.</div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" id="signinEmail" placeholder="you@example.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" id="signinPassword" placeholder="••••••••"/>
+        </div>
+        <button class="btn-submit" id="signinBtn" onclick="signIn()">Sign In →</button>
+        <div class="form-footer">
+          Don't have an account? <a href="#" onclick="switchTab('signup')">Create one free</a>
+        </div>
+      </div>
+
+      <!-- SIGN UP FORM -->
+      <div id="signupForm" style="display:none">
+        <div class="form-title">Join Malachi AI.</div>
+        <div class="form-subtitle">Create your free account to start learning.</div>
+
+        <div class="form-group">
+          <label class="form-label">I am a...</label>
+          <div class="role-selector">
+            <button class="role-btn selected" id="role-student" onclick="selectRole('student')">
+              <span class="role-icon">♟</span>Student
+            </button>
+            <button class="role-btn" id="role-teacher" onclick="selectRole('teacher')">
+              <span class="role-icon">♛</span>Teacher
+            </button>
+            <button class="role-btn" id="role-parent" onclick="selectRole('parent')">
+              <span class="role-icon">♔</span>Parent
+            </button>
+          </div>
+        </div>
+
+        <div class="form-input-row">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input class="form-input" type="text" id="signupFirst" placeholder="Marcus"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input class="form-input" type="text" id="signupLast" placeholder="T."/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input class="form-input" type="email" id="signupEmail" placeholder="you@example.com"/>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" id="signupPassword" placeholder="Min. 6 characters"/>
+        </div>
+
+        <!-- Student extras -->
+        <div id="studentExtras">
+          <div class="form-input-row">
+            <div class="form-group">
+              <label class="form-label">Grade</label>
+              <select class="form-select" id="signupGrade">
+                <option value="">Select...</option>
+                <option>K</option><option>1st</option><option>2nd</option><option>3rd</option>
+                <option>4th</option><option>5th</option><option>6th</option><option>7th</option>
+                <option>8th</option><option>9th</option><option>10th</option><option>11th</option><option>12th</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Class / Club</label>
+              <select class="form-select" id="signupClass">
+                <option value="">Select...</option>
+                <option>Morning Club</option>
+                <option>After School A</option>
+                <option>After School B</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-submit" id="signupBtn" onclick="signUp()">Create Account →</button>
+        <div class="form-footer">
+          Already have an account? <a href="#" onclick="switchTab('signin')">Sign in</a>
+        </div>
+      </div>
+
+      <!-- SUCCESS SCREEN -->
+      <div class="success-screen" id="successScreen">
+        <div class="success-icon">♔</div>
+        <div class="success-title" id="successTitle">You're in!</div>
+        <div class="success-msg" id="successMsg">Welcome to Malachi AI. Your chess journey starts now.</div>
+        <a href="learn.html" class="btn-go" id="successBtn">Go to Dashboard →</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CURSOR ──
+const cur = document.getElementById('cursor'), ring = document.getElementById('cursorRing');
+document.addEventListener('mousemove', e => {
+  cur.style.left = e.clientX+'px'; cur.style.top = e.clientY+'px';
+  setTimeout(() => { ring.style.left = e.clientX+'px'; ring.style.top = e.clientY+'px'; }, 80);
+});
+
+// ── SUPABASE CONFIG ──
+// 🔑 REPLACE THESE TWO LINES WITH YOUR OWN VALUES FROM SUPABASE → SETTINGS → API
+const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_jwmpkQztilsA5JyrDx1O1w_jQghAceu';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── STATE ──
+let selectedRole = 'student';
+
+// ── TAB SWITCHING ──
+function switchTab(tab) {
+  document.getElementById('signinForm').style.display = tab === 'signin' ? 'block' : 'none';
+  document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('signinTab').classList.toggle('active', tab === 'signin');
+  document.getElementById('signupTab').classList.toggle('active', tab === 'signup');
+  hideMessage();
+}
+
+// ── ROLE SELECTOR ──
+function selectRole(role) {
+  selectedRole = role;
+  ['student','teacher','parent'].forEach(r => {
+    document.getElementById('role-' + r).classList.toggle('selected', r === role);
+  });
+  document.getElementById('studentExtras').style.display = role === 'student' ? 'block' : 'none';
+}
+
+// ── MESSAGES ──
+function showMessage(msg, type) {
+  const el = document.getElementById('formMessage');
+  el.textContent = msg;
+  el.className = 'form-message show ' + type;
+}
+function hideMessage() {
+  document.getElementById('formMessage').className = 'form-message';
+}
+
+function setLoading(btnId, loading, defaultText) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading ? '<span class="spinner"></span>Please wait...' : defaultText;
+}
+
+// ── SIGN IN ──
+async function signIn() {
+  const email = document.getElementById('signinEmail').value.trim();
+  const password = document.getElementById('signinPassword').value;
+  if (!email || !password) { showMessage('Please fill in all fields.', 'error'); return; }
+
+  setLoading('signinBtn', true, 'Sign In →');
+  hideMessage();
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    showMessage(error.message, 'error');
+    setLoading('signinBtn', false, 'Sign In →');
+    return;
+  }
+
+  // Get their profile to redirect correctly
+  const { data: profile } = await sb.from('profiles').select('role').eq('id', data.user.id).single();
+  const role = profile?.role || 'student';
+
+  showSuccess(
+    'Welcome back!',
+    'Redirecting you now...',
+    role === 'teacher' ? 'dashboard.html' : role === 'parent' ? 'dashboard.html' : 'learn.html'
+  );
+}
+
+// ── SIGN UP ──
+async function signUp() {
+  const first = document.getElementById('signupFirst').value.trim();
+  const last = document.getElementById('signupLast').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+
+  if (!first || !last || !email || !password) { showMessage('Please fill in all fields.', 'error'); return; }
+  if (password.length < 6) { showMessage('Password must be at least 6 characters.', 'error'); return; }
+
+  setLoading('signupBtn', true, 'Create Account →');
+  hideMessage();
+
+  // Create auth user
+  const { data, error } = await sb.auth.signUp({ email, password });
+
+  if (error) {
+    showMessage(error.message, 'error');
+    setLoading('signupBtn', false, 'Create Account →');
+    return;
+  }
+
+  const userId = data.user?.id;
+  if (!userId) {
+    showMessage('Account created! Please check your email to confirm your account, then sign in.', 'success');
+    setLoading('signupBtn', false, 'Create Account →');
+    return;
+  }
+
+  // Create profile
+  const grade = document.getElementById('signupGrade')?.value || null;
+  const className = document.getElementById('signupClass')?.value || null;
+
+  await sb.from('profiles').insert({
+    id: userId,
+    username: (first + ' ' + last).trim(),
+    role: selectedRole,
+    grade: grade,
+    class_name: className,
+  });
+
+  // Create progress row for students
+  if (selectedRole === 'student') {
+    await sb.from('progress').insert({ user_id: userId });
+  }
+
+  const dest = selectedRole === 'teacher' ? 'dashboard.html' : selectedRole === 'parent' ? 'dashboard.html' : 'learn.html';
+  showSuccess(
+    'Welcome to Malachi AI!',
+    `Hey ${first}! Your account is ready. Let's start your chess journey.`,
+    dest
+  );
+}
+
+// ── SUCCESS ──
+function showSuccess(title, msg, dest) {
+  document.getElementById('signinForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('formMessage').className = 'form-message';
+  document.querySelector('.form-tabs').style.display = 'none';
+  const ss = document.getElementById('successScreen');
+  document.getElementById('successTitle').textContent = title;
+  document.getElementById('successMsg').textContent = msg;
+  document.getElementById('successBtn').href = dest;
+  document.getElementById('successBtn').textContent = selectedRole === 'teacher' ? 'Go to Dashboard →' : 'Start Learning →';
+  ss.classList.add('show');
+  setTimeout(() => { window.location.href = dest; }, 2500);
+}
+
+// ── CHECK IF ALREADY LOGGED IN ──
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    sb.from('profiles').select('role').eq('id', session.user.id).single().then(({ data }) => {
+      const role = data?.role || 'student';
+      window.location.href = role === 'teacher' || role === 'parent' ? 'dashboard.html' : 'learn.html';
+    });
+  }
+});
+</script>
+</body>
+</html>
