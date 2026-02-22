@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Malachi AI — Learn Chess</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -253,6 +254,7 @@
 </div>
 
 <script>
+ 
 // ── CURSOR ──
 const cursor = document.getElementById('cursor');
 const ring = document.getElementById('cursorRing');
@@ -840,6 +842,7 @@ function completeLesson(idx) {
     addXP(LESSONS[idx].xp);
     document.getElementById('statCompleted').textContent = completed.size;
     checkBadges();
+    saveProgress();
   }
   if (idx + 1 < LESSONS.length) {
     goToLesson(idx + 1);
@@ -863,10 +866,63 @@ function showComplete() {
     </div>`;
 }
 
+// ── SUPABASE ──
+const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
+
 // ── INIT ──
-renderBadges();
-renderSidebar();
-renderLesson(0);
+const { createClient } = supabase.createClient ? supabase : window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function init() {
+  renderBadges();
+  renderSidebar();
+
+  // Check if logged in and load saved progress
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    const { data } = await sb.from('progress')
+      .select('*')
+      .eq('user_id', session.user.id)
+      .single();
+    if (data) {
+      xp = data.xp || 0;
+      completed = new Set(
+        Array.from({length: data.lessons_completed}, (_, i) => i)
+      );
+      earnedBadges = new Set(data.badges || []);
+      document.getElementById('statCompleted').textContent = completed.size;
+      document.getElementById('statXP').textContent = xp;
+      document.getElementById('statBadges').textContent = earnedBadges.size;
+      const pct = Math.min(100, (xp / 1000) * 100);
+      document.getElementById('xpFill').style.width = pct + '%';
+      document.getElementById('xpLabel').textContent = xp + ' XP';
+    }
+  }
+
+  renderLesson(currentLesson);
+}
+
+async function saveProgress() {
+  console.log('saveProgress called');
+  const { data: { session }, error: sessionError } = await sb.auth.getSession();
+  console.log('session:', session);
+  console.log('session error:', sessionError);
+  if (!session) {
+    console.log('no session found, not saving');
+    return;
+  }
+  const { data, error } = await sb.from('progress').update({
+    lessons_completed: completed.size,
+    xp: xp,
+    badges: [...earnedBadges],
+    updated_at: new Date().toISOString()
+  }).eq('user_id', session.user.id);
+  console.log('save result:', data);
+  console.log('save error:', error);
+}
+
+init();
 </script>
 </body>
 </html>
