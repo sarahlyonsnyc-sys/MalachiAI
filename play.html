@@ -52,7 +52,9 @@
     .nav-right { display:flex; align-items:center; gap:20px; }
     .nav-back { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:color 0.2s; }
     .nav-back:hover { color:var(--gold); }
-    .difficulty-select { background:var(--panel); border:1px solid var(--border); color:var(--cream); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; padding:8px 14px; cursor:none; outline:none; appearance:none; }
+    .diff-option { padding:12px 16px; cursor:pointer; border-bottom:1px solid #222; transition:background 0.15s; }
+    .diff-option:hover { background:#252525; }
+    .diff-option:last-child { border-bottom:none; }
 
     /* LAYOUT */
     .game-layout { position:relative; z-index:1; display:grid; grid-template-columns:200px 1fr 280px; gap:0; min-height:calc(100vh - 65px); }
@@ -203,12 +205,32 @@
     <a href="index.html" class="nav-back">Home</a>
     <a href="learn.html" class="nav-back">Learn</a>
     <a href="dashboard.html" class="nav-back">Dashboard</a>
-    <select class="difficulty-select" id="difficultySelect" onchange="setDifficulty(this.value)">
-      <option value="1">Beginner</option>
-      <option value="2" selected>Intermediate</option>
-      <option value="3">Advanced</option>
-      <option value="4">Expert</option>
-    </select>
+    <div id="difficultyBtn" onclick="toggleDifficultyMenu()" style="cursor:pointer;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);padding:8px 14px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;color:var(--cream);position:relative;">
+      <span id="difficultyLabel">⚡ NOVICE</span>
+      <span style="color:var(--muted)">▾</span>
+      <div id="difficultyMenu" style="display:none;position:absolute;top:100%;right:0;width:260px;background:#1a1a1a;border:1px solid var(--border);z-index:100;margin-top:4px;">
+        <div class="diff-option" onclick="setDifficulty('novice')" data-level="novice">
+          <div style="color:#4caf50;font-weight:bold">⚡ NOVICE</div>
+          <div style="color:var(--muted);font-size:10px;margin-top:3px">Makes mistakes. Great for beginners learning the basics.</div>
+        </div>
+        <div class="diff-option" onclick="setDifficulty('casual')" data-level="casual">
+          <div style="color:#8bc34a;font-weight:bold">🌱 CASUAL</div>
+          <div style="color:var(--muted);font-size:10px;margin-top:3px">Plays reasonably but misses tactics sometimes.</div>
+        </div>
+        <div class="diff-option" onclick="setDifficulty('club')" data-level="club">
+          <div style="color:#ffc107;font-weight:bold">♟ CLUB PLAYER</div>
+          <div style="color:var(--muted);font-size:10px;margin-top:3px">Solid play. Knows openings and basic tactics.</div>
+        </div>
+        <div class="diff-option" onclick="setDifficulty('advanced')" data-level="advanced">
+          <div style="color:#ff9800;font-weight:bold">🔥 ADVANCED</div>
+          <div style="color:var(--muted);font-size:10px;margin-top:3px">Plays strong chess. Will punish mistakes.</div>
+        </div>
+        <div class="diff-option" onclick="setDifficulty('master')" data-level="master">
+          <div style="color:#f44336;font-weight:bold">👑 MASTER</div>
+          <div style="color:var(--muted);font-size:10px;margin-top:3px">Near-perfect play. Extremely difficult to beat.</div>
+        </div>
+      </div>
+    </div>
   </div>
 </nav>
 
@@ -332,7 +354,16 @@ let gameStartTime = Date.now();   // when current game started
 let gameAbandoned = false;        // did they quit mid-game?
 let possibleMoves = [];
 let lastMove = null;
-let depth = 2; // AI search depth
+// ── DIFFICULTY SYSTEM ──
+const DIFFICULTY_LEVELS = {
+  novice:   { depth: 1, mistakeRate: 0.5,  randomness: 150, thinkMin: 200,  thinkMax: 600,  label: '⚡ NOVICE',      color: '#4caf50' },
+  casual:   { depth: 1, mistakeRate: 0.25, randomness: 80,  thinkMin: 300,  thinkMax: 800,  label: '🌱 CASUAL',      color: '#8bc34a' },
+  club:     { depth: 2, mistakeRate: 0.08, randomness: 30,  thinkMin: 400,  thinkMax: 1000, label: '♟ CLUB PLAYER',  color: '#ffc107' },
+  advanced: { depth: 3, mistakeRate: 0.02, randomness: 10,  thinkMin: 600,  thinkMax: 1400, label: '🔥 ADVANCED',    color: '#ff9800' },
+  master:   { depth: 4, mistakeRate: 0,    randomness: 2,   thinkMin: 800,  thinkMax: 2000, label: '👑 MASTER',      color: '#f44336' },
+};
+let currentDifficulty = 'novice';
+let depth = 1;
 let moveHistory = [];
 
 const PIECE_UNICODE = {
@@ -358,8 +389,30 @@ const TIPS = [
   "In the endgame, the king becomes a powerful fighting piece.",
 ];
 
-function setDifficulty(val) {
-  depth = parseInt(val);
+function toggleDifficultyMenu() {
+  const menu = document.getElementById('difficultyMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(e) {
+  if (!document.getElementById('difficultyBtn').contains(e.target)) {
+    document.getElementById('difficultyMenu').style.display = 'none';
+  }
+});
+
+function setDifficulty(level) {
+  currentDifficulty = level;
+  const cfg = DIFFICULTY_LEVELS[level];
+  depth = cfg.depth;
+  document.getElementById('difficultyLabel').textContent = cfg.label;
+  document.getElementById('difficultyMenu').style.display = 'none';
+  // Show toast
+  const toast = document.createElement('div');
+  toast.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid ${cfg.color};color:${cfg.color};font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;padding:10px 20px;z-index:999;pointer-events:none;`;
+  toast.textContent = `Difficulty set to ${cfg.label}`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
 }
 
 function buildLabels() {
@@ -482,13 +535,16 @@ function makePlayerMove(from, to) {
 }
 
 function aiMove() {
+  const cfg = DIFFICULTY_LEVELS[currentDifficulty];
   document.getElementById('thinkingOverlay').classList.add('active');
   document.getElementById('aiCard').classList.add('active');
   document.getElementById('playerCard').classList.remove('active');
   document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Malachi thinking...';
 
+  const thinkTime = cfg.thinkMin + Math.random() * (cfg.thinkMax - cfg.thinkMin);
+
   setTimeout(() => {
-    const best = getBestMove(depth);
+    const best = getBestMove(cfg.depth, cfg.mistakeRate, cfg.randomness);
     if (best) {
       const move = game.move(best);
       lastMove = { from: move.from, to: move.to };
@@ -500,21 +556,40 @@ function aiMove() {
     document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Your Turn';
     renderBoard();
     checkGameOver();
-    moveStartTime = Date.now(); // reset timer for next player move
-  }, 300 + Math.random() * 400);
+    moveStartTime = Date.now();
+  }, thinkTime);
 }
 
 // ── MINIMAX AI ──
-function getBestMove(searchDepth) {
+function getBestMove(searchDepth, mistakeRate, randomness) {
   const moves = game.moves({ verbose: true });
   if (!moves.length) return null;
+
+  // Mistake: just play a random move
+  if (mistakeRate > 0 && Math.random() < mistakeRate) {
+    return moves[Math.floor(Math.random() * moves.length)];
+  }
+
   let best = null, bestVal = -Infinity;
+  const scored = [];
+
   for (const move of moves) {
     game.move(move);
     const val = -minimax(searchDepth - 1, -Infinity, Infinity, false);
     game.undo();
+    scored.push({ move, val });
     if (val > bestVal) { bestVal = val; best = move; }
   }
+
+  // Randomness: sometimes pick from top N moves instead of always best
+  if (randomness > 0) {
+    scored.sort((a, b) => b.val - a.val);
+    // Add noise to scores
+    const noisy = scored.map(s => ({ move: s.move, val: s.val + (Math.random() - 0.5) * randomness }));
+    noisy.sort((a, b) => b.val - a.val);
+    best = noisy[0].move;
+  }
+
   return best;
 }
 
