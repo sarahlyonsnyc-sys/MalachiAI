@@ -402,29 +402,7 @@
           <div class="card-header">
             <div class="card-title">Class Progress</div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:16px">
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-                <span style="font-size:13px;color:var(--cream)">Morning Club</span>
-                <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)">68%</span>
-              </div>
-              <div class="mini-bar" style="max-width:100%;height:6px"><div class="mini-bar-fill gold" style="width:68%"></div></div>
-            </div>
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-                <span style="font-size:13px;color:var(--cream)">After School A</span>
-                <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)">52%</span>
-              </div>
-              <div class="mini-bar" style="max-width:100%;height:6px"><div class="mini-bar-fill gold" style="width:52%"></div></div>
-            </div>
-            <div>
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-                <span style="font-size:13px;color:var(--cream)">After School B</span>
-                <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)">41%</span>
-              </div>
-              <div class="mini-bar" style="max-width:100%;height:6px"><div class="mini-bar-fill gold" style="width:41%"></div></div>
-            </div>
-          </div>
+          <div id="classProgressBars" style="display:flex;flex-direction:column;gap:16px"></div>
         </div>
       </div>
 
@@ -746,7 +724,43 @@ function backToStudents() {
 }
 
 // ── CLASSES PAGE ──
+function buildClassProgressBars() {
+  const el = document.getElementById('classProgressBars');
+  if (!el) return;
+
+  if (STUDENTS.length === 0) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:8px 0">No students enrolled yet</div>`;
+    return;
+  }
+
+  // Group students by class
+  const grouped = {};
+  STUDENTS.forEach(s => {
+    if (!grouped[s.class]) grouped[s.class] = [];
+    grouped[s.class].push(s);
+  });
+
+  el.innerHTML = Object.entries(grouped).map(([cls, students]) => {
+    const avgLessons = students.reduce((a,s) => a + s.lessons, 0) / students.length;
+    const pct = Math.round((avgLessons / 10) * 100);
+    const color = pct >= 70 ? 'var(--green)' : pct >= 40 ? 'var(--gold)' : 'var(--orange)';
+    return `
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:13px;color:var(--cream)">${cls} <span style="color:var(--muted);font-size:11px">(${students.length} student${students.length!==1?'s':''})</span></span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:${color}">${pct}%</span>
+        </div>
+        <div class="mini-bar" style="max-width:100%;height:6px">
+          <div class="mini-bar-fill gold" style="width:${pct}%;background:${color}"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
 function buildClasses() {
+  // Build class progress bars on overview page
+  buildClassProgressBars();
+
   const grouped = {};
   STUDENTS.forEach(s => { if (!grouped[s.class]) grouped[s.class] = []; grouped[s.class].push(s); });
   document.getElementById('classesContent').innerHTML = Object.entries(grouped).map(([cls, students]) => {
