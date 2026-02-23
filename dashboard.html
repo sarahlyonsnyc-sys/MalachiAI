@@ -341,7 +341,7 @@
       <div class="page-header">
         <div>
           <div class="page-title">Good morning, Ms. Johnson</div>
-          <div class="page-subtitle">Wednesday · 29 students across 3 classes · 4 alerts need your attention</div>
+          <div class="page-subtitle" id="overviewSubtitle">Loading your students...</div>
         </div>
         <div class="page-actions">
           <button class="btn btn-outline">Export Report</button>
@@ -489,7 +489,7 @@
         <div class="page-header">
           <div>
             <div class="page-title">All Students</div>
-            <div class="page-subtitle">29 students · Click any student to see their full profile</div>
+            <div class="page-subtitle" id="studentsSubtitle">Loading students...</div>
           </div>
           <div class="page-actions">
             <button class="btn btn-outline">Export CSV</button>
@@ -550,7 +550,7 @@
       <div class="page-header">
         <div>
           <div class="page-title">Classes</div>
-          <div class="page-subtitle">3 active groups · 29 students total</div>
+          <div class="page-subtitle" id="classesSubtitle">Loading classes...</div>
         </div>
         <div class="page-actions">
           <button class="btn btn-gold">+ New Class</button>
@@ -621,18 +621,7 @@ document.addEventListener('mousemove', e => {
 const COLORS = ['#c9a84c','#5b8dee','#4caf50','#9c6fe4','#f0924a','#e05068','#26c6da','#ef5350','#66bb6a','#ab47bc'];
 const CLASSES = ['Morning Club','After School A','After School B'];
 
-let STUDENTS = [
-  { name:'Marcus T.',   grade:'6th', class:'Morning Club',   lessons:10, quizAvg:98, timeWk:'2h 40m', wins:8, losses:2, status:'excelling',   wc:{focus:92,resilience:88,creativity:85,regulation:90,impulse:86,growth:94} },
-  { name:'Zoe M.',      grade:'4th', class:'Morning Club',   lessons:8,  quizAvg:87, timeWk:'2h 10m', wins:6, losses:4, status:'on-track',    wc:{focus:88,resilience:76,creativity:91,regulation:82,impulse:79,growth:85} },
-  { name:'Jordan B.',   grade:'5th', class:'Morning Club',   lessons:7,  quizAvg:81, timeWk:'1h 55m', wins:5, losses:5, status:'on-track',    wc:{focus:75,resilience:80,creativity:77,regulation:74,impulse:72,growth:78} },
-  { name:'Devon R.',    grade:'7th', class:'After School A', lessons:4,  quizAvg:54, timeWk:'1h 20m', wins:2, losses:8, status:'struggling',  wc:{focus:48,resilience:55,creativity:62,regulation:44,impulse:38,growth:52} },
-  { name:'Aisha K.',    grade:'5th', class:'After School A', lessons:2,  quizAvg:60, timeWk:'0h 12m', wins:1, losses:4, status:'inactive',    wc:{focus:55,resilience:60,creativity:58,regulation:62,impulse:55,growth:45} },
-  { name:'Caleb W.',    grade:'6th', class:'After School A', lessons:6,  quizAvg:75, timeWk:'1h 45m', wins:4, losses:4, status:'on-track',    wc:{focus:70,resilience:72,creativity:68,regulation:71,impulse:65,growth:73} },
-  { name:'Priya S.',    grade:'8th', class:'After School B', lessons:9,  quizAvg:91, timeWk:'2h 20m', wins:7, losses:2, status:'excelling',   wc:{focus:89,resilience:85,creativity:88,regulation:87,impulse:84,growth:91} },
-  { name:'Isaiah M.',   grade:'4th', class:'After School B', lessons:5,  quizAvg:70, timeWk:'1h 30m', wins:3, losses:5, status:'on-track',    wc:{focus:65,resilience:68,creativity:72,regulation:64,impulse:60,growth:67} },
-  { name:'Luna C.',     grade:'5th', class:'Morning Club',   lessons:8,  quizAvg:83, timeWk:'2h 00m', wins:5, losses:4, status:'on-track',    wc:{focus:80,resilience:77,creativity:84,regulation:79,impulse:75,growth:82} },
-  { name:'Theo A.',     grade:'7th', class:'After School B', lessons:3,  quizAvg:65, timeWk:'0h 55m', wins:2, losses:6, status:'struggling',  wc:{focus:55,resilience:58,creativity:60,regulation:52,impulse:48,growth:56} },
-];
+let STUDENTS = [];
 
 function statusPill(s) {
   const map = { excelling:'pill-gold', 'on-track':'pill-green', struggling:'pill-orange', inactive:'pill-red' };
@@ -859,22 +848,22 @@ const { createClient } = supabase.createClient ? supabase : window.supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function initDashboard() {
-  // Check auth
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = 'login.html'; return; }
 
-  // Check role
   const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
   if (!profile || (profile.role !== 'teacher' && profile.role !== 'parent')) {
     window.location.href = 'learn.html'; return;
   }
 
-  // Update teacher name in nav
+  // Update teacher info
   document.querySelector('.teacher-name').textContent = profile.username;
-  document.querySelector('.page-title').textContent = 'Good morning, ' + profile.username;
   document.querySelector('.teacher-avatar-sm').textContent = profile.username.split(' ').map(n=>n[0]).join('').toUpperCase();
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.querySelector('.page-title').textContent = greeting + ', ' + profile.username;
 
-  // Add sign out
+  // Sign out button
   const signOutBtn = document.createElement('button');
   signOutBtn.style.cssText = 'font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--border);padding:8px 14px;cursor:none;transition:all 0.2s;';
   signOutBtn.textContent = 'Sign Out';
@@ -883,65 +872,69 @@ async function initDashboard() {
   signOutBtn.onclick = async () => { await sb.auth.signOut(); window.location.href = 'login.html'; };
   document.querySelector('.nav-right').prepend(signOutBtn);
 
-  // Load real students from Supabase
+  // Load real students
   const { data: profiles } = await sb.from('profiles').select('*').eq('role', 'student');
   const { data: progressRows } = await sb.from('progress').select('*');
+  const studentCount = profiles ? profiles.length : 0;
+  const today = new Date().toLocaleDateString('en-US', {weekday:'long'});
 
   if (profiles && profiles.length > 0) {
-    // Merge profiles with progress
     const realStudents = profiles.map(p => {
       const prog = progressRows?.find(r => r.user_id === p.id) || {};
       const lessons = prog.lessons_completed || 0;
       const xp = prog.xp || 0;
-      const badges = prog.badges || [];
       const gamesPlayed = prog.games_played || 0;
       const gamesWon = prog.games_won || 0;
-
-      // Determine status
       let status = 'on-track';
       if (lessons >= 8) status = 'excelling';
       else if (lessons <= 1 && xp === 0) status = 'inactive';
       else if (xp < 100) status = 'struggling';
-
-      // Generate whole child scores based on real data
       const focusScore = Math.min(99, 40 + lessons * 6 + Math.floor(Math.random() * 10));
       const resilienceScore = Math.min(99, 40 + gamesPlayed * 2 + Math.floor(Math.random() * 10));
       const growthScore = Math.min(99, 30 + xp / 10 + Math.floor(Math.random() * 10));
-
       return {
-        name: p.username,
-        grade: p.grade || 'N/A',
-        class: p.class_name || 'General',
-        lessons,
-        quizAvg: Math.min(99, 50 + lessons * 5),
-        timeWk: `${Math.floor((xp / 100))}h ${Math.floor(Math.random() * 60)}m`,
-        wins: gamesWon,
-        losses: Math.max(0, gamesPlayed - gamesWon),
-        status,
+        name: p.username, grade: p.grade || 'N/A', class: p.class_name || 'General',
+        lessons, quizAvg: Math.min(99, 50 + lessons * 5),
+        timeWk: `${Math.floor(xp/100)}h ${Math.floor(Math.random()*60)}m`,
+        wins: gamesWon, losses: Math.max(0, gamesPlayed - gamesWon), status,
         wc: {
-          focus: focusScore,
-          resilience: resilienceScore,
-          creativity: Math.min(99, 45 + lessons * 4 + Math.floor(Math.random() * 15)),
-          regulation: Math.min(99, 45 + lessons * 4 + Math.floor(Math.random() * 10)),
-          impulse: Math.min(99, 40 + lessons * 5 + Math.floor(Math.random() * 10)),
+          focus: focusScore, resilience: resilienceScore,
+          creativity: Math.min(99, 45 + lessons*4 + Math.floor(Math.random()*15)),
+          regulation: Math.min(99, 45 + lessons*4 + Math.floor(Math.random()*10)),
+          impulse: Math.min(99, 40 + lessons*5 + Math.floor(Math.random()*10)),
           growth: growthScore
         }
       };
     });
-
-    // Replace STUDENTS with real data
     STUDENTS.length = 0;
     realStudents.forEach(s => STUDENTS.push(s));
 
-    // Update overview stats
-    document.querySelector('.stat-num.gold').textContent = STUDENTS.length;
-    const totalLessons = STUDENTS.reduce((a, s) => a + s.lessons, 0);
-    document.querySelectorAll('.stat-num')[1].textContent = totalLessons;
-    const avgWC = Math.round(STUDENTS.reduce((a, s) => a + wcOverall(s.wc), 0) / STUDENTS.length);
-    document.querySelectorAll('.stat-num')[3].textContent = avgWC;
+    const classes = [...new Set(STUDENTS.map(s => s.class).filter(c => c !== 'General'))];
+    const classText = classes.length > 0 ? `${classes.length} class${classes.length>1?'es':''}` : 'your club';
+    document.getElementById('overviewSubtitle').textContent = `${today} · ${studentCount} student${studentCount!==1?'s':''} in ${classText}`;
+    document.getElementById('studentsSubtitle').textContent = `${studentCount} student${studentCount!==1?'s':''} · Click any student to see their full profile`;
+    document.getElementById('classesSubtitle').textContent = `${classes.length||1} group${classes.length>1?'s':''} · ${studentCount} student${studentCount!==1?'s':''} total`;
+
+    document.querySelector('.stat-num.gold').textContent = studentCount;
+    document.querySelectorAll('.stat-num')[1].textContent = STUDENTS.reduce((a,s)=>a+s.lessons,0);
+    document.querySelectorAll('.stat-num')[3].textContent = Math.round(STUDENTS.reduce((a,s)=>a+wcOverall(s.wc),0)/STUDENTS.length);
+
+  } else {
+    document.getElementById('overviewSubtitle').textContent = `${today} · No students yet — share your signup link to get started`;
+    document.getElementById('studentsSubtitle').textContent = 'No students yet';
+    document.getElementById('classesSubtitle').textContent = 'No classes yet';
+    document.querySelector('.stat-num.gold').textContent = '0';
+    document.querySelectorAll('.stat-num')[1].textContent = '0';
+    document.querySelectorAll('.stat-num')[3].textContent = '—';
+    document.querySelector('.alerts-strip').innerHTML = `
+      <div style="padding:32px;text-align:center;border:1px dashed var(--border);">
+        <div style="font-size:32px;margin-bottom:12px">♟</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--white);margin-bottom:8px">No students yet</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:20px">Share this link with your students so they can create accounts:</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;background:var(--panel2);border:1px solid var(--border);padding:12px 20px;color:var(--gold);display:inline-block">${window.location.origin}/login.html</div>
+      </div>`;
   }
 
-  // Build all views with real (or demo) data
   buildActivityChart();
   buildHeatmap();
   buildTopStudents();
