@@ -666,6 +666,495 @@ const LESSONS = [
         <div class="quiz-feedback" id="qfeedback-9"></div>
       </div>`
   },
+
+  // ── OPENINGS: BEGINNER ──
+  {
+    category: 'Openings',
+    title: 'The Italian Game',
+    type: 'Lesson',
+    xp: 100,
+    render: () => `
+      <div class="lesson-eyebrow">Module 5 — Openings: Beginner</div>
+      <h2 class="lesson-title">The Italian Game</h2>
+      <p class="lesson-desc">One of the oldest and most popular openings in chess. Simple, aggressive, and perfect for beginners who want a solid start.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>The Italian Game begins: <strong>1. e4 e5 2. Nf3 Nc6 3. Bc4</strong>. White's bishop aims at the f7 square — the weakest point in Black's position — and prepares to castle quickly.</p>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Why it works</strong><br>
+            All three moves follow opening principles: control the center (e4), develop a piece (Nf3), develop another piece to an aggressive square (Bc4). You're ready to castle by move 5.
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">The Giuoco Piano</strong><br>
+            After Bc4, if Black plays Bc5 — mirroring your setup — you have the Giuoco Piano ("Quiet Game"). Both sides develop smoothly and fight for center control. Great for learning positional chess.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">The Evan's Gambit</strong><br>
+            Feeling aggressive? After 3...Bc5, try 4. b4 — the Evans Gambit! You sacrifice a pawn for rapid development and a powerful center. One of the most exciting openings in chess history.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-10">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">What is White's 3rd move in the Italian Game?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(10,0,1,'Bc4! The bishop aims at f7, follows opening principles, and prepares for early castling. This is the Italian Game.')">
+            <div class="option-letter">A</div> Bc4
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(10,1,1,'Bc4! The bishop aims at f7, follows opening principles, and prepares for early castling. This is the Italian Game.')">
+            <div class="option-letter">B</div> d4
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(10,2,1,'Bc4! The bishop aims at f7, follows opening principles, and prepares for early castling. This is the Italian Game.')">
+            <div class="option-letter">C</div> Bb5
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(10,3,1,'Bc4! The bishop aims at f7, follows opening principles, and prepares for early castling. This is the Italian Game.')">
+            <div class="option-letter">D</div> Nc3
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-10"></div>
+      </div>`
+  },
+  {
+    category: 'Openings',
+    title: 'The Spanish Opening',
+    type: 'Lesson',
+    xp: 100,
+    render: () => `
+      <div class="lesson-eyebrow">Module 5 — Openings: Beginner</div>
+      <h2 class="lesson-title">The Spanish Opening (Ruy López)</h2>
+      <p class="lesson-desc">The most played opening at the highest levels of chess for 500 years. Subtle, deep, and incredibly rich in strategy.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>The Spanish begins: <strong>1. e4 e5 2. Nf3 Nc6 3. Bb5</strong>. Instead of attacking f7 directly, White puts indirect pressure on Black's e5 pawn by threatening the knight that defends it.</p>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">The Big Idea</strong><br>
+            Bb5 pins or threatens the Nc6. If the knight moves, the e5 pawn loses its defender. White isn't winning the pawn immediately — it's a long-term squeeze that gives White a space advantage.
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">The Marshall Attack</strong><br>
+            Black's most aggressive response: sacrifice a pawn early for a massive attack. The resulting positions are razor-sharp and have been played by World Champions for over 100 years.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">Why the pros play it</strong><br>
+            Magnus Carlsen, Garry Kasparov, and Bobby Fischer all used the Spanish as their main weapon with White. It gives you a small but lasting edge if you know the plans.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-11">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">What is the key idea behind Bb5 in the Spanish Opening?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(11,0,2,'Correct! Bb5 pressures the Nc6, which defends the e5 pawn. It is a long-term strategic threat, not an immediate capture.')">
+            <div class="option-letter">A</div> To immediately capture the e5 pawn
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(11,1,2,'Correct! Bb5 pressures the Nc6, which defends the e5 pawn. It is a long-term strategic threat, not an immediate capture.')">
+            <div class="option-letter">B</div> To pressure the knight defending e5
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(11,2,2,'Correct! Bb5 pressures the Nc6, which defends the e5 pawn. It is a long-term strategic threat, not an immediate capture.')">
+            <div class="option-letter">C</div> To attack f7 directly
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-11"></div>
+      </div>`
+  },
+
+  // ── OPENINGS: ADVANCED ──
+  {
+    category: 'Openings',
+    title: "The Sicilian Defense",
+    type: 'Lesson',
+    xp: 125,
+    render: () => `
+      <div class="lesson-eyebrow">Module 6 — Openings: Advanced</div>
+      <h2 class="lesson-title">The Sicilian Defense</h2>
+      <p class="lesson-desc">The most popular and combative response to 1. e4. Black fights for the center asymmetrically — and creates winning chances from the very first move.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>After <strong>1. e4 c5</strong>, Black doesn't mirror White's center control — they undermine it. The c5 pawn fights for d4 without giving White a free tempo with e5.</p>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Why Black loves the Sicilian</strong><br>
+            The positions are unbalanced — White often attacks kingside while Black counterattacks queenside. Both sides play for a win, making it perfect for players who hate draws.
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">The Najdorf Variation</strong><br>
+            After 1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 a6 — Bobby Fischer called it "best by test." The a6 move prevents Bb5 and prepares b5. Kasparov's main weapon for decades.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">The Dragon Variation</strong><br>
+            Black fianchettoes the bishop to g7, creating a powerful diagonal aimed at White's queenside. One of the sharpest openings in chess — both sides attack as fast as possible.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-12">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">What is Black's first move in the Sicilian Defense?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(12,0,1,'1...c5! The Sicilian. By playing c5 instead of e5, Black fights for d4 without giving White a symmetrical position. The most popular response to 1. e4 at all levels.')">
+            <div class="option-letter">A</div> 1...e5
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(12,1,1,'1...c5! The Sicilian. By playing c5 instead of e5, Black fights for d4 without giving White a symmetrical position. The most popular response to 1. e4 at all levels.')">
+            <div class="option-letter">B</div> 1...c5
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(12,2,1,'1...c5! The Sicilian. By playing c5 instead of e5, Black fights for d4 without giving White a symmetrical position. The most popular response to 1. e4 at all levels.')">
+            <div class="option-letter">C</div> 1...d5
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(12,3,1,'1...c5! The Sicilian. By playing c5 instead of e5, Black fights for d4 without giving White a symmetrical position. The most popular response to 1. e4 at all levels.')">
+            <div class="option-letter">D</div> 1...Nf6
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-12"></div>
+      </div>`
+  },
+  {
+    category: 'Openings',
+    title: "The Queen's Gambit",
+    type: 'Lesson',
+    xp: 125,
+    render: () => `
+      <div class="lesson-eyebrow">Module 6 — Openings: Advanced</div>
+      <h2 class="lesson-title">The Queen's Gambit</h2>
+      <p class="lesson-desc">Not actually a gambit — it's a positional powerhouse used by every World Champion. Learn why 1. d4 openings are just as exciting as 1. e4.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>The Queen's Gambit: <strong>1. d4 d5 2. c4</strong>. White offers a pawn on c4. If Black takes it (2...dxc4), White gets a big center with 3. e4. If Black declines, a rich strategic battle begins.</p>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Accepted vs Declined</strong><br>
+            <strong>Accepted (QGA):</strong> Black takes the pawn and tries to hold it. White gets the center and attacks.<br>
+            <strong>Declined (QGD):</strong> Black holds the center with ...e6. Solid and classical — played by World Champions for 150 years.
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">The Slav Defense</strong><br>
+            After 1.d4 d5 2.c4 c6 — Black supports the d5 pawn with the c-pawn, freeing the c8 bishop. One of the most solid defenses in chess.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">Pop Culture Note</strong><br>
+            The Netflix show "The Queen's Gambit" is named after this opening. Beth Harmon plays it throughout the series — and now millions of new players know what it is!
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-13">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">In the Queen's Gambit, what happens if Black accepts and takes on c4?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(13,0,0,'Correct! If Black takes the pawn, White plays e4 and gets a powerful pawn center. That is why the Queen&apos;s Gambit is not a true gambit — White almost always gets the pawn back.')">
+            <div class="option-letter">A</div> White builds a big center with e4
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(13,1,0,'Correct! If Black takes the pawn, White plays e4 and gets a powerful pawn center. That is why the Queen&apos;s Gambit is not a true gambit — White almost always gets the pawn back.')">
+            <div class="option-letter">B</div> Black keeps the pawn permanently
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(13,2,0,'Correct! If Black takes the pawn, White plays e4 and gets a powerful pawn center. That is why the Queen&apos;s Gambit is not a true gambit — White almost always gets the pawn back.')">
+            <div class="option-letter">C</div> White loses material
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-13"></div>
+      </div>`
+  },
+
+  // ── TACTICS: MORE PATTERNS ──
+  {
+    category: 'Tactics',
+    title: 'The Discovered Attack',
+    type: 'Lesson',
+    xp: 100,
+    render: () => `
+      <div class="lesson-eyebrow">Module 7 — Tactics: More Patterns</div>
+      <h2 class="lesson-title">The Discovered Attack</h2>
+      <p class="lesson-desc">Move one piece to unleash a surprise attack from another. Discovered attacks are devastating because the opponent has to deal with two threats at once.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>A <strong>discovered attack</strong> happens when you move a piece out of the way, revealing an attack from the piece behind it. The moving piece can also make its own threat — creating a double attack.</p>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Discovered Check</strong><br>
+            The most powerful version: you move a piece to reveal a check from another piece. While the opponent must deal with the check, your moving piece can capture material or create another threat. Often wins decisive material.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">Double Check</strong><br>
+            The rarest and most powerful: BOTH the moving piece AND the revealed piece give check simultaneously. The only way to escape a double check is to move the king — you cannot block or capture both checking pieces at once.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-14">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">What is the ONLY legal response to a double check?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(14,0,0,'Move the king! In a double check, two pieces are giving check simultaneously. You cannot block both or capture both — the king must move. This is why double check is so powerful.')">
+            <div class="option-letter">A</div> Move the king
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(14,1,0,'Move the king! In a double check, two pieces are giving check simultaneously. You cannot block both or capture both — the king must move. This is why double check is so powerful.')">
+            <div class="option-letter">B</div> Block one of the checks
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(14,2,0,'Move the king! In a double check, two pieces are giving check simultaneously. You cannot block both or capture both — the king must move. This is why double check is so powerful.')">
+            <div class="option-letter">C</div> Capture one of the checking pieces
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-14"></div>
+      </div>`
+  },
+  {
+    category: 'Tactics',
+    title: 'Back Rank Mate',
+    type: 'Lesson',
+    xp: 100,
+    render: () => `
+      <div class="lesson-eyebrow">Module 7 — Tactics: More Patterns</div>
+      <h2 class="lesson-title">The Back Rank Mate</h2>
+      <p class="lesson-desc">The most common checkmate at every level below grandmaster. Your own pawns become your prison — and the enemy rook walks in for checkmate.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>A <strong>back rank mate</strong> happens when a king is trapped on its starting rank (rank 1 for White, rank 8 for Black) by its own pawns, and a rook or queen delivers checkmate along that rank.</p>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">How to avoid it</strong><br>
+            Create a "luft" (German for "air") — move one of the pawns in front of your king one square forward. This gives your king an escape square. g3 or h3 are the most common luft moves.
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">How to use it</strong><br>
+            Before any rook trade, check: is your opponent's back rank weak? If their king has no escape square, a rook sacrifice can force the checkmate. Trade rooks to eliminate defenders, then deliver the final blow.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">The Anastasia's Mate</strong><br>
+            A related pattern: a knight and rook trap the king on the edge of the board. The knight cuts off escape squares, the rook delivers checkmate.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-15">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">What is a "luft" and why is it important?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(15,0,1,'Correct! Luft means moving a pawn to give the king an escape square. Without it, your king is trapped on the back rank and vulnerable to checkmate by a rook or queen.')">
+            <div class="option-letter">A</div> A pawn move that gives the king an escape square
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(15,1,1,'Correct! Luft means moving a pawn to give the king an escape square. Without it, your king is trapped on the back rank and vulnerable to checkmate by a rook or queen.')">
+            <div class="option-letter">B</div> A type of pawn sacrifice in the opening
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(15,2,1,'Correct! Luft means moving a pawn to give the king an escape square. Without it, your king is trapped on the back rank and vulnerable to checkmate by a rook or queen.')">
+            <div class="option-letter">C</div> Moving the king to safety before castling
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-15"></div>
+      </div>`
+  },
+  {
+    category: 'Tactics',
+    title: 'Zwischenzug',
+    type: 'Lesson',
+    xp: 125,
+    render: () => `
+      <div class="lesson-eyebrow">Module 7 — Tactics: More Patterns</div>
+      <h2 class="lesson-title">Zwischenzug — The In-Between Move</h2>
+      <p class="lesson-desc">German for "in-between move." Instead of playing the expected move, you play a surprise shot first. One of the most mind-bending tactics in chess.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>A <strong>Zwischenzug</strong> (pronounced ZVISH-en-tsoog) is when you interrupt a forced sequence with an unexpected move that changes everything. Your opponent thinks they know what's coming — then you play something completely different first.</p>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Classic example</strong><br>
+            Your opponent captures your piece. Instead of recapturing immediately (which they expect), you first give check or make a bigger threat. They must respond to YOUR threat — and now when you recapture, the position has completely changed in your favor.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">Why it works</strong><br>
+            Chess players calculate based on expected moves. A Zwischenzug breaks the pattern and forces the opponent to recalculate everything from scratch — often under time pressure. The best Zwischenzugs are completely invisible until they appear on the board.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-16">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">What makes a Zwischenzug so effective psychologically?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(16,0,2,'Exactly! The opponent calculates the expected sequence and thinks they know what is coming. When you play an unexpected move first, they must throw out all their calculations and start over — often under time pressure.')">
+            <div class="option-letter">A</div> It captures the most valuable piece
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(16,1,2,'Exactly! The opponent calculates the expected sequence and thinks they know what is coming. When you play an unexpected move first, they must throw out all their calculations and start over — often under time pressure.')">
+            <div class="option-letter">B</div> It breaks the opponent\'s expected calculation
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(16,2,2,'Exactly! The opponent calculates the expected sequence and thinks they know what is coming. When you play an unexpected move first, they must throw out all their calculations and start over — often under time pressure.')">
+            <div class="option-letter">C</div> It always gives check
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-16"></div>
+      </div>`
+  },
+
+  // ── SECRET RULES ──
+  {
+    category: 'Secret Rules',
+    title: 'En Passant',
+    type: 'Lesson',
+    xp: 150,
+    render: () => `
+      <div class="lesson-eyebrow">Module 8 — Secret Rules</div>
+      <h2 class="lesson-title">En Passant — The Ghost Capture</h2>
+      <p class="lesson-desc">The most surprising rule in chess. A pawn captures another pawn that isn't even on the square it lands on. Beginners are always shocked when this happens to them.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p><strong>En passant</strong> (French for "in passing") is a special pawn capture that can only happen in one specific situation: when a pawn uses its two-square first move to land beside an enemy pawn.</p>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">The Rule</strong><br>
+            If your pawn is on the 5th rank and an enemy pawn moves TWO squares from its starting position to land beside your pawn, you can capture it AS IF it had only moved one square. You move diagonally forward to the square the pawn skipped over — and the enemy pawn is removed.
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">The catch — it expires!</strong><br>
+            You MUST capture en passant on the very next move. If you play any other move first, the right to capture en passant disappears forever. It's now or never.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">Historical origin</strong><br>
+            En passant was added to chess in the 15th century when the two-square pawn move was introduced. Without en passant, pawns could use the double move to sneak past enemy pawns unfairly. The rule preserves the original game balance.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-17">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">If you don't capture en passant immediately, what happens?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(17,0,0,'Correct! En passant is a now-or-never rule. If you play any other move, the right to capture en passant is permanently lost. You cannot take it on a later turn.')">
+            <div class="option-letter">A</div> The right to capture en passant is permanently lost
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(17,1,0,'Correct! En passant is a now-or-never rule. If you play any other move, the right to capture en passant is permanently lost. You cannot take it on a later turn.')">
+            <div class="option-letter">B</div> You can still capture it on your next turn
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(17,2,0,'Correct! En passant is a now-or-never rule. If you play any other move, the right to capture en passant is permanently lost. You cannot take it on a later turn.')">
+            <div class="option-letter">C</div> The game ends in a draw
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-17"></div>
+      </div>`
+  },
+  {
+    category: 'Secret Rules',
+    title: 'Castling — All the Rules',
+    type: 'Lesson',
+    xp: 150,
+    render: () => `
+      <div class="lesson-eyebrow">Module 8 — Secret Rules</div>
+      <h2 class="lesson-title">Castling — All the Rules</h2>
+      <p class="lesson-desc">Everyone knows you can castle. But do you know all FIVE conditions that must be met? Knowing the rules lets you castle when others can't — and stop your opponent from castling too.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>Castling is the only move where two pieces move at once — the king moves two squares toward a rook, and the rook jumps to the other side of the king.</p>
+          <div class="highlight-box" style="margin-bottom:12px">
+            <strong style="color:var(--gold)">The 5 Rules of Castling</strong><br>
+            <br>
+            <strong>1.</strong> Neither the king NOR the rook can have moved previously in the game — even if they moved back to the original square.<br>
+            <strong>2.</strong> There must be no pieces between the king and rook.<br>
+            <strong>3.</strong> The king cannot be in check at the time of castling.<br>
+            <strong>4.</strong> The king cannot pass through a square that is under attack.<br>
+            <strong>5.</strong> The king cannot land on a square that is under attack.<br>
+          </div>
+          <div class="highlight-box" style="margin-bottom:12px">
+            <strong style="color:var(--gold)">Kingside vs Queenside</strong><br>
+            Kingside castling (0-0): king moves to g1, rook to f1. Faster and safer — only 2 squares between king and rook.<br>
+            Queenside castling (0-0-0): king moves to c1, rook to d1. More aggressive but the king ends up more exposed.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">The Rook CAN be attacked</strong><br>
+            This surprises players: the rook is allowed to pass through an attacked square during queenside castling. Only the KING cannot pass through or land on an attacked square.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-18">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">Your king has never moved, but your kingside rook moved earlier and came back. Can you castle kingside?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(18,0,1,'No castling! Once the rook moves — even if it returns to its original square — the right to castle with that rook is permanently lost. The rule is about whether the piece has ever moved, not where it currently is.')">
+            <div class="option-letter">A</div> No — the rook already moved, so castling rights are lost
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(18,1,1,'No castling! Once the rook moves — even if it returns to its original square — the right to castle with that rook is permanently lost. The rule is about whether the piece has ever moved, not where it currently is.')">
+            <div class="option-letter">B</div> Yes — the rook is back on its starting square
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(18,2,1,'No castling! Once the rook moves — even if it returns to its original square — the right to castle with that rook is permanently lost. The rule is about whether the piece has ever moved, not where it currently is.')">
+            <div class="option-letter">C</div> Only if no pieces are between them
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-18"></div>
+      </div>`
+  },
+  {
+    category: 'Secret Rules',
+    title: 'Pawn Promotion',
+    type: 'Lesson',
+    xp: 150,
+    render: () => `
+      <div class="lesson-eyebrow">Module 8 — Secret Rules</div>
+      <h2 class="lesson-title">Pawn Promotion — The Secret Weapon</h2>
+      <p class="lesson-desc">A pawn reaches the other side of the board and becomes ANY piece it wants. This rule hides some of chess's most surprising and sneaky tactics.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <p>When a pawn reaches the 8th rank (for White) or 1st rank (for Black), it <strong>must</strong> be promoted — it cannot stay a pawn. You choose: queen, rook, bishop, or knight.</p>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Why not always promote to a queen?</strong><br>
+            Almost always you should — the queen is the most powerful piece. But there are rare cases where promoting to a knight is actually stronger! A knight can give check from squares no queen can reach, and can create a fork that a queen can't.
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Underpromotion</strong><br>
+            Promoting to a rook, bishop, or knight is called underpromotion. The most common reason: promoting to a queen would be stalemate, but promoting to a rook gives check and wins! Always check for this before automatically grabbing a queen.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">Can you have two queens?</strong><br>
+            Yes! You can promote a pawn even when you still have your original queen. In theory, you could have 9 queens at once (original + 8 promoted pawns). In practice, one extra queen is usually enough to win.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-19">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">You promote a pawn to a queen, but it creates stalemate. What should you have done instead?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(19,0,2,'Promote to a rook! A rook gives the same checkmate ability as a queen in most cases, but doesn\'t cover the extra squares that were causing stalemate. Always check for stalemate before promoting.')">
+            <div class="option-letter">A</div> Don't promote — keep it as a pawn
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(19,1,2,'Promote to a rook! A rook gives the same checkmate ability as a queen in most cases, but doesn\'t cover the extra squares that were causing stalemate. Always check for stalemate before promoting.')">
+            <div class="option-letter">B</div> Promote to a rook instead
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(19,2,2,'Promote to a rook! A rook gives the same checkmate ability as a queen in most cases, but doesn\'t cover the extra squares that were causing stalemate. Always check for stalemate before promoting.')">
+            <div class="option-letter">C</div> The stalemate cannot be avoided
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-19"></div>
+      </div>`
+  },
+  {
+    category: 'Secret Rules',
+    title: 'The 50-Move Rule & Threefold Repetition',
+    type: 'Lesson',
+    xp: 150,
+    render: () => `
+      <div class="lesson-eyebrow">Module 8 — Secret Rules</div>
+      <h2 class="lesson-title">Draw Rules Nobody Tells You About</h2>
+      <p class="lesson-desc">Chess has automatic draw rules that most beginners never learn. Knowing them can save a lost position — or stop your opponent from using them against you.</p>
+      <div class="lesson-block">
+        <div class="lesson-text">
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">The 50-Move Rule</strong><br>
+            If 50 moves pass without a pawn move or a capture, either player can claim a draw. This prevents the stronger side from dragging out a theoretically winning but practically impossible endgame forever. The counter resets every time a pawn moves or a piece is captured.
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Threefold Repetition</strong><br>
+            If the EXACT same position occurs three times (with the same player to move and the same castling/en passant rights), either player can claim a draw. The positions don't have to happen in a row — just three times total. Used by grandmasters to escape losing positions!
+          </div>
+          <div class="highlight-box" style="margin-bottom:16px">
+            <strong style="color:var(--gold)">Insufficient Material</strong><br>
+            Some endgames are theoretically impossible to win — even with perfect play. King vs King, King + Bishop vs King, King + Knight vs King — these are automatic draws. The game ends immediately when neither side has enough material to checkmate.
+          </div>
+          <div class="highlight-box">
+            <strong style="color:var(--gold)">Perpetual Check</strong><br>
+            If you can keep giving check forever with no way for the opponent to escape, you can claim a draw by threefold repetition. A brilliant defensive resource — you sacrifice material to force endless checks and avoid losing.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-block quiz-block" id="quiz-20">
+        <div class="block-label">Quick Check</div>
+        <div class="quiz-question">You're losing badly. You find a way to give check every move and the position repeats three times. What can you claim?</div>
+        <div class="quiz-options">
+          <button class="quiz-option" onclick="answerQuiz(20,0,1,'A draw by threefold repetition! If the same position occurs three times (same player to move, same rights), either player can claim a draw. This is how grandmasters escape lost positions with perpetual check.')">
+            <div class="option-letter">A</div> A draw by threefold repetition
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(20,1,1,'A draw by threefold repetition! If the same position occurs three times (same player to move, same rights), either player can claim a draw. This is how grandmasters escape lost positions with perpetual check.')">
+            <div class="option-letter">B</div> Nothing — you still lose
+          </button>
+          <button class="quiz-option" onclick="answerQuiz(20,2,1,'A draw by threefold repetition! If the same position occurs three times (same player to move, same rights), either player can claim a draw. This is how grandmasters escape lost positions with perpetual check.')">
+            <div class="option-letter">C</div> A win by perpetual check
+          </button>
+        </div>
+        <div class="quiz-feedback" id="qfeedback-20"></div>
+      </div>`
+  },
 ];
 
 // ── QUIZ LOGIC ──
