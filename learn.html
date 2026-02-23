@@ -211,7 +211,7 @@
     <a href="index.html" class="nav-link">Home</a>
     <a href="play.html" class="nav-link">Play</a>
     <a href="learn.html" class="nav-link active">Learn</a>
-    <a href="dashboard.html" class="nav-link">Dashboard</a>
+    <a href="dashboard.html" class="nav-link" id="dashboardLink" style="display:none">Dashboard</a>
   </div>
   <div class="xp-bar-nav">
     <div class="xp-label" id="xpLabel">0 XP</div>
@@ -878,18 +878,36 @@ async function init() {
   renderBadges();
   renderSidebar();
 
-  // Check if logged in and load saved progress
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
-    const { data } = await sb.from('progress')
-      .select('*')
-      .eq('user_id', session.user.id)
-      .single();
+    // Get profile
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+    if (profile) {
+      // Show name in nav
+      const navLinks = document.querySelector('.nav-links');
+      const nameEl = document.createElement('span');
+      nameEl.style.cssText = 'font-family:"DM Mono",monospace;font-size:11px;color:var(--gold);letter-spacing:0.08em;padding:8px 0;';
+      nameEl.textContent = profile.username;
+      navLinks.appendChild(nameEl);
+
+      // Show sign out button
+      const signOutBtn = document.createElement('button');
+      signOutBtn.className = 'nav-link';
+      signOutBtn.textContent = 'Sign Out';
+      signOutBtn.onclick = async () => { await sb.auth.signOut(); window.location.href = 'login.html'; };
+      navLinks.appendChild(signOutBtn);
+
+      // Show dashboard link only for teachers/parents
+      if (profile.role === 'teacher' || profile.role === 'parent') {
+        document.getElementById('dashboardLink').style.display = 'inline-block';
+      }
+    }
+
+    // Load saved progress
+    const { data } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
     if (data) {
       xp = data.xp || 0;
-      completed = new Set(
-        Array.from({length: data.lessons_completed}, (_, i) => i)
-      );
+      completed = new Set(Array.from({length: data.lessons_completed}, (_, i) => i));
       earnedBadges = new Set(data.badges || []);
       document.getElementById('statCompleted').textContent = completed.size;
       document.getElementById('statXP').textContent = xp;
@@ -898,28 +916,29 @@ async function init() {
       document.getElementById('xpFill').style.width = pct + '%';
       document.getElementById('xpLabel').textContent = xp + ' XP';
     }
+  } else {
+    // Not logged in — show sign in button
+    const navLinks = document.querySelector('.nav-links');
+    const signInBtn = document.createElement('a');
+    signInBtn.href = 'login.html';
+    signInBtn.className = 'nav-link';
+    signInBtn.textContent = 'Sign In';
+    signInBtn.style.color = 'var(--gold)';
+    navLinks.appendChild(signInBtn);
   }
 
   renderLesson(currentLesson);
 }
 
 async function saveProgress() {
-  console.log('saveProgress called');
-  const { data: { session }, error: sessionError } = await sb.auth.getSession();
-  console.log('session:', session);
-  console.log('session error:', sessionError);
-  if (!session) {
-    console.log('no session found, not saving');
-    return;
-  }
-  const { data, error } = await sb.from('progress').update({
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  await sb.from('progress').update({
     lessons_completed: completed.size,
     xp: xp,
     badges: [...earnedBadges],
     updated_at: new Date().toISOString()
   }).eq('user_id', session.user.id);
-  console.log('save result:', data);
-  console.log('save error:', error);
 }
 
 init();

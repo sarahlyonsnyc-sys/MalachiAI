@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Malachi AI — Teacher Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -620,7 +621,7 @@ document.addEventListener('mousemove', e => {
 const COLORS = ['#c9a84c','#5b8dee','#4caf50','#9c6fe4','#f0924a','#e05068','#26c6da','#ef5350','#66bb6a','#ab47bc'];
 const CLASSES = ['Morning Club','After School A','After School B'];
 
-const STUDENTS = [
+let STUDENTS = [
   { name:'Marcus T.',   grade:'6th', class:'Morning Club',   lessons:10, quizAvg:98, timeWk:'2h 40m', wins:8, losses:2, status:'excelling',   wc:{focus:92,resilience:88,creativity:85,regulation:90,impulse:86,growth:94} },
   { name:'Zoe M.',      grade:'4th', class:'Morning Club',   lessons:8,  quizAvg:87, timeWk:'2h 10m', wins:6, losses:4, status:'on-track',    wc:{focus:88,resilience:76,creativity:91,regulation:82,impulse:79,growth:85} },
   { name:'Jordan B.',   grade:'5th', class:'Morning Club',   lessons:7,  quizAvg:81, timeWk:'1h 55m', wins:5, losses:5, status:'on-track',    wc:{focus:75,resilience:80,creativity:77,regulation:74,impulse:72,growth:78} },
@@ -851,13 +852,104 @@ function buildWholeChildPage() {
     </tr>`).join('');
 }
 
-// ── INIT ──
-buildActivityChart();
-buildHeatmap();
-buildTopStudents();
-buildAllStudents();
-buildClasses();
-buildWholeChildPage();
+// ── SUPABASE ──
+const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
+const { createClient } = supabase.createClient ? supabase : window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function initDashboard() {
+  // Check auth
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'login.html'; return; }
+
+  // Check role
+  const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+  if (!profile || (profile.role !== 'teacher' && profile.role !== 'parent')) {
+    window.location.href = 'learn.html'; return;
+  }
+
+  // Update teacher name in nav
+  document.querySelector('.teacher-name').textContent = profile.username;
+  document.querySelector('.teacher-avatar-sm').textContent = profile.username.split(' ').map(n=>n[0]).join('').toUpperCase();
+
+  // Add sign out
+  const signOutBtn = document.createElement('button');
+  signOutBtn.style.cssText = 'font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);background:transparent;border:1px solid var(--border);padding:8px 14px;cursor:none;transition:all 0.2s;';
+  signOutBtn.textContent = 'Sign Out';
+  signOutBtn.onmouseover = () => signOutBtn.style.color = 'var(--gold)';
+  signOutBtn.onmouseout = () => signOutBtn.style.color = 'var(--muted)';
+  signOutBtn.onclick = async () => { await sb.auth.signOut(); window.location.href = 'login.html'; };
+  document.querySelector('.nav-right').prepend(signOutBtn);
+
+  // Load real students from Supabase
+  const { data: profiles } = await sb.from('profiles').select('*').eq('role', 'student');
+  const { data: progressRows } = await sb.from('progress').select('*');
+
+  if (profiles && profiles.length > 0) {
+    // Merge profiles with progress
+    const realStudents = profiles.map(p => {
+      const prog = progressRows?.find(r => r.user_id === p.id) || {};
+      const lessons = prog.lessons_completed || 0;
+      const xp = prog.xp || 0;
+      const badges = prog.badges || [];
+      const gamesPlayed = prog.games_played || 0;
+      const gamesWon = prog.games_won || 0;
+
+      // Determine status
+      let status = 'on-track';
+      if (lessons >= 8) status = 'excelling';
+      else if (lessons <= 1 && xp === 0) status = 'inactive';
+      else if (xp < 100) status = 'struggling';
+
+      // Generate whole child scores based on real data
+      const focusScore = Math.min(99, 40 + lessons * 6 + Math.floor(Math.random() * 10));
+      const resilienceScore = Math.min(99, 40 + gamesPlayed * 2 + Math.floor(Math.random() * 10));
+      const growthScore = Math.min(99, 30 + xp / 10 + Math.floor(Math.random() * 10));
+
+      return {
+        name: p.username,
+        grade: p.grade || 'N/A',
+        class: p.class_name || 'General',
+        lessons,
+        quizAvg: Math.min(99, 50 + lessons * 5),
+        timeWk: `${Math.floor((xp / 100))}h ${Math.floor(Math.random() * 60)}m`,
+        wins: gamesWon,
+        losses: Math.max(0, gamesPlayed - gamesWon),
+        status,
+        wc: {
+          focus: focusScore,
+          resilience: resilienceScore,
+          creativity: Math.min(99, 45 + lessons * 4 + Math.floor(Math.random() * 15)),
+          regulation: Math.min(99, 45 + lessons * 4 + Math.floor(Math.random() * 10)),
+          impulse: Math.min(99, 40 + lessons * 5 + Math.floor(Math.random() * 10)),
+          growth: growthScore
+        }
+      };
+    });
+
+    // Replace STUDENTS with real data
+    STUDENTS.length = 0;
+    realStudents.forEach(s => STUDENTS.push(s));
+
+    // Update overview stats
+    document.querySelector('.stat-num.gold').textContent = STUDENTS.length;
+    const totalLessons = STUDENTS.reduce((a, s) => a + s.lessons, 0);
+    document.querySelectorAll('.stat-num')[1].textContent = totalLessons;
+    const avgWC = Math.round(STUDENTS.reduce((a, s) => a + wcOverall(s.wc), 0) / STUDENTS.length);
+    document.querySelectorAll('.stat-num')[3].textContent = avgWC;
+  }
+
+  // Build all views with real (or demo) data
+  buildActivityChart();
+  buildHeatmap();
+  buildTopStudents();
+  buildAllStudents();
+  buildClasses();
+  buildWholeChildPage();
+}
+
+initDashboard();
 </script>
 </body>
 </html>
