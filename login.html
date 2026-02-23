@@ -366,8 +366,23 @@ async function signUp() {
   setLoading('signupBtn', true, 'Create Account →');
   hideMessage();
 
-  // Create auth user
-  const { data, error } = await sb.auth.signUp({ email, password });
+  const grade = document.getElementById('signupGrade')?.value || null;
+  const className = document.getElementById('signupClass')?.value || null;
+  const username = (first + ' ' + last).trim();
+
+  // Pass all metadata so the database trigger creates profile + progress automatically
+  const { data, error } = await sb.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        username,
+        role: selectedRole,
+        grade,
+        class_name: className
+      }
+    }
+  });
 
   if (error) {
     showMessage(error.message, 'error');
@@ -375,31 +390,9 @@ async function signUp() {
     return;
   }
 
-  const userId = data.user?.id;
-  if (!userId) {
-    showMessage('Account created! Please check your email to confirm your account, then sign in.', 'success');
-    setLoading('signupBtn', false, 'Create Account →');
-    return;
-  }
-
-  // Create profile
-  const grade = document.getElementById('signupGrade')?.value || null;
-  const className = document.getElementById('signupClass')?.value || null;
-
-  await sb.from('profiles').insert({
-    id: userId,
-    username: (first + ' ' + last).trim(),
-    role: selectedRole,
-    grade: grade,
-    class_name: className,
-  });
-
-  // Create progress row for students
-  if (selectedRole === 'student') {
-    await sb.from('progress').insert({ user_id: userId });
-  }
-
-  const dest = selectedRole === 'teacher' ? 'dashboard.html' : selectedRole === 'parent' ? 'dashboard.html' : 'learn.html';
+  // Trigger handles profile + progress creation automatically
+  // Just redirect
+  const dest = (selectedRole === 'teacher' || selectedRole === 'parent') ? 'dashboard.html' : 'learn.html';
   showSuccess(
     'Welcome to Malachi AI!',
     `Hey ${first}! Your account is ready. Let's start your chess journey.`,
