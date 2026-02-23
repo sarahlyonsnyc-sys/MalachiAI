@@ -871,6 +871,7 @@ async function initDashboard() {
 
   // Update teacher name in nav
   document.querySelector('.teacher-name').textContent = profile.username;
+  document.querySelector('.page-title').textContent = 'Good morning, ' + profile.username;
   document.querySelector('.teacher-avatar-sm').textContent = profile.username.split(' ').map(n=>n[0]).join('').toUpperCase();
 
   // Add sign out
