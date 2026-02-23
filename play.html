@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <!-- Chess engine -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -315,6 +316,18 @@ document.addEventListener('mousemove', e => {
 // ── CHESS ENGINE ──
 let game = new Chess();
 let selectedSquare = null;
+
+// ── SUPABASE ──
+const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
+const { createClient } = supabase.createClient ? supabase : window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── TRACKING ──
+let moveStartTime = Date.now();   // when player's turn started
+let moveTimes = [];               // array of seconds per move
+let gameStartTime = Date.now();   // when current game started
+let gameAbandoned = false;        // did they quit mid-game?
 let possibleMoves = [];
 let lastMove = null;
 let depth = 2; // AI search depth
@@ -448,6 +461,10 @@ function clearSelection() {
 }
 
 function makePlayerMove(from, to) {
+  // Track how long player thought before moving
+  const thinkTime = (Date.now() - moveStartTime) / 1000;
+  moveTimes.push(Math.round(thinkTime));
+
   // handle promotion
   const piece = game.get(from);
   let promotion = 'q';
@@ -481,6 +498,7 @@ function aiMove() {
     document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Your Turn';
     renderBoard();
     checkGameOver();
+    moveStartTime = Date.now(); // reset timer for next player move
   }, 300 + Math.random() * 400);
 }
 
@@ -623,16 +641,19 @@ function updatePanels() {
 
 function checkGameOver() {
   if (!game.game_over()) return;
-  setTimeout(() => {
+  setTimeout(async () => {
     const overlay = document.getElementById('modalOverlay');
     const icon = document.getElementById('modalIcon');
     const title = document.getElementById('modalTitle');
     const msg = document.getElementById('modalMsg');
     overlay.classList.add('active');
+
+    let playerWon = false;
     if (game.in_checkmate()) {
       if (game.turn() === 'b') {
         icon.textContent = '♔'; title.textContent = 'You Win!';
         msg.textContent = 'Excellent play! You checkmated Malachi AI. Want to try a harder difficulty?';
+        playerWon = true;
       } else {
         icon.textContent = '♚'; title.textContent = 'Checkmate';
         msg.textContent = "Malachi AI wins this round. Study the game and try again — every loss is a lesson.";
@@ -641,12 +662,71 @@ function checkGameOver() {
       icon.textContent = '🤝'; title.textContent = 'Draw!';
       msg.textContent = game.in_stalemate() ? 'Stalemate — the game is a draw.' : 'The game ended in a draw.';
     }
+
+    // Save game data to Supabase
+    await saveGameData(playerWon, false);
   }, 500);
 }
 
 function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
 
+async function saveGameData(playerWon, abandoned) {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  const avgMoveTime = moveTimes.length > 0
+    ? Math.round(moveTimes.reduce((a,b) => a+b, 0) / moveTimes.length)
+    : 0;
+  const gameDuration = Math.round((Date.now() - gameStartTime) / 1000);
+  const totalMoves = moveTimes.length;
+
+  // Get current progress row
+  const { data: prog } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
+  if (!prog) return;
+
+  const gamesPlayed = (prog.games_played || 0) + 1;
+  const gamesWon = (prog.games_won || 0) + (playerWon ? 1 : 0);
+
+  // Build quiz_scores as behavior data store
+  const behaviorData = prog.quiz_scores || {};
+  const allMoveTimes = behaviorData.move_times || [];
+  allMoveTimes.push(...moveTimes);
+  const gameHistory = behaviorData.game_history || [];
+  gameHistory.push({
+    date: new Date().toISOString(),
+    won: playerWon,
+    abandoned,
+    avgMoveTime,
+    totalMoves,
+    duration: gameDuration
+  });
+
+  await sb.from('progress').update({
+    games_played: gamesPlayed,
+    games_won: gamesWon,
+    quiz_scores: {
+      ...behaviorData,
+      move_times: allMoveTimes.slice(-200), // keep last 200 moves
+      game_history: gameHistory.slice(-50),  // keep last 50 games
+      avg_move_time: Math.round(allMoveTimes.reduce((a,b)=>a+b,0) / allMoveTimes.length),
+      completion_rate: Math.round((gameHistory.filter(g=>!g.abandoned).length / gameHistory.length) * 100)
+    },
+    updated_at: new Date().toISOString()
+  }).eq('user_id', session.user.id);
+}
+
 function newGame() {
+  // Save abandoned game if it had moves
+  if (moveTimes.length > 3 && !game.game_over()) {
+    saveGameData(false, true);
+  }
+
+  // Reset tracking
+  moveTimes = [];
+  gameStartTime = Date.now();
+  moveStartTime = Date.now();
+  gameAbandoned = false;
+
   game = new Chess();
   selectedSquare = null; possibleMoves = []; lastMove = null; moveHistory = [];
   document.getElementById('movesTable').querySelector('tbody').innerHTML = '';
@@ -679,6 +759,35 @@ function showTip() {
 buildLabels();
 renderBoard();
 showTip();
+
+// Check login and update nav
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  const nav = document.querySelector('.nav-links') || document.querySelector('nav');
+  if (!nav) return;
+  if (session) {
+    const { data: profile } = await sb.from('profiles').select('username, role').eq('id', session.user.id).single();
+    if (profile) {
+      const nameEl = document.createElement('span');
+      nameEl.style.cssText = 'font-family:"DM Mono",monospace;font-size:11px;color:var(--gold);letter-spacing:0.08em;';
+      nameEl.textContent = profile.username;
+      nav.appendChild(nameEl);
+      const signOutBtn = document.createElement('a');
+      signOutBtn.href = '#';
+      signOutBtn.className = 'nav-link';
+      signOutBtn.textContent = 'Sign Out';
+      signOutBtn.onclick = async (e) => { e.preventDefault(); await sb.auth.signOut(); window.location.href = 'login.html'; };
+      nav.appendChild(signOutBtn);
+    }
+  } else {
+    const signInBtn = document.createElement('a');
+    signInBtn.href = 'login.html';
+    signInBtn.className = 'nav-link';
+    signInBtn.style.color = 'var(--gold)';
+    signInBtn.textContent = 'Sign In';
+    nav.appendChild(signInBtn);
+  }
+})();
 </script>
 </body>
 </html>
