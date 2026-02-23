@@ -907,7 +907,12 @@ async function init() {
     const { data } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
     if (data) {
       xp = data.xp || 0;
-      completed = new Set(Array.from({length: data.lessons_completed}, (_, i) => i));
+      // Load actual completed lesson indices if available, otherwise fall back to count
+      if (data.badges && Array.isArray(data.badges) && data.quiz_scores && data.quiz_scores.completed_lessons) {
+        completed = new Set(data.quiz_scores.completed_lessons);
+      } else {
+        completed = new Set(Array.from({length: data.lessons_completed}, (_, i) => i));
+      }
       earnedBadges = new Set(data.badges || []);
       document.getElementById('statCompleted').textContent = completed.size;
       document.getElementById('statXP').textContent = xp;
@@ -933,12 +938,29 @@ async function init() {
 async function saveProgress() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
-  await sb.from('progress').update({
+
+  // Store actual lesson indices so we know WHICH lessons were completed, not just how many
+  const behaviorData = {};
+  try {
+    const { data: existing } = await sb.from('progress').select('quiz_scores').eq('user_id', session.user.id).single();
+    Object.assign(behaviorData, existing?.quiz_scores || {});
+  } catch(e) {}
+
+  behaviorData.completed_lessons = [...completed]; // actual indices e.g. [0, 2, 4]
+
+  const { error } = await sb.from('progress').update({
     lessons_completed: completed.size,
     xp: xp,
     badges: [...earnedBadges],
+    quiz_scores: behaviorData,
     updated_at: new Date().toISOString()
   }).eq('user_id', session.user.id);
+
+  if (error) {
+    console.error('❌ Save failed:', error.message);
+  } else {
+    console.log('✅ Progress saved — lessons:', completed.size, 'xp:', xp);
+  }
 }
 
 init();
