@@ -672,15 +672,17 @@ function checkGameOver() {
 
 function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
 
-async function saveGameData(playerWon, abandoned) {
+async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
 
-  const avgMoveTime = moveTimes.length > 0
-    ? Math.round(moveTimes.reduce((a,b) => a+b, 0) / moveTimes.length)
-    : 0;
+  // Use passed times if provided (from newGame), otherwise use current moveTimes
+  const timesToUse = passedTimes || moveTimes;
+  const avgMoveTime = passedAvgTime || (timesToUse.length > 0
+    ? Math.round(timesToUse.reduce((a,b) => a+b, 0) / timesToUse.length)
+    : 0);
   const gameDuration = Math.round((Date.now() - gameStartTime) / 1000);
-  const totalMoves = moveTimes.length;
+  const totalMoves = timesToUse.length;
 
   // Get current progress row
   const { data: prog } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
@@ -692,7 +694,7 @@ async function saveGameData(playerWon, abandoned) {
   // Build quiz_scores as behavior data store
   const behaviorData = prog.quiz_scores || {};
   const allMoveTimes = behaviorData.move_times || [];
-  allMoveTimes.push(...moveTimes);
+  allMoveTimes.push(...timesToUse);
   const gameHistory = behaviorData.game_history || [];
   gameHistory.push({
     date: new Date().toISOString(),
@@ -708,8 +710,8 @@ async function saveGameData(playerWon, abandoned) {
     games_won: gamesWon,
     quiz_scores: {
       ...behaviorData,
-      move_times: allMoveTimes.slice(-200), // keep last 200 moves
-      game_history: gameHistory.slice(-50),  // keep last 50 games
+      move_times: allMoveTimes.slice(-200),
+      game_history: gameHistory.slice(-50),
       avg_move_time: Math.round(allMoveTimes.reduce((a,b)=>a+b,0) / allMoveTimes.length),
       completion_rate: Math.round((gameHistory.filter(g=>!g.abandoned).length / gameHistory.length) * 100)
     },
@@ -718,9 +720,14 @@ async function saveGameData(playerWon, abandoned) {
 }
 
 function newGame() {
+  // Capture current times BEFORE resetting
+  const timesToSave = [...moveTimes];
+  const gameWasOver = game.game_over();
+
   // Save abandoned game if it had moves
-  if (moveTimes.length > 3 && !game.game_over()) {
-    saveGameData(false, true);
+  if (timesToSave.length > 0 && !gameWasOver) {
+    const avgMoveTime = Math.round(timesToSave.reduce((a,b)=>a+b,0) / timesToSave.length);
+    saveGameData(false, true, timesToSave, avgMoveTime);
   }
 
   // Reset tracking
