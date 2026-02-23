@@ -383,32 +383,7 @@
           <div class="card-title">Alerts & Notifications</div>
           <button class="card-action">Mark all read</button>
         </div>
-        <div class="alerts-strip">
-          <div class="alert-item">
-            <div class="alert-dot green"></div>
-            <div class="alert-text"><strong>Marcus T.</strong> is ready to advance — completed all Basics lessons with 100% quiz score. Consider moving to Tactics.</div>
-            <div class="alert-time">2h ago</div>
-            <button class="alert-action" onclick="viewStudent('Marcus T.')">View →</button>
-          </div>
-          <div class="alert-item">
-            <div class="alert-dot red"></div>
-            <div class="alert-text"><strong>Aisha K.</strong> hasn't logged in for 8 days. Last session ended after only 4 minutes — possible disengagement.</div>
-            <div class="alert-time">8d ago</div>
-            <button class="alert-action" onclick="viewStudent('Aisha K.')">View →</button>
-          </div>
-          <div class="alert-item">
-            <div class="alert-dot orange"></div>
-            <div class="alert-text"><strong>Devon R.</strong> is struggling — failed the Fork puzzle 4 times. High impulsivity score detected (moves without thinking).</div>
-            <div class="alert-time">Yesterday</div>
-            <button class="alert-action" onclick="viewStudent('Devon R.')">View →</button>
-          </div>
-          <div class="alert-item">
-            <div class="alert-dot blue"></div>
-            <div class="alert-text"><strong>Zoe M.</strong> has shown a 40% improvement in average thinking time per move over the last 2 weeks — strong attention growth.</div>
-            <div class="alert-time">Today</div>
-            <button class="alert-action" onclick="viewStudent('Zoe M.')">View →</button>
-          </div>
-        </div>
+        <div class="alerts-strip" id="alertsStrip"></div>
       </div>
 
       <!-- ACTIVITY + CLASS PROGRESS -->
@@ -937,10 +912,61 @@ async function initDashboard() {
 
   buildActivityChart();
   buildHeatmap();
+  buildAlerts();
   buildTopStudents();
   buildAllStudents();
   buildClasses();
   buildWholeChildPage();
+}
+
+function buildAlerts() {
+  const strip = document.getElementById('alertsStrip');
+  if (!strip) return;
+
+  if (STUDENTS.length === 0) {
+    strip.innerHTML = `
+      <div style="padding:32px;text-align:center;border:1px dashed var(--border);">
+        <div style="font-size:32px;margin-bottom:12px">♟</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--white);margin-bottom:8px">No students yet</div>
+        <div style="font-size:14px;color:var(--muted);margin-bottom:20px">Share this signup link with your students:</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;background:var(--panel2);border:1px solid var(--border);padding:12px 20px;color:var(--gold);display:inline-block">${window.location.origin}/login.html</div>
+      </div>`;
+    return;
+  }
+
+  const alerts = [];
+
+  STUDENTS.forEach(s => {
+    if (s.status === 'excelling') {
+      alerts.push({ dot:'green', text:`<strong>${s.name}</strong> is excelling — ${s.lessons} lessons completed with strong progress. Consider advancing them.`, time:'Recent', name:s.name });
+    }
+    if (s.status === 'inactive') {
+      alerts.push({ dot:'red', text:`<strong>${s.name}</strong> hasn't been active recently. Last known progress: ${s.lessons} lessons completed.`, time:'Overdue', name:s.name });
+    }
+    if (s.status === 'struggling') {
+      alerts.push({ dot:'orange', text:`<strong>${s.name}</strong> may need support — low quiz average (${s.quizAvg}%) and limited progress so far.`, time:'Recent', name:s.name });
+    }
+    if (wcOverall(s.wc) >= 80) {
+      alerts.push({ dot:'blue', text:`<strong>${s.name}</strong> shows strong whole child development — focus and attention scores are improving.`, time:'Today', name:s.name });
+    }
+  });
+
+  if (alerts.length === 0) {
+    strip.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:14px">All students are on track — no alerts right now. ✓</div>`;
+    return;
+  }
+
+  // Update alert count in nav
+  const alertCount = document.querySelector('.alert-count');
+  if (alertCount) alertCount.textContent = alerts.length;
+
+  strip.innerHTML = alerts.slice(0, 6).map(a => `
+    <div class="alert-item">
+      <div class="alert-dot ${a.dot}"></div>
+      <div class="alert-text">${a.text}</div>
+      <div class="alert-time">${a.time}</div>
+      <button class="alert-action" onclick="viewStudent('${a.name}')">View →</button>
+    </div>`).join('');
 }
 
 initDashboard();
