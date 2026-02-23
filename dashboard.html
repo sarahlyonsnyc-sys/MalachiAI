@@ -799,27 +799,55 @@ function viewStudentFromClass(name) {
 
 // ── WHOLE CHILD PAGE ──
 function buildWholeChildPage() {
-  const wcLabels = {focus:['🎯','Focus & Attention','Measures how long a student thinks before moving — proxy for sustained attention span.'],resilience:['💪','Resilience','How quickly students recover from blunders and continue playing without giving up.'],creativity:['🧩','Creativity','Tracks unconventional and unexpected moves that show original thinking.'],regulation:['😌','Emotional Regulation','Session completion rate + behavior after losses. High quitters score low.'],impulse:['⚡','Impulse Control','Average move time. Faster impulsive movers score lower. Improves with practice.'],growth:['📈','Growth Mindset','Improvement rate over time. Does the student get better after each session?']};
+  const wcLabels = {
+    focus:['🎯','Focus & Attention','Measures how long a student thinks before moving — proxy for sustained attention span.'],
+    resilience:['💪','Resilience','How quickly students recover from blunders and continue playing without giving up.'],
+    creativity:['🧩','Creativity','Tracks win rate relative to games played — unconventional thinkers find ways to win.'],
+    regulation:['😌','Emotional Regulation','Session completion rate + behavior after losses. High quitters score low.'],
+    impulse:['⚡','Impulse Control','Average move time. Faster impulsive movers score lower. Improves with practice.'],
+    growth:['📈','Growth Mindset','Improvement rate over time. Does the student think longer and win more after each session?']
+  };
+
+  const realMetrics = ['impulse','resilience','regulation','growth'];
+
+  if (STUDENTS.length === 0) {
+    document.getElementById('classWholeChild').innerHTML = '<div style="color:var(--muted);padding:20px">No students yet</div>';
+    return;
+  }
+
   const avgs = {};
   ['focus','resilience','creativity','regulation','impulse','growth'].forEach(k => {
     avgs[k] = Math.round(STUDENTS.reduce((a,s) => a+s.wc[k], 0) / STUDENTS.length);
   });
-  document.getElementById('classWholeChild').innerHTML = Object.entries(wcLabels).map(([k,[icon,label,desc]]) => `
+
+  const hasRealData = STUDENTS.some(s => s.hasRealGameData);
+
+  document.getElementById('classWholeChild').innerHTML = Object.entries(wcLabels).map(([k,[icon,label,desc]]) => {
+    const isReal = realMetrics.includes(k) && hasRealData;
+    const badge = isReal
+      ? `<span style="font-size:9px;background:#4caf5022;color:#4caf50;padding:2px 6px;border-radius:2px;margin-left:8px">LIVE DATA</span>`
+      : `<span style="font-size:9px;background:#6b6b6b22;color:var(--muted);padding:2px 6px;border-radius:2px;margin-left:8px">ESTIMATED</span>`;
+    return `
     <div class="wc-metric" style="text-align:left;padding:20px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
         <span style="font-size:20px">${icon}</span>
         <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold)">${label}</span>
+        ${badge}
       </div>
       <div class="wc-score" style="color:${wcColor(avgs[k])};text-align:left">${avgs[k]}<span style="font-size:16px;color:var(--muted)">/100</span></div>
       <div class="wc-bar" style="margin:8px 0"><div class="wc-bar-fill" style="width:${avgs[k]}%;background:${wcColor(avgs[k])}"></div></div>
       <div style="font-size:12px;color:var(--muted);line-height:1.5;font-weight:300">${desc}</div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   document.querySelector('#wholeChildTable tbody').innerHTML = STUDENTS.map((s,i) => `
     <tr onclick="viewStudent('${s.name}')" class="clickable">
       <td><div class="student-name-cell">
         <div class="student-avatar" style="background:${avatarColor(i)}22;color:${avatarColor(i)};width:28px;height:28px;font-size:12px">${initials(s.name)}</div>
-        <span style="font-size:13px;color:var(--cream)">${s.name}</span>
+        <div>
+          <span style="font-size:13px;color:var(--cream)">${s.name}</span>
+          ${s.hasRealGameData ? '<div style="font-size:10px;color:#4caf50">● live data</div>' : '<div style="font-size:10px;color:var(--muted)">○ estimated</div>'}
+        </div>
       </div></td>
       ${['focus','resilience','creativity','regulation','impulse','growth'].map(k => `
         <td><span style="font-family:'DM Mono',monospace;font-size:12px;color:${wcColor(s.wc[k])}">${s.wc[k]}</span></td>`).join('')}
@@ -874,23 +902,92 @@ async function initDashboard() {
       const xp = prog.xp || 0;
       const gamesPlayed = prog.games_played || 0;
       const gamesWon = prog.games_won || 0;
+
+      // Pull real behavioral data from quiz_scores
+      const behavior = prog.quiz_scores || {};
+      const avgMoveTime = behavior.avg_move_time || null;
+      const completionRate = behavior.completion_rate || null;
+      const gameHistory = behavior.game_history || [];
+      const hasRealGameData = gameHistory.length > 0;
+
       let status = 'on-track';
       if (lessons >= 8) status = 'excelling';
       else if (lessons <= 1 && xp === 0) status = 'inactive';
       else if (xp < 100) status = 'struggling';
-      const focusScore = Math.min(99, 40 + lessons * 6 + Math.floor(Math.random() * 10));
-      const resilienceScore = Math.min(99, 40 + gamesPlayed * 2 + Math.floor(Math.random() * 10));
-      const growthScore = Math.min(99, 30 + xp / 10 + Math.floor(Math.random() * 10));
+
+      // ── REAL Whole Child scores ──
+      // Impulse Control: based on avg move time
+      // Fast movers (< 3s) = impulsive = low score
+      // Deliberate movers (10s+) = high score
+      let impulseScore;
+      if (avgMoveTime !== null) {
+        if (avgMoveTime <= 1) impulseScore = 25;
+        else if (avgMoveTime <= 3) impulseScore = 40;
+        else if (avgMoveTime <= 6) impulseScore = 60;
+        else if (avgMoveTime <= 10) impulseScore = 75;
+        else if (avgMoveTime <= 20) impulseScore = 88;
+        else impulseScore = 95;
+      } else {
+        impulseScore = Math.min(85, 40 + lessons * 4); // estimate if no game data
+      }
+
+      // Resilience: based on game completion rate
+      // Did they finish games or quit?
+      let resilienceScore;
+      if (completionRate !== null) {
+        resilienceScore = Math.min(99, Math.round(completionRate * 0.7 + gamesPlayed * 2));
+      } else {
+        resilienceScore = Math.min(85, 40 + gamesPlayed * 3);
+      }
+
+      // Emotional Regulation: completion rate after losses
+      let regulationScore;
+      if (hasRealGameData) {
+        const losses = gameHistory.filter(g => !g.won && !g.abandoned);
+        const abandonAfterLoss = gameHistory.filter((g, i) => {
+          if (i === 0) return false;
+          return g.abandoned && !gameHistory[i-1].won;
+        });
+        const ragequitRate = losses.length > 0
+          ? abandonAfterLoss.length / losses.length
+          : 0;
+        regulationScore = Math.min(99, Math.round((1 - ragequitRate) * 70 + lessons * 3));
+      } else {
+        regulationScore = Math.min(85, 45 + lessons * 4);
+      }
+
+      // Growth Mindset: are they improving over time?
+      let growthScore;
+      if (gameHistory.length >= 3) {
+        const recentAvg = gameHistory.slice(-3).reduce((a,g) => a + g.avgMoveTime, 0) / 3;
+        const earlyAvg = gameHistory.slice(0, 3).reduce((a,g) => a + g.avgMoveTime, 0) / 3;
+        const improving = recentAvg > earlyAvg; // thinking longer = improving
+        growthScore = Math.min(99, 40 + xp / 15 + (improving ? 20 : 0) + lessons * 2);
+      } else {
+        growthScore = Math.min(85, 30 + xp / 10 + lessons * 3);
+      }
+
+      // Focus & Attention: lesson completion + avg move time combined
+      const focusScore = avgMoveTime !== null
+        ? Math.min(99, Math.round(impulseScore * 0.6 + lessons * 4))
+        : Math.min(85, 40 + lessons * 5);
+
+      // Creativity: unconventional play — based on win rate relative to games played
+      const winRate = gamesPlayed > 0 ? gamesWon / gamesPlayed : 0;
+      const creativityScore = Math.min(99, 40 + lessons * 4 + Math.round(winRate * 25));
+
       return {
         name: p.username, grade: p.grade || 'N/A', class: p.class_name || 'General',
         lessons, quizAvg: Math.min(99, 50 + lessons * 5),
-        timeWk: `${Math.floor(xp/100)}h ${Math.floor(Math.random()*60)}m`,
+        timeWk: `${Math.floor(xp/100)}h`,
         wins: gamesWon, losses: Math.max(0, gamesPlayed - gamesWon), status,
+        avgMoveTime, completionRate, hasRealGameData,
         wc: {
-          focus: focusScore, resilience: resilienceScore,
-          creativity: Math.min(99, 45 + lessons*4 + Math.floor(Math.random()*15)),
-          regulation: Math.min(99, 45 + lessons*4 + Math.floor(Math.random()*10)),
-          impulse: Math.min(99, 40 + lessons*5 + Math.floor(Math.random()*10)),
+          focus: focusScore,
+          resilience: resilienceScore,
+          creativity: creativityScore,
+          regulation: regulationScore,
+          impulse: impulseScore,
           growth: growthScore
         }
       };
