@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Malachi AI — Puzzle Trainer</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <style>
     :root {
@@ -171,7 +172,6 @@
   <div class="nav-right">
     <a href="index.html" class="nav-link">Home</a>
     <a href="learn.html" class="nav-link">Learn</a>
-    <a href="puzzles.html" class="nav-link active">Puzzles</a>
     <a href="openings.html" class="nav-link">Openings</a>
     <a href="play.html" class="nav-link">Play</a>
     <a href="dashboard.html" class="nav-link">Dashboard</a>
@@ -184,21 +184,22 @@
   <div class="sidebar-left">
     <div class="sidebar-section">
       <div class="sidebar-title">Difficulty</div>
-      <button class="filter-btn active" onclick="setThemeFilter('all')" id="filter-all">All Puzzles <span class="filter-count">∞</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('oneMove')" id="filter-oneMove">Beginner <span class="filter-count">1 move</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('short')" id="filter-short">Easy <span class="filter-count">2 moves</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('fork')" id="filter-fork">Forks <span class="filter-count">⑂</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('pin')" id="filter-pin">Pins <span class="filter-count">📌</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('skewer')" id="filter-skewer">Skewers</button>
+      <button class="filter-btn active" onclick="setThemeFilter('all')" id="filter-all">All Puzzles</button>
+      <button class="filter-btn" onclick="setThemeFilter('mateIn1')" id="filter-mateIn1">☠ Mate in 1</button>
+      <button class="filter-btn" onclick="setThemeFilter('mateIn2')" id="filter-mateIn2">☠ Mate in 2</button>
+      <button class="filter-btn" onclick="setThemeFilter('short')" id="filter-short">Short (2 moves)</button>
+      <button class="filter-btn" onclick="setThemeFilter('fork')" id="filter-fork">⑂ Forks</button>
+      <button class="filter-btn" onclick="setThemeFilter('pin')" id="filter-pin">📌 Pins</button>
+      <button class="filter-btn" onclick="setThemeFilter('skewer')" id="filter-skewer">⟶ Skewers</button>
       <button class="filter-btn" onclick="setThemeFilter('discoveredAttack')" id="filter-discoveredAttack">Discovered Attack</button>
       <button class="filter-btn" onclick="setThemeFilter('backRankMate')" id="filter-backRankMate">Back Rank Mate</button>
-      <button class="filter-btn" onclick="setThemeFilter('mateIn1')" id="filter-mateIn1">Mate in 1</button>
-      <button class="filter-btn" onclick="setThemeFilter('mateIn2')" id="filter-mateIn2">Mate in 2</button>
-      <button class="filter-btn" onclick="setThemeFilter('mateIn3')" id="filter-mateIn3">Mate in 3+</button>
-      <button class="filter-btn" onclick="setThemeFilter('endgame')" id="filter-endgame">Endgame</button>
+      <button class="filter-btn" onclick="setThemeFilter('endgame')" id="filter-endgame">♟ Endgame</button>
       <button class="filter-btn" onclick="setThemeFilter('opening')" id="filter-opening">Opening Traps</button>
-      <button class="filter-btn" onclick="setThemeFilter('sacrifice')" id="filter-sacrifice">Sacrifices</button>
-      <button class="filter-btn" onclick="setThemeFilter('crushing')" id="filter-crushing">Crushing</button>
+      <button class="filter-btn" onclick="setThemeFilter('sacrifice')" id="filter-sacrifice">⚡ Sacrifices</button>
+      <button class="filter-btn" onclick="setThemeFilter('crushing')" id="filter-crushing">💥 Crushing</button>
+      <button class="filter-btn" onclick="setThemeFilter('advantage')" id="filter-advantage">Advantage</button>
+      <button class="filter-btn" onclick="setThemeFilter('long')" id="filter-long">Long Combos</button>
+      <button class="filter-btn" onclick="setThemeFilter('zugzwang')" id="filter-zugzwang">Zugzwang</button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-title">Rating Range</div>
@@ -316,7 +317,7 @@ function setThemeFilter(theme) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('filter-' + theme);
   if (btn) btn.classList.add('active');
-  puzzleQueue = [];
+  buildPool();
   loadNextPuzzle();
 }
 
@@ -327,364 +328,179 @@ function updateRatingLabel() {
   document.getElementById('ratingMaxLabel').textContent = max;
 }
 
-// ── LICHESS API ──
-async function fetchPuzzle() {
-  // Lichess puzzle API — no auth needed, free for all
-  let url = 'https://lichess.org/api/puzzle/next';
-  if (currentThemeFilter !== 'all') {
-    url += '?angle=' + currentThemeFilter;
+// ── SUPABASE ──
+const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── LOCAL FALLBACK DB (used if Supabase puzzles table not yet populated) ──
+const FALLBACK_PUZZLES = [
+  ["00008","r6k/pp2r2p/4Rp1Q/3p4/8/1N1P2R1/PqP2bPP/7K b - - 0 24","f2g3 h6h7","1543","mateIn1 backRankMate short"],
+  ["0000B","r2qk2r/ppp1bppp/2np1n2/4p1B1/2B1P1b1/3P1N2/PPP2PPP/RN1QR1K1 b kq - 5 7","g4f3 d1f3 d6d5","1609","mateIn1 short"],
+  ["000PK","r1bqkb1r/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3","f3e5 d8d1 e1d1 c6e5","1050","fork advantage"],
+  ["000QK","r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4","f3g5 f6e4 g5e4 d8h4 e1f1 h4f2","1200","fork mateIn1"],
+  ["001CK","r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/3P4/PPP2PPP/RNBQK1NR w KQkq - 1 4","c1g5 f6e4 g5d8 e4c3 d8c3","1300","pin advantage"],
+  ["001KK","8/8/8/3k4/8/3K4/8/4R3 w - - 0 1","e1e5 d5d4 e5d5","850","skewer endgame"],
+  ["001QK","r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4","f3g5 d8f6 g5f7 f6f7 c4f7 e8f7","1400","discoveredAttack sacrifice"],
+  ["001WK","r2q1rk1/ppp2ppp/2n5/3p4/3P4/2PB4/PP3PPP/RN1QR1K1 b - - 0 13","d8d3 e1e8 f8e8 d1e1 e8e1","1400","backRankMate"],
+  ["002FK","8/8/8/8/3k4/8/3K4/3R4 w - - 0 1","d2c3 d4c5 c3c4","850","endgame"],
+  ["002NK","r1bq1rk1/ppp2ppp/2np1n2/4p3/2B1P3/3P1N2/PPP2PPP/RNBQK2R w KQ - 2 7","c4f7 f8f7 f3e5 d6e5 d1d8","1500","sacrifice fork"],
+  ["000DK","r1bqkb1r/pppp1ppp/2n2n2/4p3/4P3/3P1N2/PPP2PPP/RNBQKB1R w KQkq - 2 4","d1e2 f6e4 e2e4","1400","mateIn2 short"],
+  ["001LK","8/8/8/2k1r3/8/2K5/8/4B3 w - - 0 1","e1b4 e5e4 b4e1","950","skewer endgame"],
+  ["000GK","r2qkb1r/ppp2ppp/2np1n2/4p1B1/2B1P3/3P1N2/PPP2PPP/RN1QK2R w KQkq - 2 6","g5f6 d8f6 d1d5 f6f2 e1f2","1800","mateIn2 short"],
+  ["002XK","rnbqkb1r/pppp1ppp/5n2/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 2 3","d1h5 g8f6 h5f7 e8e7 f7e5","1150","opening fork mateIn2"],
+  ["003EK","r3r1k1/pp1n1ppp/2p1pn2/3p4/3P4/2PBP3/PP1N1PPP/R3R1K1 w - - 0 12","d3h7 g8h7 e1e7","1700","sacrifice mateIn2"],
+  ["002LK","r7/8/8/8/8/8/8/K1k5 b - - 0 1","a8a1","770","endgame mateIn1"],
+  ["000KK","6k1/5ppp/8/8/8/8/5PPP/3RR1K1 w - - 0 1","e1e8 g8f7 d1d7","1050","mateIn2 short"],
+  ["001NK","8/8/8/1k1r4/8/1K6/8/4R3 w - - 0 1","e1e5 d5e5 b3c4","880","skewer endgame"],
+  ["000UK","8/8/8/4p3/3NP3/8/8/4K2k w - - 0 1","d4f5 e5e4 f5d6","900","fork endgame"],
+  ["003WK","8/8/8/3k4/8/3K4/8/8 w - - 0 1","d3e3 d5e5","750","zugzwang endgame"],
+];
+
+// ── PUZZLE STATE ──
+let puzzleQueue = [];
+let usingSupabase = false;
+
+// ── CHECK IF SUPABASE HAS PUZZLES ──
+async function checkSupabase() {
+  try {
+    const { count, error } = await sb.from('puzzles').select('*', { count: 'exact', head: true });
+    if (!error && count > 0) {
+      usingSupabase = true;
+      console.log(`Supabase: ${count} puzzles available`);
+      updatePuzzleCount(count);
+    }
+  } catch(e) {
+    usingSupabase = false;
   }
-  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) throw new Error('API ' + res.status);
-  return await res.json();
 }
 
+function updatePuzzleCount(count) {
+  const btn = document.getElementById('filter-all');
+  if (btn) btn.innerHTML = `All Puzzles <span style="color:var(--gold);font-size:9px">${count.toLocaleString()}</span>`;
+}
+
+// ── FETCH FROM SUPABASE ──
+async function fetchFromSupabase(count = 20) {
+  const minR = parseInt(document.getElementById('ratingMin').value);
+  const maxR = parseInt(document.getElementById('ratingMax').value);
+
+  let query = sb.from('puzzles')
+    .select('id, fen, moves, rating, themes')
+    .gte('rating', minR)
+    .lte('rating', maxR)
+    .limit(count);
+
+  if (currentThemeFilter !== 'all') {
+    query = query.ilike('themes', `%${currentThemeFilter}%`);
+  }
+
+  // Random offset for variety
+  const { count: total } = await sb.from('puzzles')
+    .select('*', { count: 'exact', head: true })
+    .gte('rating', minR).lte('rating', maxR);
+
+  if (total > count) {
+    const offset = Math.floor(Math.random() * Math.max(0, total - count));
+    query = query.range(offset, offset + count - 1);
+  }
+
+  const { data, error } = await query;
+  if (error || !data || data.length === 0) return null;
+
+  return data.map(p => ({
+    puzzle: {
+      id: p.id,
+      fen: p.fen,
+      moves: p.moves,
+      rating: p.rating,
+      themes: (p.themes || '').split(' ').filter(Boolean)
+    }
+  }));
+}
+
+// ── FALLBACK: LOCAL PUZZLES ──
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function buildFallbackQueue() {
+  let filtered = FALLBACK_PUZZLES.filter(p => {
+    if (currentThemeFilter === 'all') return true;
+    return p[4].includes(currentThemeFilter);
+  });
+  if (filtered.length === 0) filtered = FALLBACK_PUZZLES;
+  puzzleQueue = shuffle(filtered).map(p => ({
+    puzzle: { id: p[0], fen: p[1], moves: p[2], rating: parseInt(p[3]), themes: p[4].split(' ') }
+  }));
+}
+
+// ── MAIN LOAD FUNCTION ──
 async function loadNextPuzzle() {
   puzzleSolved = false;
   puzzleFailed = false;
   hintUsed = false;
   selectedSquare = null;
   document.getElementById('feedbackOverlay').className = 'feedback-overlay';
-
-  // Show loading
-  document.getElementById('puzzle-board').innerHTML = `
-    <div class="loading-state">
-      <div class="loading-chess">♟</div>
-      <div class="loading-text">Loading puzzle...</div>
-    </div>`;
-  document.getElementById('toMoveText').textContent = 'Loading...';
-  document.getElementById('puzzleRatingBadge').textContent = 'Rating: —';
   document.getElementById('themesList').innerHTML = '';
 
   try {
-    const data = await fetchPuzzle();
+    let data;
+
+    if (usingSupabase) {
+      // Refill queue from Supabase when empty
+      if (puzzleQueue.length === 0) {
+        document.getElementById('toMoveText').textContent = 'Loading from database...';
+        const batch = await fetchFromSupabase(20);
+        if (batch) {
+          puzzleQueue = batch;
+        } else {
+          usingSupabase = false;
+          buildFallbackQueue();
+        }
+      }
+      data = puzzleQueue.shift();
+    } else {
+      if (puzzleQueue.length === 0) buildFallbackQueue();
+      data = puzzleQueue.shift();
+    }
+
+    if (!data || !data.puzzle.moves) {
+      loadNextPuzzle();
+      return;
+    }
+
     currentPuzzle = data.puzzle;
     setupPuzzle(data);
+
   } catch(e) {
-    showError(e);
+    console.error('Puzzle load error:', e);
+    if (puzzleQueue.length === 0) buildFallbackQueue();
+    const data = puzzleQueue.shift();
+    if (data) { currentPuzzle = data.puzzle; setupPuzzle(data); }
   }
 }
 
-function setupPuzzle(data) {
-  const puzzle = data.puzzle;
-  const fen = puzzle.fen;
-  const movesUCI = puzzle.moves.split(' '); // all moves: first is opponent's setup move, rest are solution
-
-  game = new Chess(fen);
-
-  // Play the first move (opponent's move that sets up the puzzle)
-  const setupMove = movesUCI[0];
-  const from = setupMove.slice(0,2);
-  const to = setupMove.slice(2,4);
-  const promo = setupMove[4] || undefined;
-  game.move({ from, to, promotion: promo });
-
-  // Solution is everything after the first move
-  solutionMoves = movesUCI.slice(1);
-  solutionIndex = 0;
-  playerColor = game.turn(); // whoever moves next is the player
-
-  // Update header
-  const rating = puzzle.rating || '?';
-  document.getElementById('puzzleRatingBadge').textContent = 'Rating: ' + rating;
-  document.getElementById('puzzleTitle').textContent = 'Find the best move — ' + (playerColor === 'w' ? 'White' : 'Black') + ' to move';
-
-  // Themes
-  const themes = (puzzle.themes || []);
-  const themeHtml = themes.slice(0,8).map(t =>
-    `<span class="theme-tag ${themeClass(t)}">${prettyTheme(t)}</span>`
-  ).join('');
-  document.getElementById('themesList').innerHTML = themeHtml;
-
-  renderBoard();
-  updateToMove();
-  animateSetupMove(from, to);
-}
-
-function animateSetupMove(from, to) {
-  // Briefly highlight the setup move squares
-  setTimeout(() => {
-    const fromEl = document.querySelector(`[data-sq="${from}"]`);
-    const toEl = document.querySelector(`[data-sq="${to}"]`);
-    if (fromEl) fromEl.classList.add('last-from');
-    if (toEl) toEl.classList.add('last-to');
-    setTimeout(() => {
-      if (fromEl) fromEl.classList.remove('last-from');
-      if (toEl) toEl.classList.remove('last-to');
-    }, 800);
-  }, 100);
-}
-
-// ── BOARD RENDERING ──
-function renderBoard() {
-  const board = document.getElementById('puzzle-board');
-  board.innerHTML = '';
-  const pos = game.board();
-
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
-      const rank = playerColor === 'w' ? 7 - r : r;
-      const file = playerColor === 'w' ? c : 7 - c;
-      const sq = 'abcdefgh'[file] + (rank + 1);
-      const piece = pos[rank] ? pos[rank][file] : null;
-      const isLight = (rank + file) % 2 === 1;
-
-      const div = document.createElement('div');
-      div.className = 'sq ' + (isLight ? 'light' : 'dark');
-      div.dataset.sq = sq;
-      div.onclick = () => handleSquareClick(sq);
-
-      if (piece) {
-        const key = piece.color + piece.type.toUpperCase();
-        const p = document.createElement('div');
-        p.className = 'piece';
-        p.textContent = PIECE_UNICODE[key] || '?';
-        div.appendChild(p);
-      }
-
-      // Square labels
-      if (file === 0) {
-        const lbl = document.createElement('div');
-        lbl.className = 'sq-label-rank';
-        lbl.textContent = rank + 1;
-        div.appendChild(lbl);
-      }
-      if (rank === 0 && playerColor === 'w' || rank === 7 && playerColor === 'b') {
-        const lbl = document.createElement('div');
-        lbl.className = 'sq-label';
-        lbl.textContent = 'abcdefgh'[file];
-        div.appendChild(lbl);
-      }
-
-      board.appendChild(div);
-    }
-  }
-
-  // Show move dots for selected piece
-  if (selectedSquare && !puzzleSolved && !puzzleFailed) {
-    const moves = game.moves({ square: selectedSquare, verbose: true });
-    moves.forEach(m => {
-      const toEl = document.querySelector(`[data-sq="${m.to}"]`);
-      if (!toEl) return;
-      const targetPiece = game.get(m.to);
-      if (targetPiece) {
-        const ring = document.createElement('div');
-        ring.className = 'capture-ring';
-        toEl.appendChild(ring);
-      } else {
-        const dot = document.createElement('div');
-        dot.className = 'move-dot';
-        toEl.appendChild(dot);
-      }
-    });
-    const selEl = document.querySelector(`[data-sq="${selectedSquare}"]`);
-    if (selEl) selEl.classList.add('selected');
-  }
-}
-
-function updateToMove() {
-  const color = game.turn();
-  const dot = document.getElementById('toMoveDot');
-  const txt = document.getElementById('toMoveText');
-  dot.className = 'to-move-dot ' + (color === 'w' ? 'white' : 'black');
-  txt.textContent = (color === 'w' ? 'White' : 'Black') + ' to move — find the best move!';
-}
-
-// ── MOVE HANDLING ──
-function handleSquareClick(sq) {
-  if (puzzleSolved || puzzleFailed) return;
-  if (game.turn() !== playerColor) return;
-
-  const piece = game.get(sq);
-
-  if (selectedSquare) {
-    if (selectedSquare === sq) {
-      selectedSquare = null;
-      renderBoard();
-      return;
-    }
-    // Try the move
-    const move = attemptMove(selectedSquare, sq);
-    if (move) {
-      selectedSquare = null;
-      return;
-    }
-    // If clicked own piece, select it instead
-    if (piece && piece.color === playerColor) {
-      selectedSquare = sq;
-      renderBoard();
-      return;
-    }
-    selectedSquare = null;
-    renderBoard();
-    return;
-  }
-
-  if (piece && piece.color === playerColor) {
-    selectedSquare = sq;
-    renderBoard();
-  }
-}
-
-function attemptMove(from, to) {
-  const promotion = needsPromotion(from, to) ? 'q' : undefined;
-  const move = game.move({ from, to, promotion });
-  if (!move) return null;
-
-  // Check if move matches solution
-  const expected = solutionMoves[solutionIndex];
-  const expectedFrom = expected.slice(0,2);
-  const expectedTo = expected.slice(2,4);
-  const playerMoveUCI = from + to + (promotion || '');
-  const expectedUCI = expected.slice(0,4) + (expected[4] || '');
-
-  if (from === expectedFrom && to === expectedTo) {
-    // Correct!
-    flashSquares(from, to, 'correct');
-    solutionIndex++;
-
-    if (solutionIndex >= solutionMoves.length) {
-      // Puzzle complete!
-      onPuzzleSolved();
-    } else {
-      // Play opponent's response
-      renderBoard();
-      setTimeout(() => playOpponentMove(), 700);
-    }
-  } else {
-    // Wrong move
-    game.undo();
-    flashSquares(from, to, 'wrong');
-    onPuzzleFailed(from, to);
-  }
-
-  renderBoard();
-  return move;
-}
-
-function playOpponentMove() {
-  if (solutionIndex >= solutionMoves.length) return;
-  const oppMove = solutionMoves[solutionIndex];
-  const from = oppMove.slice(0,2);
-  const to = oppMove.slice(2,4);
-  const promo = oppMove[4] || undefined;
-  game.move({ from, to, promotion: promo });
-  solutionIndex++;
-  flashSquares(from, to, 'last-from');
-  renderBoard();
-  if (solutionIndex >= solutionMoves.length) {
-    onPuzzleSolved();
-  }
-}
-
-function needsPromotion(from, to) {
-  const piece = game.get(from);
-  if (!piece || piece.type !== 'p') return false;
-  const toRank = parseInt(to[1]);
-  return (piece.color === 'w' && toRank === 8) || (piece.color === 'b' && toRank === 1);
-}
-
-function flashSquares(from, to, cls) {
-  const fromEl = document.querySelector(`[data-sq="${from}"]`);
-  const toEl = document.querySelector(`[data-sq="${to}"]`);
-  if (fromEl) { fromEl.classList.add(cls); setTimeout(() => fromEl.classList.remove(cls), 700); }
-  if (toEl)   { toEl.classList.add(cls);   setTimeout(() => toEl.classList.remove(cls), 700); }
-}
-
-// ── PUZZLE OUTCOME ──
-function onPuzzleSolved() {
-  puzzleSolved = true;
-  stats.solved++;
-  stats.streak++;
-  if (stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
-  addHistory(currentPuzzle?.rating || '?', true);
-  updateStats();
-
-  const overlay = document.getElementById('feedbackOverlay');
-  overlay.className = 'feedback-overlay show success';
-  document.getElementById('feedbackIcon').textContent = hintUsed ? '✓' : '⭐';
-  document.getElementById('feedbackTitle').textContent = hintUsed ? 'Solved with hint!' : 'Brilliant! Puzzle solved!';
-  document.getElementById('feedbackDesc').textContent = hintUsed
-    ? 'You found the right idea. Try the next one without a hint!'
-    : 'You found the best move. Keep going — your tactics are improving!';
-}
-
-function onPuzzleFailed(from, to) {
-  puzzleFailed = true;
-  stats.failed++;
-  stats.streak = 0;
-  addHistory(currentPuzzle?.rating || '?', false);
-  updateStats();
-
-  const overlay = document.getElementById('feedbackOverlay');
-  overlay.className = 'feedback-overlay show fail';
-  document.getElementById('feedbackIcon').textContent = '✗';
-  document.getElementById('feedbackTitle').textContent = 'Not the best move';
-  const expected = solutionMoves[solutionIndex];
-  const solFrom = expected.slice(0,2).toUpperCase();
-  const solTo = expected.slice(2,4).toUpperCase();
-  document.getElementById('feedbackDesc').textContent = `The right move was ${solFrom}→${solTo}. Click "Next Puzzle" to try a fresh one, or study the position.`;
-}
-
-function showHint() {
-  if (puzzleSolved || puzzleFailed || solutionIndex >= solutionMoves.length) return;
-  hintUsed = true;
-  const expected = solutionMoves[solutionIndex];
-  const hintFrom = expected.slice(0,2);
-  const hintEl = document.querySelector(`[data-sq="${hintFrom}"]`);
-  if (hintEl) {
-    hintEl.classList.add('hint');
-    setTimeout(() => hintEl.classList.remove('hint'), 1500);
-  }
-  selectedSquare = hintFrom;
-  renderBoard();
-}
-
-function skipPuzzle() {
-  stats.failed++;
-  stats.streak = 0;
-  addHistory(currentPuzzle?.rating || '?', false);
-  updateStats();
+function setThemeFilter(theme) {
+  currentThemeFilter = theme;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('filter-' + theme);
+  if (btn) btn.classList.add('active');
+  puzzleQueue = []; // Clear queue so next load fetches with new filter
   loadNextPuzzle();
 }
 
-// ── STATS ──
-function updateStats() {
-  document.getElementById('statSolved').textContent = stats.solved;
-  document.getElementById('statFailed').textContent = stats.failed;
-  document.getElementById('statStreak').textContent = stats.streak + ' 🔥';
-  document.getElementById('statBestStreak').textContent = stats.bestStreak;
-  document.getElementById('streakBadge').textContent = '🔥 ' + stats.streak + ' Streak';
-  const total = stats.solved + stats.failed;
-  const acc = total > 0 ? Math.round(stats.solved / total * 100) + '%' : '—';
-  document.getElementById('statAccuracy').textContent = acc;
-}
-
-function addHistory(rating, won) {
-  stats.history.unshift({ rating, won });
-  if (stats.history.length > 8) stats.history.pop();
-  const list = document.getElementById('historyList');
-  list.innerHTML = stats.history.map(h => `
-    <div class="history-item">
-      <div class="history-dot ${h.won ? 'win' : 'loss'}"></div>
-      <div class="history-info">${h.won ? 'Solved' : 'Failed'}</div>
-      <div class="history-rating">${h.rating}</div>
-    </div>`).join('');
-}
-
-function showError(err) {
-  document.getElementById('puzzle-board').innerHTML = `
-    <div class="error-state">
-      <div class="error-icon">⚠️</div>
-      <div class="error-title">Couldn't load puzzle</div>
-      <div class="error-desc">The Lichess API is unreachable. Check your internet connection and try again.<br><br>Error: ${err.message}</div>
-    </div>`;
-  document.getElementById('toMoveText').textContent = 'Connection error';
-}
-
 // ── INIT ──
-loadNextPuzzle();
-updateStats();
+checkSupabase().then(() => {
+  buildFallbackQueue();
+  loadNextPuzzle();
+  updateStats();
+});
 </script>
 </body>
 </html>
