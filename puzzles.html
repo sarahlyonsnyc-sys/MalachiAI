@@ -634,7 +634,11 @@ function onPuzzleFailed(from, to) {
   const expected = solutionMoves[solutionIndex];
   const solFrom = expected.slice(0,2).toUpperCase();
   const solTo = expected.slice(2,4).toUpperCase();
-  document.getElementById('feedbackDesc').textContent = `The right move was ${solFrom}→${solTo}. Click "Next Puzzle" to try a fresh one, or study the position.`;
+  // Get proper SAN notation for the solution move
+  const tempGame = new Chess(game.fen());
+  const solMove = tempGame.move({ from: expected.slice(0,2), to: expected.slice(2,4), promotion: expected[4] || 'q' });
+  const sanMove = solMove ? solMove.san : expected.slice(0,4);
+  document.getElementById('feedbackDesc').textContent = `The right move was ${sanMove}. Hit Retry to try again.`;
 }
 
 function updateReviewBtns() {
@@ -679,19 +683,54 @@ function restartPuzzle() {
 }
 function showAnswer() {
   if (puzzleSolved || puzzleFailed) return;
-  puzzleFailed = true; addHistory(currentPuzzle.rating, false);
+  puzzleFailed = true;
+  stats.failed++; stats.streak = 0;
+  addHistory(currentPuzzle.rating, false);
+  updateStats();
+
+  const overlay = document.getElementById('feedbackOverlay');
+  overlay.className = 'feedback-overlay show fail';
+  document.getElementById('feedbackIcon').textContent = '💡';
+  document.getElementById('feedbackTitle').textContent = 'Showing solution...';
+  document.getElementById('feedbackDesc').textContent = '';
+
   let idx = solutionIndex;
-  function step() {
+  function playStep() {
     if (idx >= solutionMoves.length) {
-      document.getElementById('toMoveText').textContent = 'Use Back/Forward to review';
-      enterReviewMode(); return;
+      document.getElementById('feedbackTitle').textContent = 'Solution complete';
+      document.getElementById('feedbackDesc').textContent = 'Use ← Back to step through the moves.';
+      if (typeof enterReviewMode === 'function') enterReviewMode();
+      return;
     }
     const uci = solutionMoves[idx];
-    game.move({ from: uci.slice(0,2), to: uci.slice(2,4), promotion: uci[4] || 'q' });
-    renderBoard(); idx++; setTimeout(step, 650);
+    const from = uci.slice(0,2), to = uci.slice(2,4), promo = uci[4] || 'q';
+
+    // Flash the from-square to show which piece is moving
+    const fromEl = document.querySelector('[data-sq="' + from + '"]');
+    if (fromEl) {
+      fromEl.classList.add('hint');
+      setTimeout(() => {
+        fromEl.classList.remove('hint');
+        // Make the move and re-render
+        const m = game.move({ from, to, promotion: promo });
+        flashSquares(from, to, 'last-to');
+        renderBoard();
+        // Update notation in feedback
+        if (m) {
+          document.getElementById('feedbackDesc').textContent = 'Played: ' + m.san;
+        }
+        idx++;
+        setTimeout(playStep, 900);
+      }, 500);
+    } else {
+      game.move({ from, to, promotion: promo });
+      renderBoard(); idx++;
+      setTimeout(playStep, 900);
+    }
   }
-  step();
+  playStep();
 }
+
 function showHint() {
   if (puzzleSolved || puzzleFailed || solutionIndex >= solutionMoves.length) return;
   hintUsed = true;
