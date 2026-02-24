@@ -5,116 +5,117 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Malachi AI — Openings Explorer</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <style>
     :root {
-      --black:  #0a0a0a;
-      --dark:   #111111;
-      --panel:  #161616;
-      --panel2: #1c1c1c;
-      --border: #2a2a2a;
-      --gold:   #c9a84c;
-      --gold2:  #e8c97a;
-      --cream:  #f5f0e8;
-      --muted:  #6b6b6b;
-      --white:  #ffffff;
-      --green:  #4caf50;
-      --red:    #e05068;
-      --blue:   #5b8dee;
-      --purple: #9c6fe4;
-      --orange: #f0924a;
+      --black:#0a0a0a; --dark:#111111; --panel:#161616; --panel2:#1c1c1c;
+      --border:#2a2a2a; --gold:#c9a84c; --gold2:#e8c97a; --cream:#f5f0e8;
+      --muted:#6b6b6b; --green:#4caf50; --red:#e05068;
     }
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { background:var(--black); color:var(--cream); font-family:'Outfit',sans-serif; overflow-x:hidden; min-height:100vh; }
+    body { background:var(--black); color:var(--cream); font-family:'Outfit',sans-serif; min-height:100vh; overflow-x:hidden; }
     .cursor { position:fixed; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:difference; }
-    .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid var(--gold); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:0.4; transition:left 0.12s ease-out,top 0.12s ease-out; }
-    .chess-bg { position:fixed; inset:0; z-index:0; opacity:0.025; background-image:repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%); background-size:48px 48px; pointer-events:none; }
+    .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid var(--gold); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:0.4; transition:left .12s ease-out,top .12s ease-out; }
+    .chess-bg { position:fixed; inset:0; z-index:0; opacity:.025; background-image:repeating-conic-gradient(var(--gold) 0% 25%,transparent 0% 50%); background-size:48px 48px; pointer-events:none; }
 
-    nav { position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:18px 40px; border-bottom:1px solid var(--border); background:rgba(10,10,10,0.96); backdrop-filter:blur(12px); }
+    /* NAV */
+    nav { position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:18px 40px; border-bottom:1px solid var(--border); background:rgba(10,10,10,.96); backdrop-filter:blur(12px); }
     .logo { display:flex; align-items:center; gap:12px; text-decoration:none; }
     .logo-icon { display:grid; grid-template-columns:1fr 1fr; gap:2px; width:18px; height:18px; }
-    .logo-icon span { background:var(--gold); border-radius:1px; display:block; }
+    .logo-icon span { background:var(--gold); border-radius:1px; }
     .logo-icon span:nth-child(2),.logo-icon span:nth-child(3) { background:transparent; border:1px solid var(--gold); }
-    .logo-text { font-family:'DM Mono',monospace; font-size:13px; letter-spacing:0.1em; color:var(--cream); }
+    .logo-text { font-family:'DM Mono',monospace; font-size:13px; letter-spacing:.1em; color:var(--cream); }
     .logo-text span { color:var(--gold); }
     .nav-right { display:flex; align-items:center; gap:16px; }
-    .nav-link { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); text-decoration:none; padding:8px 14px; border:1px solid transparent; transition:all 0.2s; }
+    .nav-link { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); text-decoration:none; padding:8px 14px; border:1px solid transparent; transition:all .2s; }
     .nav-link:hover,.nav-link.active { color:var(--gold); border-color:var(--border); }
 
-    .main { position:relative; z-index:1; display:grid; grid-template-columns:260px 1fr 340px; min-height:calc(100vh - 65px); }
+    /* LAYOUT */
+    .main { position:relative; z-index:1; display:grid; grid-template-columns:290px 1fr 280px; min-height:calc(100vh - 65px); }
 
-    /* LEFT: Opening categories */
-    .sidebar-left { background:var(--panel); border-right:1px solid var(--border); padding:20px 0; overflow-y:auto; }
-    .cat-section { padding:0 0 8px; }
-    .cat-title { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.25em; color:var(--muted); text-transform:uppercase; padding:16px 20px 8px; border-top:1px solid var(--border); }
-    .cat-title:first-child { border-top:none; padding-top:0; }
-    .opening-btn { width:100%; text-align:left; background:none; border:none; border-left:2px solid transparent; color:var(--muted); font-family:'Outfit',sans-serif; font-size:12px; padding:9px 20px 9px 18px; cursor:pointer; transition:all 0.15s; display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .opening-btn:hover { color:var(--cream); background:rgba(255,255,255,0.03); }
-    .opening-btn.active { color:var(--gold); border-left-color:var(--gold); background:rgba(201,168,76,0.06); }
-    .opening-eco { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:0.06em; flex-shrink:0; }
+    /* LEFT SIDEBAR */
+    .sidebar-left { background:var(--panel); border-right:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+    .search-wrap { padding:14px; border-bottom:1px solid var(--border); }
+    .search-input { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--cream); font-family:'Outfit',sans-serif; font-size:13px; padding:9px 13px; outline:none; transition:border .2s; border-radius:0; }
+    .search-input:focus { border-color:rgba(201,168,76,.5); }
+    .search-input::placeholder { color:var(--muted); }
+    .eco-tabs { display:flex; border-bottom:1px solid var(--border); background:var(--panel2); }
+    .eco-tab { flex:1; padding:9px 4px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; text-align:center; color:var(--muted); cursor:pointer; background:none; border:none; border-bottom:2px solid transparent; transition:all .15s; }
+    .eco-tab:hover { color:var(--cream); }
+    .eco-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+    .list-meta { padding:8px 14px; font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:.1em; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; }
+    .opening-list { flex:1; overflow-y:auto; }
+    .opening-list::-webkit-scrollbar { width:3px; }
+    .opening-list::-webkit-scrollbar-thumb { background:var(--border); }
+    .opening-item { padding:9px 14px; cursor:pointer; border-bottom:1px solid rgba(42,42,42,.4); border-left:3px solid transparent; transition:all .12s; }
+    .opening-item:hover { background:rgba(255,255,255,.02); }
+    .opening-item.active { border-left-color:var(--gold); background:rgba(201,168,76,.05); }
+    .opening-item-name { font-size:12px; color:var(--cream); line-height:1.4; margin-bottom:2px; }
+    .opening-item-eco { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); }
+    .list-status { padding:20px; text-align:center; font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:.1em; }
 
-    /* CENTER: Board */
-    .board-area { display:flex; flex-direction:column; align-items:center; padding:32px 24px; gap:20px; }
-    .opening-header { width:100%; max-width:520px; }
-    .opening-name { font-size:22px; font-weight:700; color:var(--cream); margin-bottom:4px; }
-    .opening-eco-badge { font-family:'DM Mono',monospace; font-size:10px; color:var(--gold); background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.2); padding:3px 10px; display:inline-block; margin-bottom:10px; letter-spacing:0.1em; }
-    .opening-desc { font-size:13px; color:var(--muted); line-height:1.6; max-width:480px; }
+    /* CENTER */
+    .center { display:flex; flex-direction:column; align-items:center; padding:24px 16px; gap:14px; background:var(--dark); }
+    .opening-header { width:100%; max-width:480px; }
+    .opening-name-big { font-size:18px; font-weight:700; color:var(--cream); margin-bottom:6px; line-height:1.3; }
+    .opening-badges { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; align-items:center; }
+    .eco-badge { font-family:'DM Mono',monospace; font-size:10px; color:var(--gold); background:rgba(201,168,76,.1); border:1px solid rgba(201,168,76,.25); padding:3px 10px; letter-spacing:.1em; }
+    .move-count-badge { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); background:var(--panel); border:1px solid var(--border); padding:3px 10px; letter-spacing:.06em; }
+    .opening-pgn-text { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); line-height:1.8; }
 
-    #board { display:grid; grid-template-columns:repeat(8,1fr); width:480px; height:480px; border:2px solid var(--border); box-shadow:0 0 40px rgba(0,0,0,0.6); }
-    .sq { width:60px; height:60px; display:flex; align-items:center; justify-content:center; position:relative; }
-    .sq.light { background:#2a2a2a; }
-    .sq.dark  { background:#1a1a1a; }
-    .sq.highlight { background:rgba(201,168,76,0.3) !important; }
-    .sq.last-from { background:rgba(201,168,76,0.2) !important; }
-    .sq.last-to   { background:rgba(201,168,76,0.35) !important; }
-    .piece { font-size:38px; line-height:1; user-select:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }
-    .sq-lbl { position:absolute; bottom:2px; right:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(255,255,255,0.2); }
-    .sq-lbl-r { position:absolute; top:2px; left:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(255,255,255,0.2); }
+    /* BOARD */
+    #board-wrap { position:relative; }
+    #board { display:grid; grid-template-columns:repeat(8,1fr); width:464px; height:464px; border:2px solid var(--border); box-shadow:0 8px 48px rgba(0,0,0,.6); }
+    .sq { width:58px; height:58px; display:flex; align-items:center; justify-content:center; position:relative; }
+    .sq.light { background:#222; }
+    .sq.dark  { background:#181818; }
+    .sq.hi-from { background:rgba(201,168,76,.18) !important; }
+    .sq.hi-to   { background:rgba(201,168,76,.36) !important; }
+    .piece { font-size:36px; line-height:1; user-select:none; filter:drop-shadow(0 2px 4px rgba(0,0,0,.6)); }
+    .sq-file { position:absolute; bottom:2px; right:3px; font-size:7px; font-family:'DM Mono',monospace; color:rgba(255,255,255,.18); }
+    .sq-rank { position:absolute; top:2px; left:3px; font-size:7px; font-family:'DM Mono',monospace; color:rgba(255,255,255,.18); }
 
-    /* Move controls */
-    .move-controls { display:flex; gap:10px; width:480px; }
-    .ctrl-btn { flex:1; padding:11px; font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; border:1px solid var(--border); background:var(--panel); color:var(--muted); cursor:pointer; transition:all 0.2s; }
-    .ctrl-btn:hover { color:var(--cream); border-color:var(--muted); }
-    .ctrl-btn.primary { border-color:rgba(201,168,76,0.4); color:var(--gold); background:rgba(201,168,76,0.06); }
+    /* MOVE HISTORY */
+    .move-history { width:464px; display:flex; flex-wrap:wrap; gap:3px; padding:10px 12px; background:var(--panel); border:1px solid var(--border); min-height:44px; align-items:center; }
+    .mv-num { font-family:'DM Mono',monospace; font-size:9px; color:rgba(107,107,107,.6); margin-right:1px; }
+    .mv-token { font-family:'DM Mono',monospace; font-size:11px; padding:3px 7px; background:var(--panel2); border:1px solid var(--border); color:var(--muted); cursor:pointer; transition:all .12s; border-radius:0; }
+    .mv-token:hover { color:var(--cream); border-color:var(--muted); }
+    .mv-token.active { color:var(--gold); border-color:rgba(201,168,76,.5); background:rgba(201,168,76,.08); }
+    .mv-empty { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); }
 
-    /* Move history bar */
-    .move-history { width:480px; display:flex; flex-wrap:wrap; gap:4px; padding:12px 16px; background:var(--panel); border:1px solid var(--border); min-height:44px; align-items:center; }
-    .move-token { font-family:'DM Mono',monospace; font-size:11px; padding:3px 8px; background:var(--panel2); border:1px solid var(--border); color:var(--muted); cursor:pointer; transition:all 0.15s; }
-    .move-token:hover { color:var(--cream); }
-    .move-token.current { color:var(--gold); border-color:rgba(201,168,76,0.4); background:rgba(201,168,76,0.08); }
-    .move-num { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); opacity:0.5; }
+    /* CONTROLS */
+    .controls { display:flex; gap:6px; width:464px; }
+    .ctrl { flex:1; padding:10px 6px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.08em; border:1px solid var(--border); background:var(--panel); color:var(--muted); cursor:pointer; transition:all .2s; text-transform:uppercase; }
+    .ctrl:hover { color:var(--cream); border-color:rgba(255,255,255,.2); }
+    .ctrl.gold { border-color:rgba(201,168,76,.4); color:var(--gold); background:rgba(201,168,76,.05); }
+    .ctrl.gold:hover { background:rgba(201,168,76,.12); }
 
-    /* RIGHT: Info panel */
-    .sidebar-right { background:var(--panel); border-left:1px solid var(--border); padding:24px 20px; overflow-y:auto; }
-    .section-head { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.2em; color:var(--muted); text-transform:uppercase; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+    /* PLACEHOLDER */
+    .placeholder { width:464px; height:464px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; border:2px solid var(--border); background:var(--panel); }
+    .placeholder-icon { font-size:72px; opacity:.2; }
+    .placeholder-text { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:.18em; text-align:center; line-height:1.8; }
 
-    .var-btn { width:100%; text-align:left; background:none; border:1px solid var(--border); color:var(--muted); font-family:'Outfit',sans-serif; font-size:12px; padding:10px 14px; cursor:pointer; transition:all 0.15s; margin-bottom:6px; }
-    .var-btn:hover { color:var(--cream); border-color:var(--muted); background:rgba(255,255,255,0.03); }
-    .var-btn .var-moves { font-family:'DM Mono',monospace; font-size:10px; color:var(--gold); margin-top:3px; display:block; }
+    /* RIGHT SIDEBAR */
+    .sidebar-right { background:var(--panel); border-left:1px solid var(--border); padding:18px; overflow-y:auto; }
+    .sidebar-right::-webkit-scrollbar { width:3px; }
+    .sidebar-right::-webkit-scrollbar-thumb { background:var(--border); }
+    .section-head { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.25em; color:var(--muted); text-transform:uppercase; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+    .stat-row { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid rgba(42,42,42,.5); font-size:12px; }
+    .stat-label { color:var(--muted); }
+    .stat-val { font-family:'DM Mono',monospace; font-size:11px; color:var(--gold); }
+    .related-item { padding:8px 10px; border:1px solid var(--border); margin-bottom:5px; cursor:pointer; transition:all .15s; }
+    .related-item:hover { border-color:rgba(201,168,76,.35); background:rgba(201,168,76,.04); }
+    .related-name { font-size:11px; color:var(--cream); margin-bottom:2px; }
+    .related-pgn { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
-    .key-idea { background:var(--panel2); border-left:3px solid var(--gold); padding:12px 14px; margin-bottom:10px; font-size:12px; line-height:1.6; color:var(--cream); }
-    .key-idea strong { color:var(--gold); display:block; margin-bottom:4px; font-size:11px; font-family:'DM Mono',monospace; letter-spacing:0.08em; }
-
-    .move-step { display:flex; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); cursor:pointer; }
-    .move-step:hover { background:rgba(255,255,255,0.02); }
-    .step-num { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); width:20px; flex-shrink:0; padding-top:2px; }
-    .step-move { font-family:'DM Mono',monospace; font-size:12px; color:var(--gold); width:48px; flex-shrink:0; }
-    .step-desc { font-size:11px; color:var(--muted); line-height:1.5; }
-
-    @media (max-width:1100px) { .main { grid-template-columns:220px 1fr; } .sidebar-right { display:none; } }
-    @media (max-width:800px) {
-      .main { grid-template-columns:1fr; }
-      .sidebar-left { display:none; }
-      #board { width:360px; height:360px; }
-      .sq { width:45px; height:45px; }
-      .piece { font-size:28px; }
-      .move-controls,.move-history { width:360px; }
-    }
+    @media(max-width:1150px){ .main{grid-template-columns:260px 1fr;} .sidebar-right{display:none;} }
+    @media(max-width:820px){ .main{grid-template-columns:1fr;} .sidebar-left{max-height:240px;} #board,.move-history,.controls{width:340px !important;} .sq{width:42.5px !important;height:42.5px !important;} .piece{font-size:26px !important;} }
   </style>
 </head>
 <body>
-<div class="cursor" id="cursor"></div>
-<div class="cursor-ring" id="cursorRing"></div>
+<div class="cursor" id="cur"></div>
+<div class="cursor-ring" id="ring"></div>
 <div class="chess-bg"></div>
 
 <nav>
@@ -133,658 +134,334 @@
 </nav>
 
 <div class="main">
-  <!-- LEFT SIDEBAR -->
-  <div class="sidebar-left" id="openingList"></div>
 
-  <!-- BOARD CENTER -->
-  <div class="board-area">
+  <!-- ── LEFT ── -->
+  <div class="sidebar-left">
+    <div class="search-wrap">
+      <input class="search-input" id="searchInput" type="text" placeholder="Search openings..." oninput="onSearch()">
+    </div>
+    <div class="eco-tabs">
+      <button class="eco-tab active" onclick="setEco('all')" id="tab-all">All</button>
+      <button class="eco-tab" onclick="setEco('A')" id="tab-A">A</button>
+      <button class="eco-tab" onclick="setEco('B')" id="tab-B">B</button>
+      <button class="eco-tab" onclick="setEco('C')" id="tab-C">C</button>
+      <button class="eco-tab" onclick="setEco('D')" id="tab-D">D</button>
+      <button class="eco-tab" onclick="setEco('E')" id="tab-E">E</button>
+    </div>
+    <div class="list-meta">
+      <span id="listCount">Loading...</span>
+      <span id="totalCount"></span>
+    </div>
+    <div class="opening-list" id="openingList">
+      <div class="list-status">Loading openings...</div>
+    </div>
+  </div>
+
+  <!-- ── CENTER ── -->
+  <div class="center">
     <div class="opening-header">
-      <div class="opening-name" id="openingName">Opening Explorer</div>
-      <div class="opening-eco-badge" id="openingEco">ECO: —</div>
-      <div class="opening-desc" id="openingDesc">Select an opening from the left to explore its moves, ideas, and key variations.</div>
+      <div class="opening-name-big" id="opName">Openings Explorer</div>
+      <div class="opening-badges">
+        <div class="eco-badge" id="opEco" style="display:none"></div>
+        <div class="move-count-badge" id="opMoves" style="display:none"></div>
+      </div>
+      <div class="opening-pgn-text" id="opPgn">Search or select an opening from the list to explore its moves.</div>
     </div>
 
-    <div id="board"></div>
-
-    <div class="move-history" id="moveHistory">
-      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:0.08em;">Select an opening to begin</span>
+    <div id="boardWrap">
+      <div class="placeholder">
+        <div class="placeholder-icon">♟</div>
+        <div class="placeholder-text">SELECT AN OPENING<br>TO BEGIN</div>
+      </div>
     </div>
 
-    <div class="move-controls">
-      <button class="ctrl-btn" onclick="goStart()">⏮ Start</button>
-      <button class="ctrl-btn" onclick="prevMove()">← Back</button>
-      <button class="ctrl-btn" onclick="nextMove()">Forward →</button>
-      <button class="ctrl-btn primary" onclick="playAll()">▶ Play All</button>
+    <div class="move-history" id="moveHistory"><span class="mv-empty">No moves yet</span></div>
+
+    <div class="controls">
+      <button class="ctrl" onclick="goStart()">⏮</button>
+      <button class="ctrl" onclick="prevMove()">← Back</button>
+      <button class="ctrl" onclick="nextMove()">Forward →</button>
+      <button class="ctrl gold" id="playBtn" onclick="togglePlay()">▶ Play All</button>
+      <button class="ctrl" onclick="goEnd()">⏭</button>
     </div>
   </div>
 
-  <!-- RIGHT PANEL -->
-  <div class="sidebar-right" id="rightPanel">
-    <div class="section-head">Key Ideas</div>
-    <div id="keyIdeas" style="color:var(--muted);font-size:12px;">Select an opening to see strategic ideas and move explanations.</div>
+  <!-- ── RIGHT ── -->
+  <div class="sidebar-right">
+    <div class="section-head">Details</div>
+    <div id="detailsPanel"><div style="color:var(--muted);font-size:12px">Select an opening.</div></div>
 
-    <div class="section-head" style="margin-top:24px">Move by Move</div>
-    <div id="moveAnnotations"></div>
-
-    <div class="section-head" style="margin-top:24px">Variations</div>
-    <div id="variationsList"></div>
+    <div class="section-head" style="margin-top:20px">Related Variations</div>
+    <div id="relatedPanel"><div style="color:var(--muted);font-size:12px">Related openings appear here.</div></div>
   </div>
+
 </div>
 
 <script>
 // ── CURSOR ──
-const cursor = document.getElementById('cursor');
-const ring = document.getElementById('cursorRing');
-document.addEventListener('mousemove', e => {
-  cursor.style.left = e.clientX+'px'; cursor.style.top = e.clientY+'px';
-  ring.style.left = e.clientX+'px'; ring.style.top = e.clientY+'px';
-});
+const cur=document.getElementById('cur'), ring=document.getElementById('ring');
+document.addEventListener('mousemove',e=>{cur.style.left=e.clientX+'px';cur.style.top=e.clientY+'px';ring.style.left=e.clientX+'px';ring.style.top=e.clientY+'px';});
 
-// ── OPENINGS DATABASE ──
-// 200+ openings with ECO codes, moves, descriptions, key ideas, and variations
-const OPENINGS = [
-  // ═══ E-PAWN OPENINGS (e4) ═══
-  {
-    eco:'C20', name:"King's Pawn Game", category:"e4 Openings",
-    moves:['e2e4','e7e5'],
-    desc:"The foundation of open chess. Both sides fight for the center immediately.",
-    ideas:["Control d4 and d5 with pawns","Develop knights before bishops","Castle early to protect the king"],
-    annotations:["1. e4 — Stake your claim in the center","1...e5 — Black mirrors the strategy"],
-    variations:[
-      {name:"Italian Game",moves:"2.Nf3 Nc6 3.Bc4"},
-      {name:"Spanish (Ruy López)",moves:"2.Nf3 Nc6 3.Bb5"},
-      {name:"King's Gambit",moves:"2.f4"},
-      {name:"Vienna Game",moves:"2.Nc3"},
-    ]
-  },
-  {
-    eco:'C50', name:'Italian Game', category:'e4 Openings',
-    moves:['e2e4','e7e5','g1f3','b8c6','f1c4'],
-    desc:"One of the oldest openings — simple, principled, and deadly in the right hands. The bishop eyes f7.",
-    ideas:["Aim the bishop at f7 — the weakest square","Control the center with pawns","Prepare to castle kingside quickly"],
-    annotations:["1. e4 — Pawn center","1...e5 — Mirror","2. Nf3 — Develops and attacks e5","2...Nc6 — Defends","3. Bc4 — The Italian! Aims at f7"],
-    variations:[
-      {name:"Giuoco Piano",moves:"3...Bc5 4.c3 Nf6 5.d4"},
-      {name:"Two Knights Defense",moves:"3...Nf6 4.Ng5"},
-      {name:"Evans Gambit",moves:"3...Bc5 4.b4"},
-      {name:"Hungarian Defense",moves:"3...Be7"},
-    ]
-  },
-  {
-    eco:'C60', name:'Spanish Opening (Ruy López)', category:'e4 Openings',
-    moves:['e2e4','e7e5','g1f3','b8c6','f1b5'],
-    desc:"The most played opening by World Champions for 500 years. Subtle pressure on e5.",
-    ideas:["Pressure the Nc6 that defends e5","Long-term squeeze of Black's position","Castle queenside for attacking chances"],
-    annotations:["1. e4","1...e5","2. Nf3","2...Nc6","3. Bb5 — The Spanish! Threatens to win e5 by capturing Nc6"],
-    variations:[
-      {name:"Berlin Defense",moves:"3...Nf6 4.0-0 Nxe4"},
-      {name:"Marshall Attack",moves:"3...a6 4.Ba4 Nf6 5.0-0 Be7 6.Re1 b5 7.Bb3 0-0 8.c3 d5"},
-      {name:"Morphy Defense",moves:"3...a6 4.Ba4"},
-      {name:"Steinitz Defense",moves:"3...d6"},
-      {name:"Classical Defense",moves:"3...Bc5"},
-    ]
-  },
-  {
-    eco:'B20', name:'Sicilian Defense', category:'e4 Openings',
-    moves:['e2e4','c7c5'],
-    desc:"The sharpest and most popular response to 1.e4. Black creates immediate imbalance.",
-    ideas:["Fight for d4 without giving White a free tempo","Create queenside counterplay","Unbalanced positions with winning chances for both sides"],
-    annotations:["1. e4","1...c5 — The Sicilian! Fights d4 asymmetrically"],
-    variations:[
-      {name:"Najdorf Variation",moves:"2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 a6"},
-      {name:"Dragon Variation",moves:"2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 g6"},
-      {name:"Scheveningen",moves:"2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 e6"},
-      {name:"Kan Variation",moves:"2.Nf3 e6 3.d4 cxd4 4.Nxd4 a6"},
-      {name:"Classical Sicilian",moves:"2.Nf3 Nc6 3.d4 cxd4 4.Nxd4"},
-      {name:"Accelerated Dragon",moves:"2.Nf3 Nc6 3.d4 cxd4 4.Nxd4 g6"},
-      {name:"Grand Prix Attack",moves:"2.Nc3 Nc6 3.f4"},
-    ]
-  },
-  {
-    eco:'C00', name:'French Defense', category:'e4 Openings',
-    moves:['e2e4','e7e6'],
-    desc:"Solid and strategic. Black creates a pawn chain and counterattacks White's center.",
-    ideas:["Build a solid pawn structure","Attack White's center with ...c5","Use the c8 bishop carefully — it can become bad"],
-    annotations:["1. e4","1...e6 — Prepares d5, solid but slightly passive"],
-    variations:[
-      {name:"Winawer Variation",moves:"2.d4 d5 3.Nc3 Bb4"},
-      {name:"Classical Variation",moves:"2.d4 d5 3.Nc3 Nf6"},
-      {name:"Tarrasch Variation",moves:"2.d4 d5 3.Nd2"},
-      {name:"Advance Variation",moves:"2.d4 d5 3.e5"},
-      {name:"Exchange Variation",moves:"2.d4 d5 3.exd5 exd5"},
-    ]
-  },
-  {
-    eco:'B10', name:'Caro-Kann Defense', category:'e4 Openings',
-    moves:['e2e4','c7c6'],
-    desc:"Solid and resilient. Black prepares d5 with the c-pawn, keeping the light-squared bishop active.",
-    ideas:["Prepare ...d5 to contest the center","Keep the c8 bishop outside the pawn chain","Solid structure — hard to attack"],
-    annotations:["1. e4","1...c6 — Prepares d5, unlike the French keeps the bishop free"],
-    variations:[
-      {name:"Classical Variation",moves:"2.d4 d5 3.Nc3 dxe4 4.Nxe4"},
-      {name:"Advance Variation",moves:"2.d4 d5 3.e5"},
-      {name:"Exchange Variation",moves:"2.d4 d5 3.exd5 cxd5 4.c4"},
-      {name:"Fantasy Variation",moves:"2.d4 d5 3.f3"},
-      {name:"Two Knights",moves:"2.Nc3 d5 3.Nf3"},
-    ]
-  },
-  {
-    eco:'C40', name:"King's Gambit", category:'e4 Openings',
-    moves:['e2e4','e7e5','f2f4'],
-    desc:"The most romantic opening in chess history. White sacrifices a pawn for rapid development and a kingside attack.",
-    ideas:["Open the f-file for the rook","Rapid piece development after exf4","Seize the center and attack before Black consolidates"],
-    annotations:["1. e4","1...e5","2. f4 — The King's Gambit! A pawn sacrifice for attacking chances"],
-    variations:[
-      {name:"King's Gambit Accepted",moves:"2...exf4 3.Nf3"},
-      {name:"Fischer Defense",moves:"2...exf4 3.Nf3 d6"},
-      {name:"Falkbeer Counter Gambit",moves:"2...d5"},
-      {name:"King's Gambit Declined",moves:"2...Bc5"},
-    ]
-  },
-  {
-    eco:'C44', name:"Scotch Game", category:'e4 Openings',
-    moves:['e2e4','e7e5','g1f3','b8c6','d2d4'],
-    desc:"Kasparov's revival of this classical opening. White immediately opens the center.",
-    ideas:["Open the center immediately with d4","Active piece play after exd4","Avoid the slow maneuvering of the Spanish"],
-    annotations:["1. e4","1...e5","2. Nf3","2...Nc6","3. d4 — The Scotch! Immediate central confrontation"],
-    variations:[
-      {name:"Scotch Game Main Line",moves:"3...exd4 4.Nxd4"},
-      {name:"Scotch Gambit",moves:"3...exd4 4.Bc4"},
-      {name:"Schmidt Variation",moves:"3...exd4 4.Nxd4 Nf6"},
-      {name:"Mieses Variation",moves:"3...exd4 4.Nxd4 Qh4"},
-    ]
-  },
-  {
-    eco:'C46', name:'Four Knights Game', category:'e4 Openings',
-    moves:['e2e4','e7e5','g1f3','b8c6','b1c3','g8f6'],
-    desc:"Symmetrical development. Both sides bring out all their knights before committing pawns.",
-    ideas:["Develop all pieces before pushing pawns","Maintain symmetry or break it strategically","Natural development following all opening principles"],
-    annotations:["1. e4","1...e5","2. Nf3","2...Nc6","3. Nc3","3...Nf6 — Perfect symmetry! Both sides fully developed"],
-    variations:[
-      {name:"Spanish Four Knights",moves:"4.Bb5"},
-      {name:"Italian Four Knights",moves:"4.Bc4"},
-      {name:"Scotch Four Knights",moves:"4.d4"},
-      {name:"Double Spanish",moves:"4.Bb5 Bb4"},
-    ]
-  },
-  {
-    eco:'B01', name:'Scandinavian Defense', category:'e4 Openings',
-    moves:['e2e4','d7d5'],
-    desc:"Black immediately challenges the center. Aggressive and direct — the queen comes out early.",
-    ideas:["Contest the center from move 1","Queen comes out early to d5 or d6","Solid but requires precise play to avoid harassment"],
-    annotations:["1. e4","1...d5 — Immediate central challenge!"],
-    variations:[
-      {name:"Main Line",moves:"2.exd5 Qxd5 3.Nc3 Qa5"},
-      {name:"Modern Variation",moves:"2.exd5 Nf6"},
-      {name:"Icelandic Gambit",moves:"2.exd5 Nf6 3.c4 e6"},
-      {name:"Portuguese Variation",moves:"2.exd5 Nf6 3.d4 Bg4"},
-    ]
-  },
-  {
-    eco:'B07', name:'Pirc Defense', category:'e4 Openings',
-    moves:['e2e4','d7d6','d2d4','g8f6','b1c3','g7g6'],
-    desc:"Hypermodern strategy. Black lets White build a center, then attacks it from the flanks.",
-    ideas:["Let White have the center","Attack it with ...c5 or ...e5 later","Fianchetto bishop on g7 controls the long diagonal"],
-    annotations:["1. e4","1...d6","2. d4","2...Nf6","3. Nc3","3...g6 — Hypermodern! Black prepares to attack White's center"],
-    variations:[
-      {name:"Classical System",moves:"4.Nf3 Bg7 5.Be2"},
-      {name:"Austrian Attack",moves:"4.f4 Bg7"},
-      {name:"150 Attack",moves:"4.Be3 Bg7 5.Qd2"},
-    ]
-  },
+// ── SUPABASE ──
+const SB_URL='https://nlsmrveieqadjmytsmjm.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
+const {createClient}=supabase;
+const sb=createClient(SB_URL,SB_KEY);
 
-  // ═══ d-PAWN OPENINGS (d4) ═══
-  {
-    eco:'D00', name:"Queen's Pawn Game", category:'d4 Openings',
-    moves:['d2d4','d7d5'],
-    desc:"The foundation of closed chess. Slower, more strategic battles than 1.e4.",
-    ideas:["Control the center with d4","Develop pieces toward the center","Plan queenside or kingside attacks based on pawn structure"],
-    annotations:["1. d4 — Control d4 and e5","1...d5 — Black fights for the center"],
-    variations:[
-      {name:"Queen's Gambit",moves:"2.c4"},
-      {name:"London System",moves:"2.Nf3 Nf6 3.Bf4"},
-      {name:"Trompowsky Attack",moves:"2.Bg5"},
-      {name:"Colle System",moves:"2.Nf3 Nf6 3.e3"},
-    ]
-  },
-  {
-    eco:'D06', name:"Queen's Gambit", category:'d4 Openings',
-    moves:['d2d4','d7d5','c2c4'],
-    desc:"The most classic opening in chess. White offers a pawn to gain central control.",
-    ideas:["Offer c4 pawn to gain e4 push","Not a real gambit — White almost always regains the pawn","Central control through d4 + e4"],
-    annotations:["1. d4","1...d5","2. c4 — The Queen's Gambit! Offer the c-pawn for central control"],
-    variations:[
-      {name:"Queen's Gambit Accepted",moves:"2...dxc4 3.Nf3"},
-      {name:"Queen's Gambit Declined",moves:"2...e6 3.Nc3 Nf6"},
-      {name:"Slav Defense",moves:"2...c6 3.Nf3 Nf6"},
-      {name:"Semi-Slav",moves:"2...c6 3.Nf3 Nf6 4.Nc3 e6"},
-      {name:"Chigorin Defense",moves:"2...Nc6"},
-      {name:"Albin Counter Gambit",moves:"2...e5"},
-    ]
-  },
-  {
-    eco:'D10', name:'Slav Defense', category:'d4 Openings',
-    moves:['d2d4','d7d5','c2c4','c7c6'],
-    desc:"Black supports the d5 pawn with c6, keeping the c8 bishop outside the pawn chain.",
-    ideas:["Support d5 with c6","Keep the c8 bishop active — it stays outside the chain","Solid structure, counterplay with ...dxc4 and ...b5"],
-    annotations:["1. d4","1...d5","2. c4","2...c6 — The Slav! Solid support for d5 without locking in the bishop"],
-    variations:[
-      {name:"Slav Exchange",moves:"3.cxd5 cxd5 4.Nc3"},
-      {name:"Semi-Slav",moves:"3.Nf3 Nf6 4.Nc3 e6"},
-      {name:"Czech Variation",moves:"3.Nf3 Nf6 4.Nc3 dxc4"},
-      {name:"Chameleon Variation",moves:"3.Nf3 Nf6 4.Nc3 a6"},
-    ]
-  },
-  {
-    eco:'E60', name:"King's Indian Defense", category:'d4 Openings',
-    moves:['d2d4','g8f6','c2c4','g7g6'],
-    desc:"Dynamic and aggressive. Black allows White a big center, then counterattacks with ...e5.",
-    ideas:["Let White build the center","Attack with ...e5 or ...c5","Fianchetto bishop becomes a monster on g7"],
-    annotations:["1. d4","1...Nf6","2. c4","2...g6 — Hypermodern! Black will fianchetto and attack the center"],
-    variations:[
-      {name:"Classical KID",moves:"3.Nc3 Bg7 4.e4 d6 5.Nf3 0-0 6.Be2"},
-      {name:"Sämisch Variation",moves:"3.Nc3 Bg7 4.e4 d6 5.f3"},
-      {name:"Four Pawns Attack",moves:"3.Nc3 Bg7 4.e4 d6 5.f4"},
-      {name:"Averbakh Variation",moves:"3.Nc3 Bg7 4.e4 d6 5.Be2 0-0 6.Bg5"},
-    ]
-  },
-  {
-    eco:'E00', name:"Nimzo-Indian Defense", category:'d4 Openings',
-    moves:['d2d4','g8f6','c2c4','e7e6','b1c3','f8b4'],
-    desc:"One of Black's best responses. The bishop pins the knight and prevents e4.",
-    ideas:["Pin the Nc3 with Bb4","Prevent White from playing e4","Double White's pawns after ...Bxc3"],
-    annotations:["1. d4","1...Nf6","2. c4","2...e6","3. Nc3","3...Bb4 — The Nimzo! Immediately pins the knight"],
-    variations:[
-      {name:"Classical Variation",moves:"4.Qc2"},
-      {name:"Rubinstein Variation",moves:"4.e3"},
-      {name:"Sämisch Variation",moves:"4.a3 Bxc3+ 5.bxc3"},
-      {name:"Leningrad Variation",moves:"4.Bg5"},
-    ]
-  },
-  {
-    eco:'E20', name:"Catalan Opening", category:'d4 Openings',
-    moves:['d2d4','g8f6','c2c4','e7e6','g2g3'],
-    desc:"White combines the Queen's Gambit with a kingside fianchetto for long-term pressure.",
-    ideas:["Fianchetto the bishop to g2","Long-term pressure on the c4-a8 diagonal","Solid queenside control combined with kingside safety"],
-    annotations:["1. d4","1...Nf6","2. c4","2...e6","3. g3 — The Catalan! Planning Bg2 for long diagonal pressure"],
-    variations:[
-      {name:"Open Catalan",moves:"3...d5 4.Bg2 dxc4"},
-      {name:"Closed Catalan",moves:"3...d5 4.Bg2 Be7"},
-      {name:"Catalan with Nf3",moves:"4.Nf3 d5 5.Bg2"},
-    ]
-  },
-  {
-    eco:'A45', name:"Trompowsky Attack", category:'d4 Openings',
-    moves:['d2d4','g8f6','c1g5'],
-    desc:"Unusual and tricky. White immediately attacks the knight, avoiding theory.",
-    ideas:["Avoid heavily theoretical lines","Create immediate problems for Black","Exchange the knight for the bishop to double pawns"],
-    annotations:["1. d4","1...Nf6","2. Bg5 — The Trompowsky! Immediately attacks the knight, very annoying"],
-    variations:[
-      {name:"Main Line",moves:"2...Ne4 3.Bf4"},
-      {name:"Classical Response",moves:"2...d5 3.Bxf6"},
-      {name:"Sharp Response",moves:"2...e6 3.e4"},
-    ]
-  },
-  {
-    eco:'A10', name:'English Opening', category:'d4 Openings',
-    moves:['c2c4'],
-    desc:"The third most popular first move. Flexible and hypermodern — fight for d5 from the flank.",
-    ideas:["Control d5 with the c-pawn","Flexibility — can transpose to many openings","Popular at grandmaster level for avoiding Black's preparation"],
-    annotations:["1. c4 — The English! Control d5 from the flank, not the center"],
-    variations:[
-      {name:"Symmetrical English",moves:"1...c5"},
-      {name:"English vs KID",moves:"1...Nf6 2.Nc3 g6"},
-      {name:"Reversed Sicilian",moves:"1...e5 2.Nc3"},
-      {name:"Anglo-Indian",moves:"1...Nf6 2.Nc3 e6 3.e4"},
-    ]
-  },
+// ── PIECES ──
+const P={wK:'♔',wQ:'♕',wR:'♖',wB:'♗',wN:'♘',wP:'♙',bK:'♚',bQ:'♛',bR:'♜',bB:'♝',bN:'♞',bP:'♟'};
 
-  // ═══ FLANK OPENINGS ═══
-  {
-    eco:'A00', name:"Reti Opening", category:'Flank Openings',
-    moves:['g1f3'],
-    desc:"Hypermodern king's knight opening. Delays central pawns and fights for the center with pieces.",
-    ideas:["Control the center with pieces, not pawns","Fianchetto the bishop for long diagonal control","Flexible — transpose to many structures"],
-    annotations:["1. Nf3 — The Reti! No pawn in the center yet"],
-    variations:[
-      {name:"King's Indian Attack",moves:"1...d5 2.g3"},
-      {name:"Reti vs Sicilian",moves:"1...c5 2.c4"},
-      {name:"Reversed Grünfeld",moves:"1...d5 2.c4 d4"},
-    ]
-  },
-  {
-    eco:'A07', name:"King's Indian Attack", category:'Flank Openings',
-    moves:['g1f3','d7d5','g2g3'],
-    desc:"White builds the same structure as the King's Indian but with the colors reversed.",
-    ideas:["Build a solid kingside structure","Attack later with e4 and f4","Flexible — works against many Black setups"],
-    annotations:["1. Nf3","1...d5","2. g3 — KIA! White mirrors the KID structure"],
-    variations:[
-      {name:"vs French structure",moves:"2...e6 3.Bg2 Nf6 4.0-0"},
-      {name:"vs Sicilian",moves:"1.Nf3 c5 2.g3 Nc6 3.Bg2"},
-    ]
-  },
-
-  // ═══ GAMBIT OPENINGS ═══
-  {
-    eco:'C21', name:"Danish Gambit", category:'Gambits',
-    moves:['e2e4','e7e5','d2d4','e5d4','c2c3'],
-    desc:"White sacrifices two pawns for a massive lead in development and a devastating attack.",
-    ideas:["Sacrifice two pawns for two open files","Rapid development — pieces come out with tempo","Attack the king before Black can consolidate"],
-    annotations:["1. e4","1...e5","2. d4","2...exd4","3. c3 — The Danish! Two pawn sacrifices for massive compensation"],
-    variations:[
-      {name:"Accepted",moves:"3...dxc3 4.Bc4 cxb2 5.Bxb2"},
-      {name:"Declined",moves:"3...d5 4.exd5 Qxd5"},
-    ]
-  },
-  {
-    eco:'A57', name:'Benko Gambit', category:'Gambits',
-    moves:['d2d4','g8f6','c2c4','c7c5','d4d5','b7b5'],
-    desc:"Black sacrifices a pawn for lasting queenside pressure and open files.",
-    ideas:["Sacrifice b5 pawn for open a and b files","Long-term queenside pressure","Rooks become very powerful on open files"],
-    annotations:["1. d4","1...Nf6","2. c4","2...c5","3. d5","3...b5 — The Benko! Pawn sacrifice for queenside play"],
-    variations:[
-      {name:"Accepted",moves:"4.cxb5 a6 5.bxa6 Bxa6"},
-      {name:"Declined",moves:"4.Nf3"},
-      {name:"Half-Accepted",moves:"4.cxb5 a6 5.e3"},
-    ]
-  },
-  {
-    eco:'D30', name:'Budapest Gambit', category:'Gambits',
-    moves:['d2d4','g8f6','c2c4','e7e5'],
-    desc:"A surprise weapon. Black immediately attacks the center with a pawn sacrifice.",
-    ideas:["Immediate counterattack against d4","Gambit pawn for active piece play","Tricky tactics if White is unprepared"],
-    annotations:["1. d4","1...Nf6","2. c4","2...e5 — The Budapest! Immediate counterattack"],
-    variations:[
-      {name:"Fajarowicz Variation",moves:"3.dxe5 Ne4"},
-      {name:"Alekhine Variation",moves:"3.dxe5 Ng4 4.Nf3"},
-    ]
-  },
-
-  // ═══ DEFENSES ═══
-  {
-    eco:'A41', name:"Grünfeld Defense", category:'Defenses',
-    moves:['d2d4','g8f6','c2c4','g7g6','b1c3','d7d5'],
-    desc:"Black allows White a big center, then attacks it head-on with ...d5.",
-    ideas:["Allow White a center, then destroy it","Active piece play especially on g7 diagonal","The g7 bishop becomes a monster attacking d4"],
-    annotations:["1. d4","1...Nf6","2. c4","2...g6","3. Nc3","3...d5 — The Grünfeld! Direct central confrontation"],
-    variations:[
-      {name:"Exchange Variation",moves:"4.cxd5 Nxd5 5.e4 Nxc3 6.bxc3"},
-      {name:"Russian System",moves:"4.Nf3 Bg7 5.Qb3"},
-      {name:"Three Knights",moves:"4.Nf3 Bg7 5.Bf4"},
-    ]
-  },
-  {
-    eco:'E40', name:'Dutch Defense', category:'Defenses',
-    moves:['d2d4','f7f5'],
-    desc:"Aggressive from move one. Black immediately fights for the kingside.",
-    ideas:["Control the e4 square","Kingside attack with ...f5-f4","Very double-edged — risky but exciting"],
-    annotations:["1. d4","1...f5 — The Dutch! Aggressive kingside intent from move one"],
-    variations:[
-      {name:"Stonewall Dutch",moves:"2.c4 Nf6 3.g3 e6 4.Bg2 d5 5.Nf3 c3"},
-      {name:"Leningrad Dutch",moves:"2.c4 Nf6 3.g3 g6"},
-      {name:"Classical Dutch",moves:"2.c4 Nf6 3.g3 e6"},
-    ]
-  },
-  {
-    eco:'E10', name:"Benoni Defense", category:'Defenses',
-    moves:['d2d4','g8f6','c2c4','c7c5','d4d5'],
-    desc:"Dynamic and imbalanced. Black accepts a backward pawn for active counterplay.",
-    ideas:["Accept pawn imbalance for active play","Attack on the kingside with ...f5","The c5 break is always in the air"],
-    annotations:["1. d4","1...Nf6","2. c4","2...c5","3. d5 — The Benoni! Imbalanced pawn structure with mutual chances"],
-    variations:[
-      {name:"Modern Benoni",moves:"3...e6 4.Nc3 exd5 5.cxd5 d6"},
-      {name:"Czech Benoni",moves:"3...e5"},
-      {name:"Benko Gambit",moves:"3...b5"},
-    ]
-  },
-  {
-    eco:'B00', name:"Owen's Defense", category:'Defenses',
-    moves:['e2e4','b7b6'],
-    desc:"Unorthodox and tricky. Black fianchettoes the queen's bishop to attack the center.",
-    ideas:["Fianchetto the queen's bishop","Attack the center from the flank","Surprise weapon against unprepared opponents"],
-    annotations:["1. e4","1...b6 — Owen's! Prepares Bb7 to attack the center diagonally"],
-    variations:[
-      {name:"Classical",moves:"2.d4 Bb7 3.Bd3 e6"},
-      {name:"Modern",moves:"2.d4 Bb7 3.Nc3 e6"},
-    ]
-  },
-  {
-    eco:'B06', name:'Modern Defense', category:'Defenses',
-    moves:['e2e4','g7g6'],
-    desc:"Pure hypermodern play. Black avoids the center entirely, planning to attack it later.",
-    ideas:["Let White build any center they want","Attack it from range with the g7 bishop","Very flexible — transpose to Pirc, KID, or more"],
-    annotations:["1. e4","1...g6 — The Modern! Pure hypermodern — Black will attack whatever center White builds"],
-    variations:[
-      {name:"Robatsch Variation",moves:"2.d4 Bg7 3.Nc3 d6"},
-      {name:"vs Kingside Fianchetto",moves:"2.d4 Bg7 3.Nf3 d6 4.g3"},
-    ]
-  },
+// ── FALLBACK (20 popular openings shown before Supabase loads) ──
+const FALLBACK=[
+  {eco:'C50',name:'Italian Game',pgn:'1. e4 e5 2. Nf3 Nc6 3. Bc4'},
+  {eco:'C60',name:'Ruy López Opening',pgn:'1. e4 e5 2. Nf3 Nc6 3. Bb5'},
+  {eco:'B20',name:'Sicilian Defense',pgn:'1. e4 c5'},
+  {eco:'B90',name:'Sicilian Defense: Najdorf Variation',pgn:'1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6'},
+  {eco:'B12',name:'Caro-Kann Defense',pgn:'1. e4 c6'},
+  {eco:'C00',name:'French Defense',pgn:'1. e4 e6'},
+  {eco:'D06',name:"Queen's Gambit",pgn:'1. d4 d5 2. c4'},
+  {eco:'D10',name:'Slav Defense',pgn:'1. d4 d5 2. c4 c6'},
+  {eco:'E60',name:"King's Indian Defense",pgn:'1. d4 Nf6 2. c4 g6'},
+  {eco:'E00',name:'Nimzo-Indian Defense',pgn:'1. d4 Nf6 2. c4 e6 3. Nc3 Bb4'},
+  {eco:'C44',name:'Scotch Game',pgn:'1. e4 e5 2. Nf3 Nc6 3. d4'},
+  {eco:'C40',name:"King's Gambit",pgn:'1. e4 e5 2. f4'},
+  {eco:'A10',name:'English Opening',pgn:'1. c4'},
+  {eco:'B01',name:'Scandinavian Defense',pgn:'1. e4 d5'},
+  {eco:'E20',name:'Catalan Opening',pgn:'1. d4 Nf6 2. c4 e6 3. g3'},
+  {eco:'A41',name:'Grünfeld Defense',pgn:'1. d4 Nf6 2. c4 g6 3. Nc3 d5'},
+  {eco:'C21',name:'Danish Gambit',pgn:'1. e4 e5 2. d4 exd4 3. c3'},
+  {eco:'B06',name:'Modern Defense',pgn:'1. e4 g6'},
+  {eco:'A07',name:"King's Indian Attack",pgn:'1. Nf3 d5 2. g3'},
+  {eco:'D30',name:'Budapest Gambit',pgn:'1. d4 Nf6 2. c4 e5'},
 ];
 
-// ── BOARD STATE ──
-const PIECE_UNICODE = {
-  wK:'♔',wQ:'♕',wR:'♖',wB:'♗',wN:'♘',wP:'♙',
-  bK:'♚',bQ:'♛',bR:'♜',bB:'♝',bN:'♞',bP:'♟'
-};
+// ── STATE ──
+let allOpenings=[], currentIdx=-1, allMoves=[], dispIdx=0, playTimer=null, ecoFilter='all', searchTimer=null;
 
-let game = new Chess();
-let currentOpening = null;
-let playedMoves = [];    // all moves in UCI
-let displayIndex = 0;    // which move we're showing
-let playAllTimer = null;
-
-// ── BUILD SIDEBAR ──
-function buildSidebar() {
-  const cats = [...new Set(OPENINGS.map(o => o.category))];
-  const el = document.getElementById('openingList');
-  let html = '';
-  cats.forEach(cat => {
-    html += `<div class="cat-section"><div class="cat-title">${cat}</div>`;
-    OPENINGS.filter(o => o.category === cat).forEach((o,i) => {
-      html += `<button class="opening-btn" id="obtn-${o.eco}" onclick="selectOpening('${o.eco}')">
-        <span>${o.name}</span>
-        <span class="opening-eco">${o.eco}</span>
-      </button>`;
-    });
-    html += '</div>';
-  });
-  el.innerHTML = html;
-}
-
-function selectOpening(eco) {
-  if (playAllTimer) { clearInterval(playAllTimer); playAllTimer = null; }
-  currentOpening = OPENINGS.find(o => o.eco === eco);
-  if (!currentOpening) return;
-
-  // Highlight button
-  document.querySelectorAll('.opening-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('obtn-' + eco);
-  if (btn) { btn.classList.add('active'); btn.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
-
-  // Set up game
-  game = new Chess();
-  playedMoves = [...currentOpening.moves];
-  displayIndex = 0;
-
-  // Update header
-  document.getElementById('openingName').textContent = currentOpening.name;
-  document.getElementById('openingEco').textContent = 'ECO: ' + currentOpening.eco;
-  document.getElementById('openingDesc').textContent = currentOpening.desc;
-
-  // Key ideas
-  const ideasHtml = currentOpening.ideas.map(idea =>
-    `<div class="key-idea"><strong>💡 KEY IDEA</strong>${idea}</div>`).join('');
-  document.getElementById('keyIdeas').innerHTML = ideasHtml;
-
-  // Variations
-  const varHtml = (currentOpening.variations || []).map(v =>
-    `<button class="var-btn" onclick="loadVariation('${v.moves}')">
-      ${v.name}
-      <span class="var-moves">${v.moves}</span>
-    </button>`).join('');
-  document.getElementById('variationsList').innerHTML = varHtml || '<div style="color:var(--muted);font-size:12px">No variations listed</div>';
-
-  // Move annotations
-  const annHtml = (currentOpening.annotations || []).map((a, i) => {
-    const moveNum = Math.floor(i/2) + 1;
-    const isWhite = i % 2 === 0;
-    return `<div class="move-step" onclick="goToMove(${i+1})">
-      <div class="step-num">${isWhite ? moveNum+'.' : ''}</div>
-      <div class="step-move">${isWhite ? '...' : '...'}${a.split('—')[0].trim()}</div>
-      <div class="step-desc">${a.includes('—') ? a.split('—')[1].trim() : ''}</div>
-    </div>`;
-  }).join('');
-  document.getElementById('moveAnnotations').innerHTML = annHtml;
-
-  goStart();
-}
-
-function loadVariation(movesStr) {
-  if (!currentOpening) return;
-  if (playAllTimer) { clearInterval(playAllTimer); playAllTimer = null; }
-  const varMoves = movesStr.trim().split(' ');
-  // Parse the variation moves (they're in SAN format like "2.Nf3 Nc6 3.Bc4")
-  // Clean: remove move numbers
-  const cleanMoves = varMoves.filter(m => !m.match(/^\d+\./));
-  // Base moves from the opening
-  const baseMoves = [...currentOpening.moves];
-  // Convert base moves to game, then add variation
-  game = new Chess();
-  const uciMoves = [];
-  baseMoves.forEach(uci => {
-    const from = uci.slice(0,2), to = uci.slice(2,4), promo = uci[4];
-    const m = game.move({ from, to, promotion: promo });
-    if (m) uciMoves.push(uci);
-  });
-  // Now try to play the SAN variation moves
-  cleanMoves.forEach(san => {
-    const m = game.move(san);
-    if (m) uciMoves.push(m.from + m.to + (m.promotion || ''));
-  });
-  playedMoves = uciMoves;
-  displayIndex = 0;
-  showMoveAtIndex(0);
-  renderMoveHistory();
-}
-
-function goToMove(idx) {
-  displayIndex = Math.min(idx, playedMoves.length);
-  game = new Chess();
-  for (let i = 0; i < displayIndex; i++) {
-    const uci = playedMoves[i];
-    game.move({ from: uci.slice(0,2), to: uci.slice(2,4), promotion: uci[4] || undefined });
+// ── SUPABASE QUERIES ──
+async function fetchOpenings(search='', eco='all'){
+  try {
+    let q=sb.from('openings').select('eco,name,pgn').order('eco').order('name').limit(300);
+    if(eco!=='all') q=q.like('eco',`${eco}%`);
+    if(search) q=q.ilike('name',`%${search}%`);
+    const {data,error}=await q;
+    if(error||!data||data.length===0) throw new Error('empty');
+    return data;
+  } catch(e){
+    let res=[...FALLBACK];
+    if(eco!=='all') res=res.filter(o=>o.eco.startsWith(eco));
+    if(search) res=res.filter(o=>o.name.toLowerCase().includes(search.toLowerCase()));
+    return res;
   }
-  renderBoard(displayIndex > 0 ? playedMoves[displayIndex-1] : null);
+}
+
+async function fetchRelated(opening){
+  const family=opening.name.split(':')[0];
+  try {
+    const {data}=await sb.from('openings').select('eco,name,pgn').ilike('name',`%${family}%`).neq('name',opening.name).limit(10);
+    return data||[];
+  } catch(e){ return []; }
+}
+
+async function fetchTotalCount(){
+  try {
+    const {count}=await sb.from('openings').select('*',{count:'exact',head:true});
+    return count||0;
+  } catch(e){ return 0; }
+}
+
+// ── RENDER LIST ──
+function renderList(list){
+  const el=document.getElementById('openingList');
+  if(!list.length){ el.innerHTML='<div class="list-status">No openings found</div>'; return; }
+  el.innerHTML=list.map((o,i)=>`
+    <div class="opening-item${i===currentIdx?' active':''}" id="oi${i}" onclick="selectOpening(${i})">
+      <div class="opening-item-name">${o.name}</div>
+      <div class="opening-item-eco">${o.eco}</div>
+    </div>`).join('');
+  document.getElementById('listCount').textContent=`${list.length} shown`;
+}
+
+// ── SELECT OPENING ──
+async function selectOpening(idx){
+  if(playTimer){clearInterval(playTimer);playTimer=null;document.getElementById('playBtn').textContent='▶ Play All';}
+  currentIdx=idx;
+  const op=allOpenings[idx];
+  if(!op) return;
+
+  // Highlight list item
+  document.querySelectorAll('.opening-item').forEach(el=>el.classList.remove('active'));
+  const item=document.getElementById('oi'+idx);
+  if(item){item.classList.add('active');item.scrollIntoView({behavior:'smooth',block:'nearest'});}
+
+  // Header
+  document.getElementById('opName').textContent=op.name;
+  const ecoBadge=document.getElementById('opEco');
+  ecoBadge.textContent='ECO: '+op.eco; ecoBadge.style.display='';
+  document.getElementById('opPgn').textContent=op.pgn;
+
+  // Parse moves
+  allMoves=parsePGN(op.pgn);
+  const movesBadge=document.getElementById('opMoves');
+  movesBadge.textContent=allMoves.length+' moves'; movesBadge.style.display='';
+
+  // Board
+  dispIdx=0;
+  document.getElementById('boardWrap').innerHTML='<div id="board"></div>';
+  renderBoard();
   renderMoveHistory();
+
+  // Right panel
+  document.getElementById('detailsPanel').innerHTML=`
+    <div class="stat-row"><span class="stat-label">ECO</span><span class="stat-val">${op.eco}</span></div>
+    <div class="stat-row"><span class="stat-label">Moves</span><span class="stat-val">${allMoves.length}</span></div>
+    <div class="stat-row"><span class="stat-label">Category</span><span class="stat-val">${ecoCat(op.eco)}</span></div>
+  `;
+
+  // Related
+  const related=await fetchRelated(op);
+  document.getElementById('relatedPanel').innerHTML=related.length
+    ? related.map(r=>`<div class="related-item" onclick="selectByName('${r.name.replace(/'/g,"\\'")}')"><div class="related-name">${r.name}</div><div class="related-pgn">${r.pgn}</div></div>`).join('')
+    : '<div style="color:var(--muted);font-size:12px">No variations found.</div>';
 }
 
-function showMoveAtIndex(idx) {
-  goToMove(idx);
+function selectByName(name){
+  const idx=allOpenings.findIndex(o=>o.name===name);
+  if(idx>=0) selectOpening(idx);
 }
 
-function goStart() {
-  game = new Chess();
-  displayIndex = 0;
-  renderBoard(null);
-  renderMoveHistory();
+function ecoCat(eco){
+  return {A:'Flank / Indian openings',B:'Semi-open games (1.e4)',C:'Open games (1.e4 e5)',D:'Closed / Semi-closed',E:'Indian defenses (1.d4 Nf6)'}[eco[0]]||'Unknown';
 }
 
-function prevMove() {
-  if (displayIndex > 0) goToMove(displayIndex - 1);
+// ── PGN PARSER ──
+function parsePGN(pgn){
+  const g=new Chess();
+  const tokens=pgn.replace(/\d+\.\s*/g,' ').trim().split(/\s+/).filter(t=>t&&t!=='*');
+  const moves=[];
+  for(const t of tokens){
+    const m=g.move(t);
+    if(m) moves.push(m.san); else break;
+  }
+  return moves;
 }
 
-function nextMove() {
-  if (displayIndex < playedMoves.length) goToMove(displayIndex + 1);
+// ── BOARD RENDER ──
+function makeGameAtIndex(idx){
+  const g=new Chess();
+  for(let i=0;i<idx;i++) g.move(allMoves[i]);
+  return g;
 }
 
-function playAll() {
-  if (playAllTimer) { clearInterval(playAllTimer); playAllTimer = null; return; }
-  goStart();
-  playAllTimer = setInterval(() => {
-    if (displayIndex >= playedMoves.length) {
-      clearInterval(playAllTimer); playAllTimer = null; return;
-    }
-    nextMove();
-  }, 900);
-}
-
-// ── RENDER ──
-function renderBoard(lastMoveUCI) {
-  const boardEl = document.getElementById('board');
-  boardEl.innerHTML = '';
-  const pos = game.board();
-  const lastFrom = lastMoveUCI ? lastMoveUCI.slice(0,2) : null;
-  const lastTo   = lastMoveUCI ? lastMoveUCI.slice(2,4) : null;
-
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
-      const rank = 7 - r;
-      const file = c;
-      const sq = 'abcdefgh'[file] + (rank + 1);
-      const piece = pos[rank][file];
-      const isLight = (rank + file) % 2 === 1;
-
-      const div = document.createElement('div');
-      div.className = 'sq ' + (isLight ? 'light' : 'dark');
-      if (sq === lastFrom) div.classList.add('last-from');
-      if (sq === lastTo)   div.classList.add('last-to');
-
-      if (piece) {
-        const key = piece.color + piece.type.toUpperCase();
-        const p = document.createElement('div');
-        p.className = 'piece';
-        p.textContent = PIECE_UNICODE[key] || '';
-        div.appendChild(p);
-      }
-      if (file === 0) {
-        const l = document.createElement('div'); l.className='sq-lbl-r'; l.textContent=rank+1; div.appendChild(l);
-      }
-      if (rank === 0) {
-        const l = document.createElement('div'); l.className='sq-lbl'; l.textContent='abcdefgh'[file]; div.appendChild(l);
-      }
-      boardEl.appendChild(div);
+function renderBoard(){
+  const el=document.getElementById('board');
+  if(!el) return;
+  const g=makeGameAtIndex(dispIdx);
+  const pos=g.board();
+  const hist=g.history({verbose:true});
+  const last=hist[hist.length-1];
+  el.innerHTML='';
+  for(let r=0;r<8;r++){
+    for(let c=0;c<8;c++){
+      const rank=7-r,file=c;
+      const sq='abcdefgh'[file]+(rank+1);
+      const pc=pos[rank][file];
+      const div=document.createElement('div');
+      div.className='sq '+((rank+file)%2===1?'light':'dark');
+      if(last&&sq===last.from) div.classList.add('hi-from');
+      if(last&&sq===last.to)   div.classList.add('hi-to');
+      if(pc){const s=document.createElement('div');s.className='piece';s.textContent=P[pc.color+pc.type.toUpperCase()]||'';div.appendChild(s);}
+      if(file===0){const l=document.createElement('div');l.className='sq-rank';l.textContent=rank+1;div.appendChild(l);}
+      if(rank===0){const l=document.createElement('div');l.className='sq-file';l.textContent='abcdefgh'[file];div.appendChild(l);}
+      el.appendChild(div);
     }
   }
 }
 
-function renderMoveHistory() {
-  if (!currentOpening) return;
-  const el = document.getElementById('moveHistory');
-  if (playedMoves.length === 0) {
-    el.innerHTML = '<span style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--muted)">Starting position</span>';
+// ── MOVE HISTORY ──
+function renderMoveHistory(){
+  const el=document.getElementById('moveHistory');
+  if(!allMoves.length){el.innerHTML='<span class="mv-empty">No moves</span>';return;}
+  let h='';
+  allMoves.forEach((san,i)=>{
+    if(i%2===0) h+=`<span class="mv-num">${Math.floor(i/2)+1}.</span>`;
+    h+=`<span class="mv-token${dispIdx===i+1?' active':''}" onclick="goTo(${i+1})">${san}</span>`;
+  });
+  el.innerHTML=h;
+}
+
+// ── NAVIGATION ──
+function goTo(idx){
+  dispIdx=Math.max(0,Math.min(idx,allMoves.length));
+  renderBoard(); renderMoveHistory();
+}
+function goStart(){goTo(0);}
+function goEnd(){goTo(allMoves.length);}
+function prevMove(){if(dispIdx>0)goTo(dispIdx-1);}
+function nextMove(){if(dispIdx<allMoves.length)goTo(dispIdx+1);}
+
+function togglePlay(){
+  if(playTimer){
+    clearInterval(playTimer); playTimer=null;
+    document.getElementById('playBtn').textContent='▶ Play All';
     return;
   }
-
-  // Replay to get SAN notation
-  const tempGame = new Chess();
-  const sanMoves = [];
-  playedMoves.forEach(uci => {
-    const m = tempGame.move({ from:uci.slice(0,2), to:uci.slice(2,4), promotion:uci[4]||undefined });
-    if (m) sanMoves.push(m.san);
-  });
-
-  let html = '';
-  sanMoves.forEach((san, i) => {
-    if (i % 2 === 0) html += `<span class="move-num">${Math.floor(i/2)+1}.</span>`;
-    html += `<span class="move-token ${displayIndex === i+1 ? 'current' : ''}" onclick="goToMove(${i+1})">${san}</span>`;
-  });
-  el.innerHTML = html;
+  goStart();
+  document.getElementById('playBtn').textContent='⏸ Pause';
+  playTimer=setInterval(()=>{
+    if(dispIdx>=allMoves.length){
+      clearInterval(playTimer); playTimer=null;
+      document.getElementById('playBtn').textContent='▶ Play All';
+      return;
+    }
+    nextMove();
+  },750);
 }
 
-// ── KEYBOARD NAVIGATION ──
-document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight') nextMove();
-  if (e.key === 'ArrowLeft') prevMove();
-  if (e.key === 'Home') goStart();
-  if (e.key === 'End') goToMove(playedMoves.length);
+// ── FILTERS ──
+function setEco(eco){
+  ecoFilter=eco;
+  document.querySelectorAll('.eco-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+eco).classList.add('active');
+  refreshList();
+}
+
+function onSearch(){
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(refreshList,280);
+}
+
+async function refreshList(){
+  const q=document.getElementById('searchInput').value.trim();
+  document.getElementById('openingList').innerHTML='<div class="list-status">Searching...</div>';
+  allOpenings=await fetchOpenings(q,ecoFilter);
+  currentIdx=-1;
+  renderList(allOpenings);
+}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight') nextMove();
+  if(e.key==='ArrowLeft')  prevMove();
+  if(e.key==='Home')       goStart();
+  if(e.key==='End')        goEnd();
 });
 
 // ── INIT ──
-buildSidebar();
-renderBoard(null);
+async function init(){
+  // Show total count
+  const total=await fetchTotalCount();
+  if(total>0) document.getElementById('totalCount').textContent=`${total.toLocaleString()} total`;
 
-// Auto-select first opening
-if (OPENINGS.length > 0) selectOpening(OPENINGS[0].eco);
+  // Load list
+  allOpenings=await fetchOpenings('','all');
+  renderList(allOpenings);
+
+  // Auto-select first
+  if(allOpenings.length>0) selectOpening(0);
+}
+
+init();
 </script>
 </body>
 </html>
