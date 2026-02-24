@@ -79,8 +79,8 @@
     .sq.last-from { background:rgba(201,168,76,0.2) !important; }
     .sq.last-to   { background:rgba(201,168,76,0.3) !important; }
     .piece { font-size:38px; line-height:1; user-select:none; pointer-events:none; }
-    .piece.white { color:#f0e6cc; filter: drop-shadow(1px 1px 0px #000) drop-shadow(-1px -1px 0px #000) drop-shadow(1px -1px 0px #000) drop-shadow(-1px 1px 0px #000); }
-    .piece.black { color:#1a1a1a; filter: drop-shadow(1px 1px 0px rgba(255,255,255,0.7)) drop-shadow(-1px -1px 0px rgba(255,255,255,0.7)) drop-shadow(1px -1px 0px rgba(255,255,255,0.5)) drop-shadow(-1px 1px 0px rgba(255,255,255,0.5)); }
+    .piece.white { color:#f0e6cc; filter: drop-shadow(1px 1px 0 #000) drop-shadow(-1px -1px 0 #000) drop-shadow(1px -1px 0 #000) drop-shadow(-1px 1px 0 #000); }
+    .piece.black { color:#111; filter: drop-shadow(1px 1px 0 rgba(255,255,255,0.8)) drop-shadow(-1px -1px 0 rgba(255,255,255,0.8)) drop-shadow(1px -1px 0 rgba(255,255,255,0.6)) drop-shadow(-1px 1px 0 rgba(255,255,255,0.6)); }
     .sq-label { position:absolute; bottom:2px; right:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(255,255,255,0.2); pointer-events:none; }
     .sq-label-rank { position:absolute; top:2px; left:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(255,255,255,0.2); pointer-events:none; }
     .move-dot { position:absolute; width:18px; height:18px; background:rgba(201,168,76,0.55); border-radius:50%; pointer-events:none; }
@@ -208,6 +208,9 @@
           <span>Min: <span id="ratingMinLabel">600</span></span>
           <span>Max: <span id="ratingMaxLabel">2400</span></span>
         </div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.7">
+          600 = beginner &nbsp;·&nbsp; 1200 = intermediate<br>1800 = advanced &nbsp;·&nbsp; 2400 = master
+        </div>
         <input type="range" id="ratingMin" min="600" max="2400" step="100" value="600" oninput="updateRatingLabel()">
         <input type="range" id="ratingMax" min="600" max="2400" step="100" value="2400" oninput="updateRatingLabel()" style="margin-top:8px">
       </div>
@@ -245,8 +248,14 @@
 
     <div class="puzzle-controls">
       <button class="ctrl-btn" onclick="showHint()">💡 Hint</button>
-      <button class="ctrl-btn" onclick="skipPuzzle()">⏭ Skip</button>
-      <button class="ctrl-btn primary" onclick="loadNextPuzzle()">Next Puzzle →</button>
+      <button class="ctrl-btn" onclick="showAnswer()">👁 Answer</button>
+      <button class="ctrl-btn" onclick="restartPuzzle()" style="color:#e8c97a;border-color:rgba(232,201,122,0.3)">🔄 Retry</button>
+      <button class="ctrl-btn primary" onclick="loadNextPuzzle()">Next →</button>
+    </div>
+    <div class="puzzle-controls" style="margin-top:6px">
+      <button class="ctrl-btn" id="reviewBackBtn" onclick="reviewBack()" disabled style="opacity:0.35">← Back</button>
+      <button class="ctrl-btn" id="reviewLabel" style="cursor:default;flex:2;font-size:9px">Review moves</button>
+      <button class="ctrl-btn" id="reviewFwdBtn" onclick="reviewForward()" disabled style="opacity:0.35">Forward →</button>
     </div>
   </div>
 
@@ -283,6 +292,9 @@ let currentPuzzle = null;
 let solutionMoves = [];
 let solutionIndex = 0;
 let selectedSquare = null;
+let reviewMode = false;
+let reviewMoves = [];
+let reviewIndex = 0;
 let puzzleSolved = false;
 let puzzleFailed = false;
 let hintUsed = false;
@@ -329,41 +341,43 @@ function updateRatingLabel() {
 }
 
 // ── LICHESS API ──
-async function fetchPuzzle() {
-  // Lichess puzzle API — no auth needed, free for all
-  let url = 'https://lichess.org/api/puzzle/next';
-  if (currentThemeFilter !== 'all') {
-    url += '?angle=' + currentThemeFilter;
-  }
-  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
-  if (!res.ok) throw new Error('API ' + res.status);
-  return await res.json();
+// ── SUPABASE ENGINE ──
+const SB_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
+
+async function refillQueue() {
+  const minR = parseInt(document.getElementById('ratingMin').value);
+  const maxR = parseInt(document.getElementById('ratingMax').value);
+  const base = SB_URL + '/rest/v1/puzzles';
+  const hdrs = { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Accept': 'application/json' };
+  let cUrl = `${base}?select=id&rating=gte.${minR}&rating=lte.${maxR}&limit=1`;
+  if (currentThemeFilter !== 'all') cUrl += `&themes=ilike.*${currentThemeFilter}*`;
+  const cRes = await fetch(cUrl, { headers: { ...hdrs, 'Prefer': 'count=exact' } });
+  const total = parseInt((cRes.headers.get('content-range') || '0/50000').split('/')[1]) || 50000;
+  const offset = Math.floor(Math.random() * Math.max(0, total - 30));
+  let url = `${base}?select=id,fen,moves,rating,themes&rating=gte.${minR}&rating=lte.${maxR}&order=id.asc&offset=${offset}&limit=30`;
+  if (currentThemeFilter !== 'all') url += `&themes=ilike.*${currentThemeFilter}*`;
+  const res = await fetch(url, { headers: hdrs });
+  if (!res.ok) throw new Error('DB error ' + res.status);
+  const data = await res.json();
+  if (!data.length) throw new Error('No puzzles found for this filter.');
+  for (let i = data.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [data[i],data[j]]=[data[j],data[i]]; }
+  puzzleQueue = data;
 }
 
 async function loadNextPuzzle() {
-  puzzleSolved = false;
-  puzzleFailed = false;
-  hintUsed = false;
-  selectedSquare = null;
+  puzzleSolved = false; puzzleFailed = false; hintUsed = false; selectedSquare = null;
   document.getElementById('feedbackOverlay').className = 'feedback-overlay';
-
-  // Show loading
-  document.getElementById('puzzle-board').innerHTML = `
-    <div class="loading-state">
-      <div class="loading-chess">♟</div>
-      <div class="loading-text">Loading puzzle...</div>
-    </div>`;
   document.getElementById('toMoveText').textContent = 'Loading...';
   document.getElementById('puzzleRatingBadge').textContent = 'Rating: —';
   document.getElementById('themesList').innerHTML = '';
-
+  document.getElementById('puzzle-board').innerHTML = '<div class="loading-state"><div class="loading-chess">♟</div><div class="loading-text">Loading puzzle...</div></div>';
   try {
-    const data = await fetchPuzzle();
-    currentPuzzle = data.puzzle;
-    setupPuzzle(data);
-  } catch(e) {
-    showError(e);
-  }
+    if (puzzleQueue.length === 0) await refillQueue();
+    const p = puzzleQueue.shift();
+    currentPuzzle = { id:p.id, fen:p.fen, moves:p.moves, rating:p.rating, themes:(p.themes||'').split(' ').filter(Boolean) };
+    setupPuzzle({ puzzle: currentPuzzle });
+  } catch(e) { showError(e); }
 }
 
 function setupPuzzle(data) {
@@ -443,14 +457,13 @@ function renderBoard() {
         div.appendChild(p);
       }
 
-      // Square labels
-      if (file === 0) {
+      if (c === 0) {
         const lbl = document.createElement('div');
         lbl.className = 'sq-label-rank';
         lbl.textContent = rank + 1;
         div.appendChild(lbl);
       }
-      if (rank === 0 && playerColor === 'w' || rank === 7 && playerColor === 'b') {
+      if (r === 7) {
         const lbl = document.createElement('div');
         lbl.className = 'sq-label';
         lbl.textContent = 'abcdefgh'[file];
@@ -484,11 +497,10 @@ function renderBoard() {
 }
 
 function updateToMove() {
-  const color = game.turn();
   const dot = document.getElementById('toMoveDot');
   const txt = document.getElementById('toMoveText');
-  dot.className = 'to-move-dot ' + (color === 'w' ? 'white' : 'black');
-  txt.textContent = (color === 'w' ? 'White' : 'Black') + ' to move — find the best move!';
+  dot.className = 'to-move-dot ' + (playerColor === 'w' ? 'white' : 'black');
+  txt.textContent = 'You are ' + (playerColor === 'w' ? 'White ♔' : 'Black ♚') + ' — find the best move!';
 }
 
 // ── MOVE HANDLING ──
@@ -594,6 +606,7 @@ function flashSquares(from, to, cls) {
 
 // ── PUZZLE OUTCOME ──
 function onPuzzleSolved() {
+  setTimeout(enterReviewMode, 400);
   puzzleSolved = true;
   stats.solved++;
   stats.streak++;
@@ -611,6 +624,7 @@ function onPuzzleSolved() {
 }
 
 function onPuzzleFailed(from, to) {
+  setTimeout(enterReviewMode, 900);
   puzzleFailed = true;
   stats.failed++;
   stats.streak = 0;
@@ -627,6 +641,59 @@ function onPuzzleFailed(from, to) {
   document.getElementById('feedbackDesc').textContent = `The right move was ${solFrom}→${solTo}. Click "Next Puzzle" to try a fresh one, or study the position.`;
 }
 
+function updateReviewBtns() {
+  const back = document.getElementById('reviewBackBtn');
+  const fwd  = document.getElementById('reviewFwdBtn');
+  const lbl  = document.getElementById('reviewLabel');
+  if (!back) return;
+  back.disabled = !(reviewMode && reviewIndex > 0);
+  back.style.opacity = (reviewMode && reviewIndex > 0) ? '1' : '0.35';
+  fwd.disabled  = !(reviewMode && reviewIndex < reviewMoves.length);
+  fwd.style.opacity  = (reviewMode && reviewIndex < reviewMoves.length) ? '1' : '0.35';
+  lbl.textContent = reviewMode ? `Move ${reviewIndex} / ${reviewMoves.length}` : 'Review moves';
+}
+function enterReviewMode() {
+  reviewMoves = game.history({ verbose: true });
+  reviewIndex = reviewMoves.length;
+  reviewMode = true;
+  updateReviewBtns();
+}
+function reviewBack() {
+  if (!reviewMode || reviewIndex <= 0) return;
+  reviewIndex--;
+  const g = new Chess(currentPuzzle.fen);
+  const su = currentPuzzle.moves.split(' ')[0];
+  g.move({ from:su.slice(0,2), to:su.slice(2,4), promotion:su[4]||'q' });
+  reviewMoves.slice(0, reviewIndex).forEach(m => g.move(m.san));
+  game = g; renderBoard(); updateReviewBtns();
+}
+function reviewForward() {
+  if (!reviewMode || reviewIndex >= reviewMoves.length) return;
+  game.move(reviewMoves[reviewIndex].san);
+  reviewIndex++; renderBoard(); updateReviewBtns();
+}
+function restartPuzzle() {
+  if (!currentPuzzle) return;
+  reviewMode = false; reviewMoves = []; reviewIndex = 0;
+  updateReviewBtns();
+  setupPuzzle({ puzzle: currentPuzzle });
+}
+function showAnswer() {
+  if (puzzleSolved || puzzleFailed) return;
+  puzzleFailed = true;
+  addHistory(currentPuzzle.rating, false);
+  let idx = solutionIndex;
+  function step() {
+    if (idx >= solutionMoves.length) {
+      document.getElementById('toMoveText').textContent = '👁 Answer shown — use ← → to review';
+      enterReviewMode(); return;
+    }
+    const uci = solutionMoves[idx];
+    game.move({ from:uci.slice(0,2), to:uci.slice(2,4), promotion:uci[4]||'q' });
+    renderBoard(); idx++; setTimeout(step, 650);
+  }
+  step();
+}
 function showHint() {
   if (puzzleSolved || puzzleFailed || solutionIndex >= solutionMoves.length) return;
   hintUsed = true;
