@@ -70,21 +70,19 @@
     .board-wrap { position:relative; }
     #puzzle-board { display:grid; grid-template-columns:repeat(8,1fr); width:480px; height:480px; border:2px solid var(--border); box-shadow:0 0 40px rgba(0,0,0,0.6); }
     .sq { width:60px; height:60px; display:flex; align-items:center; justify-content:center; position:relative; cursor:pointer; transition:background 0.1s; }
-    .sq.light { background:#4a4a4a; }
-    .sq.dark  { background:#1a1a1a; }
-    .sq.selected { background:rgba(201,168,76,0.4) !important; }
-    .sq.hint    { background:rgba(91,141,238,0.35) !important; }
-    .sq.correct { background:rgba(76,175,80,0.45) !important; }
-    .sq.wrong   { background:rgba(224,80,104,0.45) !important; }
-    .sq.last-from { background:rgba(201,168,76,0.2) !important; }
-    .sq.last-to   { background:rgba(201,168,76,0.3) !important; }
-    .piece { font-size:38px; line-height:1; user-select:none; pointer-events:none; }
-    .piece.white { color:#f5ecd7; filter: drop-shadow(1px 1px 0 #000) drop-shadow(-1px -1px 0 #000) drop-shadow(1px -1px 0 #000) drop-shadow(-1px 1px 0 #000); }
-    .piece.black { color:#1a1a2e; filter: drop-shadow(1px 1px 0 rgba(255,255,255,0.9)) drop-shadow(-1px -1px 0 rgba(255,255,255,0.9)) drop-shadow(1px -1px 0 rgba(255,255,255,0.7)) drop-shadow(-1px 1px 0 rgba(255,255,255,0.7)); }
-    .sq-label { position:absolute; bottom:2px; right:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(255,255,255,0.2); pointer-events:none; }
-    .sq-label-rank { position:absolute; top:2px; left:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(255,255,255,0.2); pointer-events:none; }
-    .move-dot { position:absolute; width:18px; height:18px; background:rgba(201,168,76,0.55); border-radius:50%; pointer-events:none; }
-    .capture-ring { position:absolute; inset:3px; border:3px solid rgba(201,168,76,0.55); border-radius:50%; pointer-events:none; }
+    .sq.light { background:#f0d9b5; }
+    .sq.dark  { background:#b58863; }
+    .sq.selected { background:rgba(20,85,30,0.5) !important; }
+    .sq.hint    { background:rgba(50,100,200,0.5) !important; }
+    .sq.correct { background:rgba(20,160,40,0.6) !important; }
+    .sq.wrong   { background:rgba(200,40,40,0.6) !important; }
+    .sq.last-from { background:rgba(205,210,106,0.7) !important; }
+    .sq.last-to   { background:rgba(205,210,106,0.9) !important; }
+    .piece { width:90%; height:90%; user-select:none; pointer-events:none; display:block; }
+    .sq-label { position:absolute; bottom:2px; right:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(0,0,0,0.4); pointer-events:none; }
+    .sq-label-rank { position:absolute; top:2px; left:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(0,0,0,0.4); pointer-events:none; }
+    .move-dot { position:absolute; width:30%; height:30%; background:rgba(20,85,30,0.5); border-radius:50%; pointer-events:none; z-index:2; }
+    .capture-ring { position:absolute; inset:3px; border:4px solid rgba(20,85,30,0.55); border-radius:50%; pointer-events:none; z-index:2; }
 
     .to-move-bar { width:480px; display:flex; align-items:center; gap:12px; font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); letter-spacing:0.08em; }
     .to-move-dot { width:12px; height:12px; border-radius:50%; border:2px solid var(--border); }
@@ -155,7 +153,7 @@
       .sidebar-left { display:none; }
       #puzzle-board { width:360px; height:360px; }
       .sq { width:45px; height:45px; }
-      .piece { font-size:28px; }
+
       .to-move-bar, .puzzle-controls, .feedback-overlay { width:360px; }
     }
   </style>
@@ -208,7 +206,6 @@
           <span>Min: <span id="ratingMinLabel">600</span></span>
           <span>Max: <span id="ratingMaxLabel">2400</span></span>
         </div>
-        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.7">600=beginner · 1200=intermediate<br>1800=advanced · 2400=master</div>
         <input type="range" id="ratingMin" min="600" max="2400" step="100" value="600" oninput="updateRatingLabel()">
         <input type="range" id="ratingMax" min="600" max="2400" step="100" value="2400" oninput="updateRatingLabel()" style="margin-top:8px">
       </div>
@@ -303,9 +300,11 @@ let currentThemeFilter = 'all';
 let puzzleQueue = [];
 let loadingNext = false;
 
-const PIECE_UNICODE = {
-  wK:'♔', wQ:'♕', wR:'♖', wB:'♗', wN:'♘', wP:'♙',
-  bK:'♚', bQ:'♛', bR:'♜', bB:'♝', bN:'♞', bP:'♟'
+// Using Lichess open-source piece SVGs (cburnett set, public domain)
+const PIECE_IMG_BASE = 'https://lichess1.org/assets/piece/cburnett/';
+const PIECE_FILENAMES = {
+  wK:'wK.svg', wQ:'wQ.svg', wR:'wR.svg', wB:'wB.svg', wN:'wN.svg', wP:'wP.svg',
+  bK:'bK.svg', bQ:'bQ.svg', bR:'bR.svg', bB:'bB.svg', bN:'bN.svg', bP:'bP.svg'
 };
 
 const THEME_COLORS = {
@@ -450,19 +449,21 @@ function renderBoard() {
 
       if (piece) {
         const key = piece.color + piece.type.toUpperCase();
-        const p = document.createElement('div');
-        p.className = 'piece ' + (piece.color === 'w' ? 'white' : 'black');
-        p.textContent = PIECE_UNICODE[key] || '?';
-        div.appendChild(p);
+        const img = document.createElement('img');
+        img.src = PIECE_IMG_BASE + PIECE_FILENAMES[key];
+        img.className = 'piece';
+        img.draggable = false;
+        div.appendChild(img);
       }
 
-      if (c === 0) {
+      // Square labels
+      if (file === 0) {
         const lbl = document.createElement('div');
         lbl.className = 'sq-label-rank';
         lbl.textContent = rank + 1;
         div.appendChild(lbl);
       }
-      if (r === 7) {
+      if (rank === 0 && playerColor === 'w' || rank === 7 && playerColor === 'b') {
         const lbl = document.createElement('div');
         lbl.className = 'sq-label';
         lbl.textContent = 'abcdefgh'[file];
@@ -499,7 +500,7 @@ function updateToMove() {
   const dot = document.getElementById('toMoveDot');
   const txt = document.getElementById('toMoveText');
   dot.className = 'to-move-dot ' + (playerColor === 'w' ? 'white' : 'black');
-  txt.textContent = 'You are ' + (playerColor === 'w' ? 'White ♔' : 'Black ♚') + ' — find the best move!';
+  txt.textContent = 'You are ' + (playerColor === 'w' ? 'White' : 'Black') + ' — find the best move!';
 }
 
 // ── MOVE HANDLING ──
@@ -605,7 +606,6 @@ function flashSquares(from, to, cls) {
 
 // ── PUZZLE OUTCOME ──
 function onPuzzleSolved() {
-  setTimeout(enterReviewMode, 400);
   puzzleSolved = true;
   stats.solved++;
   stats.streak++;
@@ -623,7 +623,6 @@ function onPuzzleSolved() {
 }
 
 function onPuzzleFailed(from, to) {
-  setTimeout(enterReviewMode, 900);
   puzzleFailed = true;
   stats.failed++;
   stats.streak = 0;
@@ -664,27 +663,17 @@ function reviewBack() {
   const su = currentPuzzle.moves.split(' ')[0];
   g.move({ from: su.slice(0,2), to: su.slice(2,4), promotion: su[4] || 'q' });
   for (let i = 0; i < reviewIndex; i++) g.move(reviewMoves[i].san);
-  game = g;
-  renderBoard();
-  updateReviewBtns();
+  game = g; renderBoard(); updateReviewBtns();
 }
 function reviewForward() {
   if (!reviewMode || reviewIndex >= reviewMoves.length) return;
   game.move(reviewMoves[reviewIndex].san);
-  reviewIndex++;
-  renderBoard();
-  updateReviewBtns();
+  reviewIndex++; renderBoard(); updateReviewBtns();
 }
 function restartPuzzle() {
   if (!currentPuzzle) return;
-  // Reset flags so the player can actually play again
-  puzzleSolved = false;
-  puzzleFailed = false;
-  hintUsed = false;
-  selectedSquare = null;
-  reviewMode = false;
-  reviewMoves = [];
-  reviewIndex = 0;
+  puzzleSolved = false; puzzleFailed = false; hintUsed = false; selectedSquare = null;
+  reviewMode = false; reviewMoves = []; reviewIndex = 0;
   updateReviewBtns();
   document.getElementById('feedbackOverlay').className = 'feedback-overlay';
   document.getElementById('themesList').innerHTML = '';
@@ -692,20 +681,16 @@ function restartPuzzle() {
 }
 function showAnswer() {
   if (puzzleSolved || puzzleFailed) return;
-  puzzleFailed = true;
-  addHistory(currentPuzzle.rating, false);
+  puzzleFailed = true; addHistory(currentPuzzle.rating, false);
   let idx = solutionIndex;
   function step() {
     if (idx >= solutionMoves.length) {
-      document.getElementById('toMoveText').textContent = '👁 Answer shown — use ← → to review';
-      enterReviewMode();
-      return;
+      document.getElementById('toMoveText').textContent = '👁 Use ← → to review';
+      enterReviewMode(); return;
     }
     const uci = solutionMoves[idx];
     game.move({ from: uci.slice(0,2), to: uci.slice(2,4), promotion: uci[4] || 'q' });
-    renderBoard();
-    idx++;
-    setTimeout(step, 650);
+    renderBoard(); idx++; setTimeout(step, 650);
   }
   step();
 }
@@ -771,5 +756,3 @@ updateStats();
 </script>
 </body>
 </html>
-
-
