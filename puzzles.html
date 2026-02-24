@@ -78,11 +78,11 @@
     .sq.wrong   { background:rgba(200,40,40,0.6) !important; }
     .sq.last-from { background:rgba(205,210,106,0.7) !important; }
     .sq.last-to   { background:rgba(205,210,106,0.9) !important; }
-    .piece { width:90%; height:90%; user-select:none; pointer-events:none; display:block; }
-    .sq-label { position:absolute; bottom:2px; right:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(0,0,0,0.4); pointer-events:none; }
-    .sq-label-rank { position:absolute; top:2px; left:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(0,0,0,0.4); pointer-events:none; }
-    .move-dot { position:absolute; width:30%; height:30%; background:rgba(20,85,30,0.5); border-radius:50%; pointer-events:none; z-index:2; }
-    .capture-ring { position:absolute; inset:3px; border:4px solid rgba(20,85,30,0.55); border-radius:50%; pointer-events:none; z-index:2; }
+    .piece { width:100%; height:100%; user-select:none; pointer-events:none; display:block; }
+    .sq-label { position:absolute; bottom:2px; right:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(0,0,0,0.35); pointer-events:none; }
+    .sq-label-rank { position:absolute; top:2px; left:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(0,0,0,0.35); pointer-events:none; }
+    .move-dot { position:absolute; width:30%; height:30%; background:rgba(0,0,0,0.25); border-radius:50%; pointer-events:none; z-index:2; }
+    .capture-ring { position:absolute; inset:3px; border:4px solid rgba(0,0,0,0.35); border-radius:50%; pointer-events:none; z-index:2; }
 
     .to-move-bar { width:480px; display:flex; align-items:center; gap:12px; font-family:'DM Mono',monospace; font-size:12px; color:var(--muted); letter-spacing:0.08em; }
     .to-move-dot { width:12px; height:12px; border-radius:50%; border:2px solid var(--border); }
@@ -184,8 +184,8 @@
     <div class="sidebar-section">
       <div class="sidebar-title">Difficulty</div>
       <button class="filter-btn active" onclick="setThemeFilter('all')" id="filter-all">All Puzzles <span class="filter-count">∞</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('mateIn1')" id="filter-oneMove">Beginner <span class="filter-count">1 move</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('mateIn2')" id="filter-short">Easy <span class="filter-count">2 moves</span></button>
+      <button class="filter-btn" onclick="setThemeFilter('oneMove')" id="filter-oneMove">Beginner <span class="filter-count">1 move</span></button>
+      <button class="filter-btn" onclick="setThemeFilter('short')" id="filter-short">Easy <span class="filter-count">2 moves</span></button>
       <button class="filter-btn" onclick="setThemeFilter('fork')" id="filter-fork">Forks <span class="filter-count">⑂</span></button>
       <button class="filter-btn" onclick="setThemeFilter('pin')" id="filter-pin">Pins <span class="filter-count">📌</span></button>
       <button class="filter-btn" onclick="setThemeFilter('skewer')" id="filter-skewer">Skewers</button>
@@ -195,7 +195,7 @@
       <button class="filter-btn" onclick="setThemeFilter('mateIn2')" id="filter-mateIn2">Mate in 2</button>
       <button class="filter-btn" onclick="setThemeFilter('mateIn3')" id="filter-mateIn3">Mate in 3+</button>
       <button class="filter-btn" onclick="setThemeFilter('endgame')" id="filter-endgame">Endgame</button>
-      <button class="filter-btn" onclick="setThemeFilter('openingTactics')" id="filter-opening">Opening Traps</button>
+      <button class="filter-btn" onclick="setThemeFilter('opening')" id="filter-opening">Opening Traps</button>
       <button class="filter-btn" onclick="setThemeFilter('sacrifice')" id="filter-sacrifice">Sacrifices</button>
       <button class="filter-btn" onclick="setThemeFilter('crushing')" id="filter-crushing">Crushing</button>
     </div>
@@ -300,9 +300,8 @@ let currentThemeFilter = 'all';
 let puzzleQueue = [];
 let loadingNext = false;
 
-// Using Lichess open-source piece SVGs (cburnett set, public domain)
-const PIECE_IMG_BASE = 'https://lichess1.org/assets/piece/cburnett/';
-const PIECE_FILENAMES = {
+const PIECE_BASE = 'https://lichess1.org/assets/piece/cburnett/';
+const PIECE_SRC = {
   wK:'wK.svg', wQ:'wQ.svg', wR:'wR.svg', wB:'wB.svg', wN:'wN.svg', wP:'wP.svg',
   bK:'bK.svg', bQ:'bQ.svg', bR:'bR.svg', bB:'bB.svg', bN:'bN.svg', bP:'bP.svg'
 };
@@ -338,10 +337,8 @@ function updateRatingLabel() {
 }
 
 // ── LICHESS API ──
-// ── SUPABASE ENGINE ──
 const SB_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
-
 async function refillQueue() {
   const minR = parseInt(document.getElementById('ratingMin').value);
   const maxR = parseInt(document.getElementById('ratingMax').value);
@@ -361,7 +358,6 @@ async function refillQueue() {
   for (let i = data.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [data[i],data[j]]=[data[j],data[i]]; }
   puzzleQueue = data;
 }
-
 async function loadNextPuzzle() {
   puzzleSolved = false; puzzleFailed = false; hintUsed = false; selectedSquare = null;
   reviewMode = false; reviewMoves = []; reviewIndex = 0;
@@ -439,7 +435,8 @@ function renderBoard() {
       const rank = playerColor === 'w' ? 7 - r : r;
       const file = playerColor === 'w' ? c : 7 - c;
       const sq = 'abcdefgh'[file] + (rank + 1);
-      const piece = pos[rank] ? pos[rank][file] : null;
+      const arrayRow = playerColor === 'w' ? r : 7 - r;
+      const piece = pos[arrayRow] ? pos[arrayRow][file] : null;
       const isLight = (rank + file) % 2 === 1;
 
       const div = document.createElement('div');
@@ -450,20 +447,19 @@ function renderBoard() {
       if (piece) {
         const key = piece.color + piece.type.toUpperCase();
         const img = document.createElement('img');
-        img.src = PIECE_IMG_BASE + PIECE_FILENAMES[key];
+        img.src = PIECE_BASE + PIECE_SRC[key];
         img.className = 'piece';
         img.draggable = false;
         div.appendChild(img);
       }
 
-      // Square labels
-      if (file === 0) {
+      if (c === 0) {
         const lbl = document.createElement('div');
         lbl.className = 'sq-label-rank';
         lbl.textContent = rank + 1;
         div.appendChild(lbl);
       }
-      if (rank === 0 && playerColor === 'w' || rank === 7 && playerColor === 'b') {
+      if (r === 7) {
         const lbl = document.createElement('div');
         lbl.className = 'sq-label';
         lbl.textContent = 'abcdefgh'[file];
@@ -606,6 +602,7 @@ function flashSquares(from, to, cls) {
 
 // ── PUZZLE OUTCOME ──
 function onPuzzleSolved() {
+  setTimeout(enterReviewMode, 400);
   puzzleSolved = true;
   stats.solved++;
   stats.streak++;
@@ -623,6 +620,7 @@ function onPuzzleSolved() {
 }
 
 function onPuzzleFailed(from, to) {
+  setTimeout(enterReviewMode, 900);
   puzzleFailed = true;
   stats.failed++;
   stats.streak = 0;
@@ -685,7 +683,7 @@ function showAnswer() {
   let idx = solutionIndex;
   function step() {
     if (idx >= solutionMoves.length) {
-      document.getElementById('toMoveText').textContent = '👁 Use ← → to review';
+      document.getElementById('toMoveText').textContent = 'Use Back/Forward to review';
       enterReviewMode(); return;
     }
     const uci = solutionMoves[idx];
