@@ -183,21 +183,31 @@
   <div class="sidebar-left">
     <div class="sidebar-section">
       <div class="sidebar-title">Difficulty</div>
-      <button class="filter-btn active" onclick="setThemeFilter('all')" id="filter-all">All Puzzles <span class="filter-count">∞</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('oneMove')" id="filter-oneMove">Beginner <span class="filter-count">1 move</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('short')" id="filter-short">Easy <span class="filter-count">2 moves</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('fork')" id="filter-fork">Forks <span class="filter-count">⑂</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('pin')" id="filter-pin">Pins <span class="filter-count">📌</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('skewer')" id="filter-skewer">Skewers</button>
+      <button class="filter-btn active" onclick="setThemeFilter('all')" id="filter-all">All Puzzles</button>
+      <button class="filter-btn" onclick="setThemeFilter('mateIn1')" id="filter-mateIn1">☠ Mate in 1</button>
+      <button class="filter-btn" onclick="setThemeFilter('mateIn2')" id="filter-mateIn2">☠ Mate in 2</button>
+      <button class="filter-btn" onclick="setThemeFilter('mateIn3')" id="filter-mateIn3">☠ Mate in 3</button>
+      <button class="filter-btn" onclick="setThemeFilter('fork')" id="filter-fork">⑂ Forks</button>
+      <button class="filter-btn" onclick="setThemeFilter('pin')" id="filter-pin">📌 Pins</button>
+      <button class="filter-btn" onclick="setThemeFilter('skewer')" id="filter-skewer">⟶ Skewers</button>
       <button class="filter-btn" onclick="setThemeFilter('discoveredAttack')" id="filter-discoveredAttack">Discovered Attack</button>
       <button class="filter-btn" onclick="setThemeFilter('backRankMate')" id="filter-backRankMate">Back Rank Mate</button>
-      <button class="filter-btn" onclick="setThemeFilter('mateIn1')" id="filter-mateIn1">Mate in 1</button>
-      <button class="filter-btn" onclick="setThemeFilter('mateIn2')" id="filter-mateIn2">Mate in 2</button>
-      <button class="filter-btn" onclick="setThemeFilter('mateIn3')" id="filter-mateIn3">Mate in 3+</button>
-      <button class="filter-btn" onclick="setThemeFilter('endgame')" id="filter-endgame">Endgame</button>
-      <button class="filter-btn" onclick="setThemeFilter('opening')" id="filter-opening">Opening Traps</button>
-      <button class="filter-btn" onclick="setThemeFilter('sacrifice')" id="filter-sacrifice">Sacrifices</button>
-      <button class="filter-btn" onclick="setThemeFilter('crushing')" id="filter-crushing">Crushing</button>
+      <button class="filter-btn" onclick="setThemeFilter('endgame')" id="filter-endgame">♟ Endgame</button>
+      <button class="filter-btn" onclick="setThemeFilter('middlegame')" id="filter-middlegame">Middlegame</button>
+      <button class="filter-btn" onclick="setThemeFilter('openingTactics')" id="filter-openingTactics">Opening Traps</button>
+      <button class="filter-btn" onclick="setThemeFilter('sacrifice')" id="filter-sacrifice">⚡ Sacrifices</button>
+      <button class="filter-btn" onclick="setThemeFilter('crushing')" id="filter-crushing">💥 Crushing</button>
+      <button class="filter-btn" onclick="setThemeFilter('advantage')" id="filter-advantage">Advantage</button>
+      <button class="filter-btn" onclick="setThemeFilter('hangingPiece')" id="filter-hangingPiece">Hanging Piece</button>
+      <button class="filter-btn" onclick="setThemeFilter('trappedPiece')" id="filter-trappedPiece">Trapped Piece</button>
+      <button class="filter-btn" onclick="setThemeFilter('deflection')" id="filter-deflection">Deflection</button>
+      <button class="filter-btn" onclick="setThemeFilter('attraction')" id="filter-attraction">Attraction</button>
+      <button class="filter-btn" onclick="setThemeFilter('zugzwang')" id="filter-zugzwang">Zugzwang</button>
+      <button class="filter-btn" onclick="setThemeFilter('queenRookEndgame')" id="filter-queenRookEndgame">Queen+Rook End</button>
+      <button class="filter-btn" onclick="setThemeFilter('rookEndgame')" id="filter-rookEndgame">Rook Endgame</button>
+      <button class="filter-btn" onclick="setThemeFilter('pawnEndgame')" id="filter-pawnEndgame">Pawn Endgame</button>
+      <button class="filter-btn" onclick="setThemeFilter('promotion')" id="filter-promotion">Promotion</button>
+      <button class="filter-btn" onclick="setThemeFilter('long')" id="filter-long">Long Combo</button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-title">Rating Range</div>
@@ -299,8 +309,10 @@ const PIECE_UNICODE = {
 const THEME_COLORS = {
   fork:'gold', pin:'blue', skewer:'purple', discoveredAttack:'blue',
   backRankMate:'red', mateIn1:'red', mateIn2:'red', mateIn3:'red',
-  endgame:'green', opening:'green', sacrifice:'purple', crushing:'gold',
-  short:'green', long:'purple', oneMove:'green'
+  endgame:'green', openingTactics:'green', sacrifice:'purple', crushing:'gold',
+  middlegame:'blue', long:'purple', hangingPiece:'green', trappedPiece:'green',
+  deflection:'purple', attraction:'purple', zugzwang:'gold', promotion:'blue',
+  rookEndgame:'green', pawnEndgame:'green', queenRookEndgame:'green', advantage:'green'
 };
 
 function themeClass(t) { return THEME_COLORS[t] || ''; }
@@ -326,42 +338,16 @@ function updateRatingLabel() {
   document.getElementById('ratingMaxLabel').textContent = max;
 }
 
-// ── SUPABASE ──
-const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
-
-async function sbFetch(url) {
-  const res = await fetch(SUPABASE_URL + url, {
-    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + SUPABASE_ANON_KEY }
-  });
-  return res.json();
-}
-
-// ── PUZZLE QUEUE ──
-async function refillQueue() {
-  const minR = parseInt(document.getElementById('ratingMin').value);
-  const maxR = parseInt(document.getElementById('ratingMax').value);
-
-  // Random offset so we never see the same puzzles twice
-  const countData = await sbFetch(`/rest/v1/puzzles?select=id&rating=gte.${minR}&rating=lte.${maxR}${currentThemeFilter !== 'all' ? '&themes=ilike.*' + currentThemeFilter + '*' : ''}&limit=1`);
-  const total = Array.isArray(countData) ? 10000 : 10000;
-  const offset = Math.floor(Math.random() * Math.max(1, total - 30));
-
-  let url = `/rest/v1/puzzles?select=id,fen,moves,rating,themes&rating=gte.${minR}&rating=lte.${maxR}`;
-  if (currentThemeFilter !== 'all') url += `&themes=ilike.*${currentThemeFilter}*`;
-  url += `&limit=30&offset=${offset}&order=rating.asc`;
-
-  const data = await sbFetch(url);
-  if (Array.isArray(data) && data.length > 0) {
-    // Shuffle the batch
-    for (let i = data.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [data[i], data[j]] = [data[j], data[i]];
-    }
-    puzzleQueue = data;
-    return true;
+// ── LICHESS API ──
+async function fetchPuzzle() {
+  // Lichess puzzle API — no auth needed, free for all
+  let url = 'https://lichess.org/api/puzzle/next';
+  if (currentThemeFilter !== 'all') {
+    url += '?angle=' + currentThemeFilter;
   }
-  return false;
+  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error('API ' + res.status);
+  return await res.json();
 }
 
 async function loadNextPuzzle() {
@@ -370,20 +356,21 @@ async function loadNextPuzzle() {
   hintUsed = false;
   selectedSquare = null;
   document.getElementById('feedbackOverlay').className = 'feedback-overlay';
-  document.getElementById('themesList').innerHTML = '';
+
+  // Show loading
+  document.getElementById('puzzle-board').innerHTML = `
+    <div class="loading-state">
+      <div class="loading-chess">♟</div>
+      <div class="loading-text">Loading puzzle...</div>
+    </div>`;
   document.getElementById('toMoveText').textContent = 'Loading...';
   document.getElementById('puzzleRatingBadge').textContent = 'Rating: —';
+  document.getElementById('themesList').innerHTML = '';
 
   try {
-    // Refill queue if empty
-    if (puzzleQueue.length === 0) {
-      const ok = await refillQueue();
-      if (!ok) { showError(new Error('No puzzles found. Try a different filter.')); return; }
-    }
-
-    const p = puzzleQueue.shift();
-    currentPuzzle = { id: p.id, fen: p.fen, moves: p.moves, rating: p.rating, themes: (p.themes || '').split(' ').filter(Boolean) };
-    setupPuzzle({ puzzle: currentPuzzle });
+    const data = await fetchPuzzle();
+    currentPuzzle = data.puzzle;
+    setupPuzzle(data);
   } catch(e) {
     showError(e);
   }
@@ -707,8 +694,8 @@ function showError(err) {
 }
 
 // ── INIT ──
-updateStats();
 loadNextPuzzle();
+updateStats();
 </script>
 </body>
 </html>
