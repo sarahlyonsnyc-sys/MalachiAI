@@ -198,12 +198,18 @@
   <!-- LEFT SIDEBAR -->
   <div class="sidebar-left">
     <div class="sidebar-section">
-      <div class="sidebar-title">Difficulty</div>
-      <button class="filter-btn active" onclick="setThemeFilter('all')" id="filter-all">All Puzzles <span class="filter-count">∞</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('mateIn1')" id="filter-oneMove">Beginner <span class="filter-count">1 move</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('mateIn2')" id="filter-short">Easy <span class="filter-count">2 moves</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('fork')" id="filter-fork">Forks <span class="filter-count">⑂</span></button>
-      <button class="filter-btn" onclick="setThemeFilter('pin')" id="filter-pin">Pins <span class="filter-count">📌</span></button>
+      <div class="sidebar-title">Section</div>
+      <button class="filter-btn active" onclick="setSectionFilter('all',0,3000)" id="filter-all">All Puzzles <span class="filter-count">∞</span></button>
+      <button class="filter-btn" onclick="setSectionFilter('beginner',0,400)" id="filter-beginner">Beginner</button>
+      <button class="filter-btn" onclick="setSectionFilter('novice',401,800)" id="filter-novice">Novice</button>
+      <button class="filter-btn" onclick="setSectionFilter('intermediate',801,1300)" id="filter-intermediate">Intermediate</button>
+      <button class="filter-btn" onclick="setSectionFilter('reserve',1301,1700)" id="filter-reserve">Reserve</button>
+      <button class="filter-btn" onclick="setSectionFilter('open',1701,3000)" id="filter-open">Open</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Tactics</div>
+      <button class="filter-btn" onclick="setThemeFilter('fork')" id="filter-fork">Forks</button>
+      <button class="filter-btn" onclick="setThemeFilter('pin')" id="filter-pin">Pins</button>
       <button class="filter-btn" onclick="setThemeFilter('skewer')" id="filter-skewer">Skewers</button>
       <button class="filter-btn" onclick="setThemeFilter('discoveredAttack')" id="filter-discoveredAttack">Discovered Attack</button>
       <button class="filter-btn" onclick="setThemeFilter('backRankMate')" id="filter-backRankMate">Back Rank Mate</button>
@@ -215,18 +221,11 @@
       <button class="filter-btn" onclick="setThemeFilter('sacrifice')" id="filter-sacrifice">Sacrifices</button>
       <button class="filter-btn" onclick="setThemeFilter('crushing')" id="filter-crushing">Crushing</button>
     </div>
-    <div class="sidebar-section">
-      <div class="sidebar-title">Rating Range</div>
-      <div class="rating-range">
-        <div class="rating-label">
-          <span>Min: <span id="ratingMinLabel">600</span></span>
-          <span>Max: <span id="ratingMaxLabel">2400</span></span>
-        </div>
-        <input type="range" id="ratingMin" min="600" max="2400" step="100" value="600" oninput="updateRatingLabel()">
-        <input type="range" id="ratingMax" min="600" max="2400" step="100" value="2400" oninput="updateRatingLabel()" style="margin-top:8px">
-      </div>
-    </div>
   </div>
+
+  <!-- hidden rating inputs read by refillQueue -->
+  <input type="range" id="ratingMin" min="0" max="3000" value="0" style="display:none">
+  <input type="range" id="ratingMax" min="0" max="3000" value="3000" style="display:none">
 
   <!-- BOARD CENTER -->
   <div class="board-area">
@@ -351,6 +350,26 @@ function prettyTheme(t) {
 }
 
 // ── FILTER ──
+// Current section rating bounds
+let sectionMin = 0;
+let sectionMax = 3000;
+
+function setSectionFilter(sectionId, min, max) {
+  sectionMin = min;
+  sectionMax = max;
+  // Update hidden sliders so refillQueue reads correct values
+  document.getElementById('ratingMin').value = min;
+  document.getElementById('ratingMax').value = max;
+  // Clear active on ALL filter buttons, then activate this one
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('filter-' + sectionId);
+  if (btn) btn.classList.add('active');
+  // Also clear any active theme btn
+  currentThemeFilter = 'all';
+  puzzleQueue = [];
+  loadNextPuzzle();
+}
+
 function setThemeFilter(theme) {
   currentThemeFilter = theme;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -361,10 +380,7 @@ function setThemeFilter(theme) {
 }
 
 function updateRatingLabel() {
-  const min = parseInt(document.getElementById('ratingMin').value);
-  const max = parseInt(document.getElementById('ratingMax').value);
-  document.getElementById('ratingMinLabel').textContent = min;
-  document.getElementById('ratingMaxLabel').textContent = max;
+  // no-op — labels removed, kept for compatibility
 }
 
 // ── LICHESS API ──
