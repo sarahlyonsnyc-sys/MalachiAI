@@ -60,16 +60,21 @@
     .opening-eco-badge { font-family:'DM Mono',monospace; font-size:10px; color:var(--gold); background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.2); padding:3px 10px; display:inline-block; margin-bottom:10px; letter-spacing:0.1em; }
     .opening-desc { font-size:13px; color:var(--muted); line-height:1.6; max-width:480px; }
 
-    #board { display:grid; grid-template-columns:repeat(8,1fr); width:480px; height:480px; border:2px solid var(--border); box-shadow:0 0 40px rgba(0,0,0,0.6); }
+    #board { display:grid; grid-template-columns:repeat(8,1fr); width:480px; height:480px; border:3px solid #8b6914; box-shadow:0 8px 32px rgba(0,0,0,0.7); }
     .sq { width:60px; height:60px; display:flex; align-items:center; justify-content:center; position:relative; }
-    .sq.light { background:#2a2a2a; }
-    .sq.dark  { background:#1a1a1a; }
-    .sq.highlight { background:rgba(201,168,76,0.3) !important; }
-    .sq.last-from { background:rgba(201,168,76,0.2) !important; }
-    .sq.last-to   { background:rgba(201,168,76,0.35) !important; }
-    .piece { font-size:38px; line-height:1; user-select:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,0.5)); }
-    .sq-lbl { position:absolute; bottom:2px; right:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(255,255,255,0.2); }
-    .sq-lbl-r { position:absolute; top:2px; left:3px; font-size:8px; font-family:'DM Mono',monospace; color:rgba(255,255,255,0.2); }
+    .sq.light { background:#f0d9b5; }
+    .sq.dark  { background:#b58863; }
+    .sq.highlight { background:rgba(246,246,105,0.6) !important; }
+    .sq.last-from { background:rgba(246,246,105,0.45) !important; }
+    .sq.last-to   { background:rgba(246,246,105,0.7) !important; }
+    .piece { width:100%; height:100%; display:block; user-select:none; pointer-events:none; }
+    .piece-wrap { width:85%; height:85%; display:flex; align-items:center; justify-content:center; }
+    .piece-wrap.bounce { animation:pieceBounce 0.22s cubic-bezier(0.2,0,0,1.4); }
+    @keyframes pieceBounce { 0%{transform:scale(1.15)} 60%{transform:scale(0.95)} 100%{transform:scale(1)} }
+    .sq-lbl { position:absolute; bottom:2px; right:3px; font-size:9px; font-family:'DM Mono',monospace; font-weight:600; pointer-events:none; }
+    .sq.light .sq-lbl, .sq.light .sq-lbl-r { color:rgba(181,136,99,0.85); }
+    .sq.dark .sq-lbl, .sq.dark .sq-lbl-r { color:rgba(240,217,181,0.85); }
+    .sq-lbl-r { position:absolute; top:2px; left:3px; font-size:9px; font-family:'DM Mono',monospace; font-weight:600; pointer-events:none; }
 
     /* Move controls */
     .move-controls { display:flex; gap:10px; width:480px; }
@@ -101,16 +106,20 @@
     .step-move { font-family:'DM Mono',monospace; font-size:12px; color:var(--gold); width:48px; flex-shrink:0; }
     .step-desc { font-size:11px; color:var(--muted); line-height:1.5; }
 
+    .particle { position:absolute; border-radius:50%; pointer-events:none; animation:particleFly 0.55s ease-out forwards; z-index:200; }
+    @keyframes particleFly { 0%{opacity:1;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)} }
+
     @media (max-width:1100px) { .main { grid-template-columns:220px 1fr; } .sidebar-right { display:none; } }
     @media (max-width:800px) {
       .main { grid-template-columns:1fr; }
       .sidebar-left { display:none; }
       #board { width:360px; height:360px; }
       .sq { width:45px; height:45px; }
-      .piece { font-size:28px; }
+
       .move-controls,.move-history { width:360px; }
     }
 
+    /* ── Profile nav widget ── */
     .profile-nav { display:flex; align-items:center; gap:10px; }
     .profile-avatar-btn { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#c9a84c,#8b6914); border:2px solid rgba(201,168,76,0.4); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:12px; font-weight:700; color:#000; cursor:pointer; text-decoration:none; transition:all 0.2s; flex-shrink:0; }
     .profile-avatar-btn:hover { border-color:#c9a84c; transform:scale(1.08); }
@@ -568,9 +577,22 @@ const OPENINGS = [
 ];
 
 // ── BOARD STATE ──
-const PIECE_UNICODE = {
-  wK:'♔',wQ:'♕',wR:'♖',wB:'♗',wN:'♘',wP:'♙',
-  bK:'♚',bQ:'♛',bR:'♜',bB:'♝',bN:'♞',bP:'♟'
+const PIECE_BASE = 'https://lichess1.org/assets/piece/cburnett/';
+const PIECE_SRC = {
+  wK:'wK.svg',wQ:'wQ.svg',wR:'wR.svg',wB:'wB.svg',wN:'wN.svg',wP:'wP.svg',
+  bK:'bK.svg',bQ:'bQ.svg',bR:'bR.svg',bB:'bB.svg',bN:'bN.svg',bP:'bP.svg'
+};
+
+const SFX = {
+  ctx: null,
+  init() { if (!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); if (this.ctx.state==='suspended') this.ctx.resume(); },
+  play(type) {
+    try { this.init(); const ctx=this.ctx, now=ctx.currentTime, g=ctx.createGain(); g.connect(ctx.destination);
+      if (type==='move') { const o=ctx.createOscillator(); o.connect(g); o.type='triangle'; o.frequency.setValueAtTime(320,now); o.frequency.exponentialRampToValueAtTime(180,now+0.08); g.gain.setValueAtTime(0.18,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.12); o.start(now); o.stop(now+0.12); }
+      else if (type==='capture') { const o=ctx.createOscillator(); o.connect(g); o.type='sawtooth'; o.frequency.setValueAtTime(220,now); o.frequency.exponentialRampToValueAtTime(80,now+0.1); g.gain.setValueAtTime(0.25,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.15); o.start(now); o.stop(now+0.15); }
+      else if (type==='select') { const o=ctx.createOscillator(); o.connect(g); o.type='sine'; o.frequency.setValueAtTime(520,now); o.frequency.exponentialRampToValueAtTime(440,now+0.06); g.gain.setValueAtTime(0.1,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.08); o.start(now); o.stop(now+0.08); }
+    } catch(e) {}
+  }
 };
 
 let game = new Chess();
@@ -598,6 +620,7 @@ function buildSidebar() {
 }
 
 function selectOpening(eco) {
+  SFX.play('select');
   if (playAllTimer) { clearInterval(playAllTimer); playAllTimer = null; }
   currentOpening = OPENINGS.find(o => o.eco === eco);
   if (!currentOpening) return;
@@ -676,11 +699,23 @@ function loadVariation(movesStr) {
 function goToMove(idx) {
   displayIndex = Math.min(idx, playedMoves.length);
   game = new Chess();
+  let lastMove = null;
   for (let i = 0; i < displayIndex; i++) {
     const uci = playedMoves[i];
-    game.move({ from: uci.slice(0,2), to: uci.slice(2,4), promotion: uci[4] || undefined });
+    lastMove = game.move({ from: uci.slice(0,2), to: uci.slice(2,4), promotion: uci[4] || undefined });
   }
-  renderBoard(displayIndex > 0 ? playedMoves[displayIndex-1] : null);
+  const lastUCI = displayIndex > 0 ? playedMoves[displayIndex-1] : null;
+  if (lastMove) {
+    SFX.play(lastMove.captured ? 'capture' : 'move');
+    setTimeout(() => {
+      const toSq = lastUCI ? lastUCI.slice(2,4) : null;
+      if (toSq) {
+        const wrap = document.querySelector(`#board [data-sq="${toSq}"] .piece-wrap`);
+        if (wrap) { wrap.classList.add('bounce'); setTimeout(() => wrap.classList.remove('bounce'), 300); }
+      }
+    }, 20);
+  }
+  renderBoard(lastUCI);
   renderMoveHistory();
 }
 
@@ -727,20 +762,26 @@ function renderBoard(lastMoveUCI) {
       const rank = 7 - r;
       const file = c;
       const sq = 'abcdefgh'[file] + (rank + 1);
-      const piece = pos[rank][file];
+      // chess.js pos[0]=rank8 pos[7]=rank1 → arrayRow=r for white-at-bottom
+      const piece = pos[r] ? pos[r][file] : null;
       const isLight = (rank + file) % 2 === 1;
 
       const div = document.createElement('div');
       div.className = 'sq ' + (isLight ? 'light' : 'dark');
+      div.dataset.sq = sq;
       if (sq === lastFrom) div.classList.add('last-from');
       if (sq === lastTo)   div.classList.add('last-to');
 
       if (piece) {
         const key = piece.color + piece.type.toUpperCase();
-        const p = document.createElement('div');
-        p.className = 'piece';
-        p.textContent = PIECE_UNICODE[key] || '';
-        div.appendChild(p);
+        const wrap = document.createElement('div');
+        wrap.className = 'piece-wrap';
+        const img = document.createElement('img');
+        img.src = PIECE_BASE + PIECE_SRC[key];
+        img.className = 'piece';
+        img.draggable = false;
+        wrap.appendChild(img);
+        div.appendChild(wrap);
       }
       if (file === 0) {
         const l = document.createElement('div'); l.className='sq-lbl-r'; l.textContent=rank+1; div.appendChild(l);
@@ -793,37 +834,41 @@ renderBoard(null);
 if (OPENINGS.length > 0) selectOpening(OPENINGS[0].eco);
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function() {
   const SB_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
-  if (!window.supabase) return;
-  const _sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
-  async function injectProfileNav() {
-    const { data: { session } } = await _sb.auth.getSession();
-    const container = document.querySelector('.nav-right');
-    if (!container) return;
-    const widget = document.createElement('div');
-    widget.className = 'profile-nav';
-    if (session) {
-      const { data: profile } = await _sb.from('profiles').select('username,chess_rating').eq('id', session.user.id).single();
-      const initials = (profile?.username || '?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      const rating = profile?.chess_rating;
-      if (rating) {
-        const pill = document.createElement('div'); pill.className = 'profile-rating-pill';
-        pill.textContent = '♟ ' + rating; widget.appendChild(pill);
+  function tryInject() {
+    if (!window.supabase) { setTimeout(tryInject, 50); return; }
+    const _sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      const container = document.querySelector('.nav-right');
+      if (!container) return;
+      const widget = document.createElement('div');
+      widget.className = 'profile-nav';
+      if (session) {
+        _sb.from('profiles').select('username,chess_rating').eq('id', session.user.id).single().then(({ data: profile }) => {
+          const initials = (profile?.username||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+          const rating = profile?.chess_rating;
+          if (rating) {
+            const pill = document.createElement('div'); pill.className='profile-rating-pill';
+            pill.textContent='♟ '+rating; widget.appendChild(pill);
+          }
+          const avatar = document.createElement('a'); avatar.href='profile.html';
+          avatar.className='profile-avatar-btn'; avatar.title='My Profile';
+          avatar.textContent=initials; widget.appendChild(avatar);
+          container.appendChild(widget);
+        });
+      } else {
+        const signin = document.createElement('a'); signin.href='login.html';
+        signin.className='profile-signin'; signin.textContent='Sign In';
+        widget.appendChild(signin); container.appendChild(widget);
       }
-      const avatar = document.createElement('a'); avatar.href = 'profile.html';
-      avatar.className = 'profile-avatar-btn'; avatar.title = 'My Profile';
-      avatar.textContent = initials; widget.appendChild(avatar);
-    } else {
-      const signin = document.createElement('a'); signin.href = 'login.html';
-      signin.className = 'profile-signin'; signin.textContent = 'Sign In'; widget.appendChild(signin);
-    }
-    container.appendChild(widget);
+    });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectProfileNav);
-  else injectProfileNav();
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', tryInject);
+  else tryInject();
 })();
 </script>
 </body>
