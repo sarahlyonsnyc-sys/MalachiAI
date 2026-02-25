@@ -353,19 +353,49 @@ function prettyTheme(t) {
 // Current section rating bounds
 let sectionMin = 0;
 let sectionMax = 3000;
+let currentSectionName = 'All Puzzles';
+
+const SECTION_LABELS = {
+  'all':          'All Puzzles',
+  'beginner':     'Beginner Section',
+  'novice':       'Novice Section',
+  'intermediate': 'Intermediate Section',
+  'reserve':      'Reserve Section',
+  'open':         'Open Section',
+};
+
+const THEME_LABELS = {
+  'fork': 'Forks', 'pin': 'Pins', 'skewer': 'Skewers',
+  'discoveredAttack': 'Discovered Attack', 'backRankMate': 'Back Rank Mate',
+  'mateIn1': 'Mate in 1', 'mateIn2': 'Mate in 2', 'mateIn3': 'Mate in 3+',
+  'endgame': 'Endgame', 'openingTactics': 'Opening Traps',
+  'sacrifice': 'Sacrifices', 'crushing': 'Crushing',
+};
+
+function updatePuzzleTitle() {
+  const titleEl = document.getElementById('puzzleTitle');
+  if (!titleEl) return;
+  const themeLabel = currentThemeFilter !== 'all' ? THEME_LABELS[currentThemeFilter] || currentThemeFilter : null;
+  if (themeLabel && currentSectionName !== 'All Puzzles') {
+    titleEl.textContent = currentSectionName + '  ·  ' + themeLabel;
+  } else if (themeLabel) {
+    titleEl.textContent = themeLabel;
+  } else {
+    titleEl.textContent = currentSectionName;
+  }
+}
 
 function setSectionFilter(sectionId, min, max) {
   sectionMin = min;
   sectionMax = max;
-  // Update hidden sliders so refillQueue reads correct values
+  currentSectionName = SECTION_LABELS[sectionId] || sectionId;
   document.getElementById('ratingMin').value = min;
   document.getElementById('ratingMax').value = max;
-  // Clear active on ALL filter buttons, then activate this one
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('filter-' + sectionId);
   if (btn) btn.classList.add('active');
-  // Also clear any active theme btn
   currentThemeFilter = 'all';
+  updatePuzzleTitle();
   puzzleQueue = [];
   loadNextPuzzle();
 }
@@ -375,6 +405,7 @@ function setThemeFilter(theme) {
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   const btn = document.getElementById('filter-' + theme);
   if (btn) btn.classList.add('active');
+  updatePuzzleTitle();
   puzzleQueue = [];
   loadNextPuzzle();
 }
