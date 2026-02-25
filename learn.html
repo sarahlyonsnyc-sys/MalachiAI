@@ -117,6 +117,72 @@
     .dsq.green-hl { background:rgba(80,200,100,0.45) !important; }
     .dsq.arrow-from { background:rgba(201,168,76,0.35) !important; }
 
+
+    /* ── OPENING LESSONS ── */
+    .opening-hero { background:linear-gradient(135deg,#1a1400 0%,#0d0d0d 100%); border:1px solid rgba(201,168,76,0.3); border-radius:4px; padding:24px 28px; margin-bottom:28px; display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+    .opening-badge { font-size:48px; flex-shrink:0; }
+    .opening-hero-text h3 { font-family:'Cormorant Garamond',serif; font-size:22px; color:var(--white); margin:0 0 4px; }
+    .opening-hero-text p { font-size:13px; color:var(--muted); margin:0; line-height:1.5; }
+    .opening-moves-strip { display:flex; gap:8px; flex-wrap:wrap; margin:12px 0 0; }
+    .move-chip { background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.3); color:var(--gold); font-family:'DM Mono',monospace; font-size:12px; padding:4px 10px; border-radius:2px; }
+
+    /* animated board GIF-style */
+    .anim-board-wrap { margin:0 0 28px; }
+    .anim-board-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
+    .anim-board { display:inline-grid; grid-template-columns:repeat(8,46px); grid-template-rows:repeat(8,46px); border:2px solid rgba(201,168,76,0.4); position:relative; }
+    .anim-sq { display:flex; align-items:center; justify-content:center; font-size:28px; position:relative; transition:background 0.2s; }
+    .anim-sq.al { background:#f0d9b5; }
+    .anim-sq.ad { background:#b58863; }
+    .anim-sq.hl  { background:rgba(201,168,76,0.6) !important; }
+    .anim-sq.red { background:rgba(220,50,80,0.5) !important; }
+    .anim-sq.grn { background:rgba(80,200,100,0.5) !important; }
+    .anim-piece { transition:all 0.35s ease; display:inline-block; }
+    .anim-controls { display:flex; align-items:center; gap:10px; margin-top:10px; flex-wrap:wrap; }
+    .anim-btn { background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.3); color:var(--gold); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; padding:7px 14px; cursor:pointer; transition:all 0.2s; }
+    .anim-btn:hover { background:rgba(201,168,76,0.2); }
+    .anim-btn:disabled { opacity:0.3; cursor:default; }
+    .anim-step-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); flex:1; }
+    .anim-step-dots { display:flex; gap:5px; }
+    .anim-dot { width:7px; height:7px; border-radius:50%; background:var(--border); transition:background 0.2s; }
+    .anim-dot.active { background:var(--gold); }
+
+    /* Historical game card */
+    .hist-game { background:var(--panel); border:1px solid var(--border); border-radius:4px; padding:20px 24px; margin-bottom:20px; position:relative; overflow:hidden; }
+    .hist-game::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--gold); }
+    .hist-game-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:10px; flex-wrap:wrap; }
+    .hist-game-players { font-family:'Cormorant Garamond',serif; font-size:18px; color:var(--white); font-weight:600; }
+    .hist-game-meta { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.08em; text-align:right; line-height:1.8; }
+    .hist-game-body { font-size:13px; color:#9a9a9a; line-height:1.7; }
+    .hist-game-body strong { color:var(--cream); }
+    .fun-fact { background:rgba(201,168,76,0.07); border:1px solid rgba(201,168,76,0.2); border-radius:3px; padding:10px 14px; margin-top:12px; font-size:12px; color:var(--gold); }
+    .fun-fact::before { content:'⚡ '; }
+
+    /* Opponent responses */
+    .resp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; margin:16px 0; }
+    .resp-card { background:var(--panel); border:1px solid var(--border); padding:16px 18px; border-radius:3px; }
+    .resp-card-move { font-family:'DM Mono',monospace; font-size:13px; color:var(--gold); font-weight:bold; margin-bottom:6px; }
+    .resp-card-name { font-size:12px; color:var(--cream); margin-bottom:6px; font-weight:500; }
+    .resp-card-desc { font-size:12px; color:#888; line-height:1.6; }
+    .resp-card-counter { background:rgba(80,200,100,0.08); border-top:1px solid rgba(80,200,100,0.2); margin-top:10px; padding-top:10px; font-size:11px; color:#6ecf8a; line-height:1.5; }
+    .resp-card-counter::before { content:'✅ Counter: '; font-weight:bold; }
+
+    /* Step-by-step visual */
+    .steps-visual { display:flex; gap:0; margin:20px 0; overflow-x:auto; padding-bottom:8px; }
+    .step-item { flex-shrink:0; width:120px; text-align:center; position:relative; }
+    .step-item:not(:last-child)::after { content:'→'; position:absolute; right:-10px; top:24px; color:var(--gold); font-size:18px; font-weight:bold; }
+    .step-num { width:36px; height:36px; border-radius:50%; background:var(--gold); color:#000; font-family:'DM Mono',monospace; font-size:13px; font-weight:bold; display:flex; align-items:center; justify-content:center; margin:0 auto 8px; }
+    .step-move { font-family:'DM Mono',monospace; font-size:13px; color:var(--gold); margin-bottom:4px; }
+    .step-note { font-size:10px; color:var(--muted); line-height:1.4; padding:0 4px; }
+
+    /* Emoji callout */
+    .emoji-tip { display:flex; align-items:flex-start; gap:12px; background:rgba(255,255,255,0.03); border-radius:4px; padding:14px 16px; margin:12px 0; }
+    .emoji-tip .et-icon { font-size:28px; flex-shrink:0; }
+    .emoji-tip .et-text { font-size:13px; color:#9a9a9a; line-height:1.7; }
+    .emoji-tip .et-text strong { color:var(--cream); }
+
+    /* ranking badge */
+    .rank-badge { display:inline-block; background:rgba(201,168,76,0.15); border:1px solid rgba(201,168,76,0.3); color:var(--gold); font-family:'DM Mono',monospace; font-size:10px; padding:2px 8px; border-radius:2px; margin-left:6px; vertical-align:middle; }
+
     /* LESSON CONTENT BLOCKS */
     .lesson-block { margin-bottom:32px; }
     .block-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
@@ -714,47 +780,120 @@ const LESSONS = [
     type: 'Lesson',
     xp: 100,
     render: () => `
+      
       <div class="lesson-eyebrow">Module 5 — Openings: Beginner</div>
       <h2 class="lesson-title">The Italian Game</h2>
-      <p class="lesson-desc">One of the oldest and most popular openings in chess. Simple, aggressive, and perfect for beginners who want a solid start.</p>
+      <p class="lesson-desc">One of the oldest openings in chess — over 500 years old! Simple moves, big ideas. Perfect for beginners who want to start strong every game.</p>
+
       <div class="lesson-board-wrap"><div id="lb-10"></div><div class="lesson-board-info"><div class="lesson-board-title">Italian Game — After 3.Bc4</div><div class="lesson-board-desc">White's bishop eyes the <strong>f7 square</strong> — Black's weakest point. White is ready to castle and has followed all opening principles in just 3 moves.</div></div></div></div>
-      
+
+      <!-- ANIMATED MOVES -->
       <div class="lesson-block">
-        <div class="lesson-text">
-          <p>The Italian Game begins: <strong>1. e4 e5 2. Nf3 Nc6 3. Bc4</strong>. White's bishop aims at the f7 square — the weakest point in Black's position — and prepares to castle quickly.</p>
-          <div class="highlight-box" style="margin-bottom:16px">
-            <strong style="color:var(--gold)">Why it works</strong><br>
-            All three moves follow opening principles: control the center (e4), develop a piece (Nf3), develop another piece to an aggressive square (Bc4). You're ready to castle by move 5.
+        <div class="block-label">🎬 Watch the Opening Move by Move</div>
+        <div class="anim-board-wrap">
+          <div class="anim-board-label">
+            <span id="ital-step-label">Starting Position — Press ▶ Next to begin</span>
+            <div class="anim-step-dots" id="ital-dots"></div>
           </div>
-          <div class="highlight-box" style="margin-bottom:16px">
-            <strong style="color:var(--gold)">The Giuoco Piano</strong><br>
-            After Bc4, if Black plays Bc5 — mirroring your setup — you have the Giuoco Piano ("Quiet Game"). Both sides develop smoothly and fight for center control. Great for learning positional chess.
-          </div>
-          <div class="highlight-box">
-            <strong style="color:var(--gold)">The Evan's Gambit</strong><br>
-            Feeling aggressive? After 3...Bc5, try 4. b4 — the Evans Gambit! You sacrifice a pawn for rapid development and a powerful center. One of the most exciting openings in chess history.
+          <div id="ital-board" class="anim-board"></div>
+          <div class="anim-controls">
+            <button class="anim-btn" id="ital-prev" onclick="italStep(-1)" disabled>◀ Back</button>
+            <button class="anim-btn" id="ital-next" onclick="italStep(1)">▶ Next</button>
           </div>
         </div>
       </div>
+
+      <!-- STEP VISUAL -->
+      <div class="lesson-block">
+        <div class="block-label">📋 The 3 Moves at a Glance</div>
+        <div class="steps-visual">
+          <div class="step-item"><div class="step-num">1</div><div class="step-move">e4</div><div class="step-note">Grab the center! King pawn forward 2</div></div>
+          <div class="step-item"><div class="step-num">2</div><div class="step-move">Nf3</div><div class="step-note">Knight out — attacks e5 and develops</div></div>
+          <div class="step-item"><div class="step-num">3</div><div class="step-move">Bc4</div><div class="step-note">Bishop eyes f7 — Black's weak spot!</div></div>
+        </div>
+      </div>
+
+      <!-- EMOJI TIPS -->
+      <div class="lesson-block">
+        <div class="emoji-tip"><div class="et-icon">🎯</div><div class="et-text"><strong>The Big Target:</strong> f7 is only protected by the king at the start. Your bishop on c4 stares right at it. This threat alone forces Black to be careful every move.</div></div>
+        <div class="emoji-tip"><div class="et-icon">🏰</div><div class="et-text"><strong>Castle Fast:</strong> After 3.Bc4 you only need Nc3 or d3, then castle. You'll be safe while Black is still figuring out what to do.</div></div>
+        <div class="emoji-tip"><div class="et-icon">⚡</div><div class="et-text"><strong>Evans Gambit:</strong> After Black plays Bc5, try 4.b4! Sacrifice a pawn to open lines and attack like crazy. It's one of the most fun gambits ever invented.</div></div>
+      </div>
+
+      <!-- HISTORICAL GAME -->
+      <div class="lesson-block">
+        <div class="block-label">🏆 Famous Game Using This Opening</div>
+        <div class="hist-game">
+          <div class="hist-game-header">
+            <div class="hist-game-players">Wilhelm Steinitz <span style="color:var(--muted)">vs</span> Johannes Zukertort</div>
+            <div class="hist-game-meta">World Championship Match<br>1886 · New Orleans, USA<br><span class="rank-badge">Steinitz: World #1</span> <span class="rank-badge">Zukertort: World #2</span></div>
+          </div>
+          <div class="hist-game-body">
+            The <strong>very first official World Chess Championship</strong> was played with the Italian Game! Steinitz, the first ever World Champion, used it to squeeze opponents with patient positional play. He beat Zukertort 10–5 to become champion.
+            <br><br>Key moves: <strong>1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.c3</strong> — Steinitz's patient approach, building a strong pawn center before attacking.
+          </div>
+          <div class="fun-fact">The match was played across 3 cities — New York, St. Louis, and New Orleans. They had to travel by steam train between games! Steinitz was 49 years old and still dominated.</div>
+        </div>
+        <div class="hist-game">
+          <div class="hist-game-header">
+            <div class="hist-game-players">Paul Morphy <span style="color:var(--muted)">vs</span> Duke of Brunswick</div>
+            <div class="hist-game-meta">Paris Opera Game<br>1858 · Paris Opera House<br><span class="rank-badge">Morphy: World #1 (unofficial)</span></div>
+          </div>
+          <div class="hist-game-body">
+            The most famous chess game ever played started with the Italian Game! Paul Morphy played this game during an opera performance — the Duke asked to play while watching the show. Morphy didn't even look at the board much.
+            <br><br>He used <strong>1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.b4</strong> (Evans Gambit!) and won brilliantly in just 17 moves with a queen sacrifice.
+          </div>
+          <div class="fun-fact">Morphy was only 21 years old and is considered one of the greatest chess geniuses ever. He beat every player in Europe, then retired from chess entirely at age 22!</div>
+        </div>
+      </div>
+
+      <!-- OPPONENT RESPONSES -->
+      <div class="lesson-block">
+        <div class="block-label">🥊 What Black Can Play — And How to Beat It</div>
+        <div class="resp-grid">
+          <div class="resp-card">
+            <div class="resp-card-move">3...Bc5 — Giuoco Piano</div>
+            <div class="resp-card-name">The "Quiet Game"</div>
+            <div class="resp-card-desc">Black copies your bishop development. Both sides build solid positions. This is the most common response and leads to rich middlegame battles.</div>
+            <div class="resp-card-counter">Play 4.c3 then 5.d4 to grab the center. Or try 4.b4 (Evans Gambit) for an exciting attack!</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">3...Nf6 — Two Knights</div>
+            <div class="resp-card-name">The Two Knights Defense</div>
+            <div class="resp-card-desc">Black develops fast and is ready to counterattack. The knight on f6 hits your e4 pawn and prepares ...d5 to challenge your center.</div>
+            <div class="resp-card-counter">Play 4.Ng5 to threaten f7 immediately. Or 4.d4 for a solid center. Avoid 4.Ng5 d5 5.exd5 Nxd5?? — Black gets a strong attack!</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">3...Be7 — Hungarian Defense</div>
+            <div class="resp-card-name">The Solid Choice</div>
+            <div class="resp-card-desc">Black plays very safely. This is less aggressive but very solid — no weaknesses. Many beginners choose this because it's simple.</div>
+            <div class="resp-card-counter">Just keep developing! Play d3, Nc3, Be3, and castle. You have more space so a long game favors you.</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">3...d6 — Paris Defense</div>
+            <div class="resp-card-name">Lock It Down</div>
+            <div class="resp-card-desc">Black supports the e5 pawn right away. Very solid but passive — Black gives up space to be safe.</div>
+            <div class="resp-card-counter">Develop normally: Nc3, d3, Be3, 0-0. You'll have more space and can attack on the kingside when ready.</div>
+          </div>
+        </div>
+      </div>
+
       <div class="lesson-block quiz-block" id="quiz-10">
         <div class="block-label">Quick Check</div>
-        <div class="quiz-question">What is White's 3rd move in the Italian Game?</div>
+        <div class="quiz-question">Which square does the Italian Game bishop on c4 threaten?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(10,0,1,'Bc4! The bishop aims at f7, follows opening principles, and prepares for early castling. This is the Italian Game.')">
-            <div class="option-letter">A</div> Bc4
+          <button class="quiz-option" onclick="answerQuiz(10,0,1,'f7! The bishop on c4 stares directly at f7 — Black\\'s weakest square at the start, only defended by the king. This is the whole point of the Italian Game!')">
+            <div class="option-letter">A</div> f7 — Black's weakest square
           </button>
-          <button class="quiz-option" onclick="answerQuiz(10,1,1,'Bc4! The bishop aims at f7, follows opening principles, and prepares for early castling. This is the Italian Game.')">
-            <div class="option-letter">B</div> d4
+          <button class="quiz-option" onclick="answerQuiz(10,1,1,'f7! The bishop on c4 stares directly at f7 — Black\\'s weakest square at the start, only defended by the king. This is the whole point of the Italian Game!')">
+            <div class="option-letter">B</div> d5 — the center
           </button>
-          <button class="quiz-option" onclick="answerQuiz(10,2,1,'Bc4! The bishop aims at f7, follows opening principles, and prepares for early castling. This is the Italian Game.')">
-            <div class="option-letter">C</div> Bb5
-          </button>
-          <button class="quiz-option" onclick="answerQuiz(10,3,1,'Bc4! The bishop aims at f7, follows opening principles, and prepares for early castling. This is the Italian Game.')">
-            <div class="option-letter">D</div> Nc3
+          <button class="quiz-option" onclick="answerQuiz(10,2,1,'f7! The bishop on c4 stares directly at f7 — Black\\'s weakest square at the start, only defended by the king. This is the whole point of the Italian Game!')">
+            <div class="option-letter">C</div> e8 — the king directly
           </button>
         </div>
         <div class="quiz-feedback" id="qfeedback-10"></div>
-      </div>`
+      </div>
   },
   {
     category: 'Openings',
@@ -762,44 +901,116 @@ const LESSONS = [
     type: 'Lesson',
     xp: 100,
     render: () => `
+      
       <div class="lesson-eyebrow">Module 5 — Openings: Beginner</div>
       <h2 class="lesson-title">The Spanish Opening (Ruy López)</h2>
-      <p class="lesson-desc">The most played opening at the highest levels of chess for 500 years. Subtle, deep, and incredibly rich in strategy.</p>
+      <p class="lesson-desc">The most played opening at the highest levels of chess for over 500 years. Subtle, deep, and used by almost every World Champion ever.</p>
+
       <div class="lesson-board-wrap"><div id="lb-11"></div><div class="lesson-board-info"><div class="lesson-board-title">Ruy López — After 3.Bb5</div><div class="lesson-board-desc">White's bishop pins the knight defending e5. The <strong>Ruy López</strong> has been played by World Champions for over 400 years.</div></div></div></div>
-      
+
+      <!-- ANIMATED MOVES -->
       <div class="lesson-block">
-        <div class="lesson-text">
-          <p>The Spanish begins: <strong>1. e4 e5 2. Nf3 Nc6 3. Bb5</strong>. Instead of attacking f7 directly, White puts indirect pressure on Black's e5 pawn by threatening the knight that defends it.</p>
-          <div class="highlight-box" style="margin-bottom:16px">
-            <strong style="color:var(--gold)">The Big Idea</strong><br>
-            Bb5 pins or threatens the Nc6. If the knight moves, the e5 pawn loses its defender. White isn't winning the pawn immediately — it's a long-term squeeze that gives White a space advantage.
+        <div class="block-label">🎬 Watch the Opening Move by Move</div>
+        <div class="anim-board-wrap">
+          <div class="anim-board-label">
+            <span id="span-step-label">Starting Position — Press ▶ Next to begin</span>
+            <div class="anim-step-dots" id="span-dots"></div>
           </div>
-          <div class="highlight-box" style="margin-bottom:16px">
-            <strong style="color:var(--gold)">The Marshall Attack</strong><br>
-            Black's most aggressive response: sacrifice a pawn early for a massive attack. The resulting positions are razor-sharp and have been played by World Champions for over 100 years.
-          </div>
-          <div class="highlight-box">
-            <strong style="color:var(--gold)">Why the pros play it</strong><br>
-            Magnus Carlsen, Garry Kasparov, and Bobby Fischer all used the Spanish as their main weapon with White. It gives you a small but lasting edge if you know the plans.
+          <div id="span-board" class="anim-board"></div>
+          <div class="anim-controls">
+            <button class="anim-btn" id="span-prev" onclick="spanStep(-1)" disabled>◀ Back</button>
+            <button class="anim-btn" id="span-next" onclick="spanStep(1)">▶ Next</button>
           </div>
         </div>
       </div>
+
+      <div class="lesson-block">
+        <div class="block-label">📋 The 3 Moves at a Glance</div>
+        <div class="steps-visual">
+          <div class="step-item"><div class="step-num">1</div><div class="step-move">e4</div><div class="step-note">Control center with king pawn</div></div>
+          <div class="step-item"><div class="step-num">2</div><div class="step-move">Nf3</div><div class="step-note">Knight attacks Black's e5 pawn</div></div>
+          <div class="step-item"><div class="step-num">3</div><div class="step-move">Bb5</div><div class="step-note">Pin the Nc6 that defends e5!</div></div>
+        </div>
+      </div>
+
+      <div class="lesson-block">
+        <div class="emoji-tip"><div class="et-icon">📌</div><div class="et-text"><strong>The Pin Trick:</strong> Bb5 threatens to take the Nc6. If the knight disappears, who defends the e5 pawn? Nobody! But White doesn't always capture — just the threat causes problems.</div></div>
+        <div class="emoji-tip"><div class="et-icon">🐢</div><div class="et-text"><strong>Patient Strategy:</strong> Unlike the Italian, the Spanish is about long-term pressure. You slowly squeeze Black's position. It's like slowly turning up the heat — Black gets uncomfortable without seeing one big attack coming.</div></div>
+        <div class="emoji-tip"><div class="et-icon">👑</div><div class="et-text"><strong>Used by Champions:</strong> Kasparov, Fischer, Carlsen, Karpov, Anand — every single World Champion has used this opening. If it's good enough for them, it's perfect for you!</div></div>
+      </div>
+
+      <div class="lesson-block">
+        <div class="block-label">🏆 Famous Games Using This Opening</div>
+        <div class="hist-game">
+          <div class="hist-game-header">
+            <div class="hist-game-players">Garry Kasparov <span style="color:var(--muted)">vs</span> Anatoly Karpov</div>
+            <div class="hist-game-meta">World Championship, Game 16<br>1985 · Moscow, USSR<br><span class="rank-badge">Kasparov: Rating 2700</span> <span class="rank-badge">Karpov: Rating 2720</span></div>
+          </div>
+          <div class="hist-game-body">
+            This game — called "<strong>The Chess Game of the Century</strong>" by many — was played in their legendary World Championship rivalry. Kasparov used the Ruy López to outplay Karpov in a 42-move masterpiece. Kasparov won the match and became the youngest World Champion at age 22.
+            <br><br>The two rivals played <strong>5 World Championship matches</strong> between 1984–1990. The Ruy López appeared in almost every game.
+          </div>
+          <div class="fun-fact">Kasparov and Karpov were political rivals too — both from the USSR. Their matches were watched by millions around the world during the Cold War.</div>
+        </div>
+        <div class="hist-game">
+          <div class="hist-game-header">
+            <div class="hist-game-players">Bobby Fischer <span style="color:var(--muted)">vs</span> Boris Spassky</div>
+            <div class="hist-game-meta">World Championship, Game 6<br>1972 · Reykjavik, Iceland<br><span class="rank-badge">Fischer: Rating 2785 (World #1)</span> <span class="rank-badge">Spassky: Rating 2660</span></div>
+          </div>
+          <div class="hist-game-body">
+            Game 6 of the "<strong>Match of the Century</strong>" — USA vs USSR during the Cold War. Fischer played the Ruy López and produced what is widely called the <strong>greatest chess game ever played</strong>. He won so brilliantly that Spassky stood up and applauded his own defeat!
+            <br><br>Fischer won with a knight sacrifice: <strong>...Bxh2!</strong> that shattered Spassky's kingside. Pure magic.
+          </div>
+          <div class="fun-fact">Bobby Fischer learned to play chess at age 6, became a grandmaster at 15 — the youngest ever at the time — and is still considered one of the greatest chess players in history.</div>
+        </div>
+      </div>
+
+      <div class="lesson-block">
+        <div class="block-label">🥊 What Black Can Play — And How to Beat It</div>
+        <div class="resp-grid">
+          <div class="resp-card">
+            <div class="resp-card-move">3...a6 — Morphy Defense</div>
+            <div class="resp-card-name">Most Popular! (90% of games)</div>
+            <div class="resp-card-desc">Black immediately challenges your bishop — "are you going to take my knight or retreat?" This is what the best players in the world play.</div>
+            <div class="resp-card-counter">Retreat with 4.Ba4! Don't take the knight yet. Keep the pin going. After 4...Nf6 5.0-0 Be7 6.Re1 — you're in the classic Open Spanish.</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">3...Nf6 — Berlin Defense</div>
+            <div class="resp-card-name">Magnus Carlsen's Fortress</div>
+            <div class="resp-card-desc">Super solid defense — trades pieces quickly and heads for a slightly worse endgame that Black can hold. Magnus Carlsen used this to become World Champion.</div>
+            <div class="resp-card-counter">Play 4.0-0 Nxe4 5.d4 — attack the center. The Berlin endgame is tough but beatable with d4 pressure. Don't panic — just develop!</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">3...d6 — Steinitz Defense</div>
+            <div class="resp-card-name">The Old-School Solid</div>
+            <div class="resp-card-desc">Black defends the e5 pawn immediately. Very passive but rock solid. This was the original defense before modern chess theory developed.</div>
+            <div class="resp-card-counter">Play 4.d4! Strike the center immediately. After 4...exd4 5.Nxd4, you have a big center advantage and more space.</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">3...Bc5 — Classical Defense</div>
+            <div class="resp-card-name">Counter With Your Own Bishop</div>
+            <div class="resp-card-desc">Black develops the bishop actively, ignoring your Bb5 threat. It says "I'm not scared of your pin!" and fights for the center.</div>
+            <div class="resp-card-counter">Play 4.c3 then d4 to hit the center. Or 4.0-0 and slowly build pressure. Black's bishop on c5 can become a target later.</div>
+          </div>
+        </div>
+      </div>
+
       <div class="lesson-block quiz-block" id="quiz-11">
         <div class="block-label">Quick Check</div>
-        <div class="quiz-question">What is the key idea behind Bb5 in the Spanish Opening?</div>
+        <div class="quiz-question">In the Ruy López, why does White play Bb5?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(11,0,2,'Correct! Bb5 pressures the Nc6, which defends the e5 pawn. It is a long-term strategic threat, not an immediate capture.')">
-            <div class="option-letter">A</div> To immediately capture the e5 pawn
+          <button class="quiz-option" onclick="answerQuiz(11,0,1,'Correct! Bb5 pins or pressures the Nc6 which is defending Black\\'s e5 pawn. If the knight has to move, e5 becomes vulnerable!')">
+            <div class="option-letter">A</div> To pressure the knight that defends e5
           </button>
-          <button class="quiz-option" onclick="answerQuiz(11,1,2,'Correct! Bb5 pressures the Nc6, which defends the e5 pawn. It is a long-term strategic threat, not an immediate capture.')">
-            <div class="option-letter">B</div> To pressure the knight defending e5
+          <button class="quiz-option" onclick="answerQuiz(11,1,1,'Correct! Bb5 pins or pressures the Nc6 which is defending Black\\'s e5 pawn. If the knight has to move, e5 becomes vulnerable!')">
+            <div class="option-letter">B</div> To immediately capture on c6
           </button>
-          <button class="quiz-option" onclick="answerQuiz(11,2,2,'Correct! Bb5 pressures the Nc6, which defends the e5 pawn. It is a long-term strategic threat, not an immediate capture.')">
+          <button class="quiz-option" onclick="answerQuiz(11,2,1,'Correct! Bb5 pins or pressures the Nc6 which is defending Black\\'s e5 pawn. If the knight has to move, e5 becomes vulnerable!')">
             <div class="option-letter">C</div> To attack f7 directly
           </button>
         </div>
         <div class="quiz-feedback" id="qfeedback-11"></div>
-      </div>`
+      </div>
   },
 
   // ── OPENINGS: ADVANCED ──
@@ -809,47 +1020,116 @@ const LESSONS = [
     type: 'Lesson',
     xp: 125,
     render: () => `
+      
       <div class="lesson-eyebrow">Module 6 — Openings: Advanced</div>
       <h2 class="lesson-title">The Sicilian Defense</h2>
-      <p class="lesson-desc">The most popular and combative response to 1. e4. Black fights for the center asymmetrically — and creates winning chances from the very first move.</p>
+      <p class="lesson-desc">The most popular chess opening in the world! Used by over half of all grandmasters as their main weapon against 1.e4. Fight back from the very first move!</p>
+
       <div class="lesson-board-wrap"><div id="lb-12"></div><div class="lesson-board-info"><div class="lesson-board-title">Sicilian — After 1.e4 c5</div><div class="lesson-board-desc">Black avoids a symmetrical position. The c5 pawn <strong>fights for d4</strong> without letting White have a pawn in the center. The most popular defense at all levels.</div></div></div></div>
-      
+
       <div class="lesson-block">
-        <div class="lesson-text">
-          <p>After <strong>1. e4 c5</strong>, Black doesn't mirror White's center control — they undermine it. The c5 pawn fights for d4 without giving White a free tempo with e5.</p>
-          <div class="highlight-box" style="margin-bottom:16px">
-            <strong style="color:var(--gold)">Why Black loves the Sicilian</strong><br>
-            The positions are unbalanced — White often attacks kingside while Black counterattacks queenside. Both sides play for a win, making it perfect for players who hate draws.
+        <div class="block-label">🎬 Watch the Opening Move by Move</div>
+        <div class="anim-board-wrap">
+          <div class="anim-board-label">
+            <span id="sicil-step-label">Starting Position — Press ▶ Next to begin</span>
+            <div class="anim-step-dots" id="sicil-dots"></div>
           </div>
-          <div class="highlight-box" style="margin-bottom:16px">
-            <strong style="color:var(--gold)">The Najdorf Variation</strong><br>
-            After 1.e4 c5 2.Nf3 d6 3.d4 cxd4 4.Nxd4 Nf6 5.Nc3 a6 — Bobby Fischer called it "best by test." The a6 move prevents Bb5 and prepares b5. Kasparov's main weapon for decades.
-          </div>
-          <div class="highlight-box">
-            <strong style="color:var(--gold)">The Dragon Variation</strong><br>
-            Black fianchettoes the bishop to g7, creating a powerful diagonal aimed at White's queenside. One of the sharpest openings in chess — both sides attack as fast as possible.
+          <div id="sicil-board" class="anim-board"></div>
+          <div class="anim-controls">
+            <button class="anim-btn" id="sicil-prev" onclick="sicilStep(-1)" disabled>◀ Back</button>
+            <button class="anim-btn" id="sicil-next" onclick="sicilStep(1)">▶ Next</button>
           </div>
         </div>
       </div>
+
+      <div class="lesson-block">
+        <div class="block-label">📋 The Key Moves at a Glance</div>
+        <div class="steps-visual">
+          <div class="step-item"><div class="step-num">1</div><div class="step-move">...c5</div><div class="step-note">Fight for d4 without being symmetric!</div></div>
+          <div class="step-item"><div class="step-num">2</div><div class="step-move">...d6</div><div class="step-note">Solid foundation for pieces</div></div>
+          <div class="step-item"><div class="step-num">3</div><div class="step-move">...Nf6</div><div class="step-note">Attack White's e4 pawn!</div></div>
+          <div class="step-item"><div class="step-num">4</div><div class="step-move">...a6</div><div class="step-note">Stop Bb5, prepare b5 advance!</div></div>
+        </div>
+      </div>
+
+      <div class="lesson-block">
+        <div class="emoji-tip"><div class="et-icon">🔥</div><div class="et-text"><strong>Why It's So Popular:</strong> The Sicilian creates UNBALANCED positions — White attacks kingside, Black attacks queenside. Both sides play for a WIN. No boring draws!</div></div>
+        <div class="emoji-tip"><div class="et-icon">♟</div><div class="et-text"><strong>The Asymmetry Secret:</strong> After c5, White has a pawn on e4, Black has a pawn on c5. Different files! This means both sides have unique plans. White can't just copy Black's moves.</div></div>
+        <div class="emoji-tip"><div class="et-icon">🐉</div><div class="et-text"><strong>The Dragon:</strong> One variation is literally named "The Dragon" because the pawn structure looks like the Draco constellation. Black's bishop on g7 breathes fire down the long diagonal!</div></div>
+      </div>
+
+      <div class="lesson-block">
+        <div class="block-label">🏆 Famous Games Using This Opening</div>
+        <div class="hist-game">
+          <div class="hist-game-header">
+            <div class="hist-game-players">Garry Kasparov <span style="color:var(--muted)">vs</span> Deep Blue</div>
+            <div class="hist-game-meta">Man vs Machine Match, Game 1<br>1997 · New York, USA<br><span class="rank-badge">Kasparov: Rating 2795 (World #1)</span> <span class="rank-badge">Deep Blue: IBM Supercomputer</span></div>
+          </div>
+          <div class="hist-game-body">
+            In the historic Man vs Machine match, Kasparov opened with the Sicilian Defense against IBM's supercomputer Deep Blue. Game 1 was a <strong>brilliant Kasparov win</strong> — he outplayed the computer beautifully. Unfortunately Deep Blue won the overall match 3.5–2.5.
+            <br><br>Kasparov used the <strong>Najdorf Variation</strong> — his favorite weapon for decades, which he personally helped develop and refine.
+          </div>
+          <div class="fun-fact">Deep Blue could calculate 200 million positions per second. Kasparov said he could "feel" moves that the computer couldn't understand. The match shocked the world.</div>
+        </div>
+        <div class="hist-game">
+          <div class="hist-game-header">
+            <div class="hist-game-players">Bobby Fischer <span style="color:var(--muted)">vs</span> Reuben Fine</div>
+            <div class="hist-game-meta">New York Casual Game<br>1963 · New York, USA<br><span class="rank-badge">Fischer: Rating ~2600</span></div>
+          </div>
+          <div class="hist-game-body">
+            Bobby Fischer called the Sicilian <strong>"best by test"</strong> — the best response to 1.e4. He said it creates the most fighting positions and gives Black real winning chances. Fischer used both sides of the Sicilian throughout his career.
+            <br><br>Fischer's most famous Sicilian game: he beat Donald Byrne at age <strong>13</strong> in what was called "The Game of the Century" — his first masterpiece.
+          </div>
+          <div class="fun-fact">The Sicilian is named after Giulio Polerio, an Italian player who first recorded it in 1594 — but it was a Sicilian (from Sicily, Italy) player who popularized it, hence the name!</div>
+        </div>
+      </div>
+
+      <div class="lesson-block">
+        <div class="block-label">🥊 The Main Sicilian Variations</div>
+        <div class="resp-grid">
+          <div class="resp-card">
+            <div class="resp-card-move">...a6 — Najdorf Variation</div>
+            <div class="resp-card-name">The King of All Openings</div>
+            <div class="resp-card-desc">The most popular chess opening ever! a6 prevents Bb5 and prepares b5. Kasparov and Fischer's main weapon. Super sharp and complex.</div>
+            <div class="resp-card-counter">As White: Play 6.Bg5 for the English Attack, or 6.Be3 for the Classical. Avoid passive moves — attack fast or Black takes over!</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">...g6 — Dragon Variation</div>
+            <div class="resp-card-name">🐉 Unleash the Dragon!</div>
+            <div class="resp-card-desc">Black fianchettoes the bishop to g7, creating a "fire-breathing" diagonal. Both sides race to checkmate each other — most exciting variation!</div>
+            <div class="resp-card-counter">As White: The Yugoslav Attack (h4-h5) is the main line. Attack fast with g4-g5 before Black's queenside attack arrives!</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">...e6 — Scheveningen</div>
+            <div class="resp-card-name">Solid and Flexible</div>
+            <div class="resp-card-desc">Black builds a solid "small center" with d6+e6. More defensive than the Najdorf but very flexible — Black waits to see White's plan.</div>
+            <div class="resp-card-counter">As White: English Attack with Be3, f3, g4 is powerful. Or the Keres Attack with g4 early to stop Black from castling.</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">...Nc6 — Classical</div>
+            <div class="resp-card-name">Old School Cool</div>
+            <div class="resp-card-desc">Knight develops naturally. Less theory to memorize, good piece play. Great for players who prefer understanding over memorization.</div>
+            <div class="resp-card-counter">As White: Play Bc4 (Sozin Attack) to pressure the weak f7. Or d4 and Bg5 for rich tactical positions.</div>
+          </div>
+        </div>
+      </div>
+
       <div class="lesson-block quiz-block" id="quiz-12">
         <div class="block-label">Quick Check</div>
-        <div class="quiz-question">What is Black's first move in the Sicilian Defense?</div>
+        <div class="quiz-question">Why is 1...c5 so powerful in the Sicilian?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(12,0,1,'1...c5! The Sicilian. By playing c5 instead of e5, Black fights for d4 without giving White a symmetrical position. The most popular response to 1. e4 at all levels.')">
-            <div class="option-letter">A</div> 1...e5
+          <button class="quiz-option" onclick="answerQuiz(12,0,1,'Exactly! c5 fights for d4 without letting White have a symmetric pawn center. This creates unbalanced positions where both sides can win!')">
+            <div class="option-letter">A</div> It fights for d4 without being symmetric — both sides attack
           </button>
-          <button class="quiz-option" onclick="answerQuiz(12,1,1,'1...c5! The Sicilian. By playing c5 instead of e5, Black fights for d4 without giving White a symmetrical position. The most popular response to 1. e4 at all levels.')">
-            <div class="option-letter">B</div> 1...c5
+          <button class="quiz-option" onclick="answerQuiz(12,1,1,'Exactly! c5 fights for d4 without letting White have a symmetric pawn center. This creates unbalanced positions where both sides can win!')">
+            <div class="option-letter">B</div> It immediately defends the king
           </button>
-          <button class="quiz-option" onclick="answerQuiz(12,2,1,'1...c5! The Sicilian. By playing c5 instead of e5, Black fights for d4 without giving White a symmetrical position. The most popular response to 1. e4 at all levels.')">
-            <div class="option-letter">C</div> 1...d5
-          </button>
-          <button class="quiz-option" onclick="answerQuiz(12,3,1,'1...c5! The Sicilian. By playing c5 instead of e5, Black fights for d4 without giving White a symmetrical position. The most popular response to 1. e4 at all levels.')">
-            <div class="option-letter">D</div> 1...Nf6
+          <button class="quiz-option" onclick="answerQuiz(12,2,1,'Exactly! c5 fights for d4 without letting White have a symmetric pawn center. This creates unbalanced positions where both sides can win!')">
+            <div class="option-letter">C</div> It copies White's pawn structure
           </button>
         </div>
         <div class="quiz-feedback" id="qfeedback-12"></div>
-      </div>`
+      </div>
   },
   {
     category: 'Openings',
@@ -857,45 +1137,115 @@ const LESSONS = [
     type: 'Lesson',
     xp: 125,
     render: () => `
+      
       <div class="lesson-eyebrow">Module 6 — Openings: Advanced</div>
       <h2 class="lesson-title">The Queen's Gambit</h2>
-      <p class="lesson-desc">Not actually a gambit — it's a positional powerhouse used by every World Champion. Learn why 1. d4 openings are just as exciting as 1. e4.</p>
+      <p class="lesson-desc">Not a real gambit — it's a trap disguised as a gift! Used by every single World Chess Champion. Simple idea, incredibly deep strategy.</p>
+
       <div class="lesson-board-wrap"><div id="lb-13"></div><div class="lesson-board-info"><div class="lesson-board-title">Queen's Gambit — After 1.d4 d5 2.c4</div><div class="lesson-board-desc">White offers the c4 pawn. If Black takes it (<strong>Accepted</strong>), White gets a huge center with e4. If Black declines (<strong>Declined</strong>), a rich positional battle begins.</div></div></div></div>
-      
+
       <div class="lesson-block">
-        <div class="lesson-text">
-          <p>The Queen's Gambit: <strong>1. d4 d5 2. c4</strong>. White offers a pawn on c4. If Black takes it (2...dxc4), White gets a big center with 3. e4. If Black declines, a rich strategic battle begins.</p>
-          <div class="highlight-box" style="margin-bottom:16px">
-            <strong style="color:var(--gold)">Accepted vs Declined</strong><br>
-            <strong>Accepted (QGA):</strong> Black takes the pawn and tries to hold it. White gets the center and attacks.<br>
-            <strong>Declined (QGD):</strong> Black holds the center with ...e6. Solid and classical — played by World Champions for 150 years.
+        <div class="block-label">🎬 Watch the Opening Move by Move</div>
+        <div class="anim-board-wrap">
+          <div class="anim-board-label">
+            <span id="qg-step-label">Starting Position — Press ▶ Next to begin</span>
+            <div class="anim-step-dots" id="qg-dots"></div>
           </div>
-          <div class="highlight-box" style="margin-bottom:16px">
-            <strong style="color:var(--gold)">The Slav Defense</strong><br>
-            After 1.d4 d5 2.c4 c6 — Black supports the d5 pawn with the c-pawn, freeing the c8 bishop. One of the most solid defenses in chess.
-          </div>
-          <div class="highlight-box">
-            <strong style="color:var(--gold)">Pop Culture Note</strong><br>
-            The Netflix show "The Queen's Gambit" is named after this opening. Beth Harmon plays it throughout the series — and now millions of new players know what it is!
+          <div id="qg-board" class="anim-board"></div>
+          <div class="anim-controls">
+            <button class="anim-btn" id="qg-prev" onclick="qgStep(-1)" disabled>◀ Back</button>
+            <button class="anim-btn" id="qg-next" onclick="qgStep(1)">▶ Next</button>
           </div>
         </div>
       </div>
+
+      <div class="lesson-block">
+        <div class="block-label">📋 The Key Moves at a Glance</div>
+        <div class="steps-visual">
+          <div class="step-item"><div class="step-num">1</div><div class="step-move">d4</div><div class="step-note">Control center with queen's pawn</div></div>
+          <div class="step-item"><div class="step-num">2</div><div class="step-move">c4</div><div class="step-note">Offer the "free" pawn — it's a trap!</div></div>
+          <div class="step-item"><div class="step-num">3</div><div class="step-move">e4</div><div class="step-note">If Black takes c4, grab the whole center!</div></div>
+        </div>
+      </div>
+
+      <div class="lesson-block">
+        <div class="emoji-tip"><div class="et-icon">🎁</div><div class="et-text"><strong>Free Pawn? Not Really!</strong> White offers c4 but if Black takes it, White plays e4 and controls the entire center with TWO center pawns. It's like trading a penny for a dollar!</div></div>
+        <div class="emoji-tip"><div class="et-icon">🎬</div><div class="et-text"><strong>Netflix Famous!</strong> The TV show "The Queen's Gambit" is named after this opening. Millions of new players learned what this opening was because of that show. Beth Harmon plays it in every match!</div></div>
+        <div class="emoji-tip"><div class="et-icon">⚖️</div><div class="et-text"><strong>Accepted vs Declined:</strong> If Black takes the pawn (Accepted), White gets the center. If Black says "no thanks" (Declined), a deep strategic battle begins. Both are great — pick your style!</div></div>
+      </div>
+
+      <div class="lesson-block">
+        <div class="block-label">🏆 Famous Games Using This Opening</div>
+        <div class="hist-game">
+          <div class="hist-game-header">
+            <div class="hist-game-players">Magnus Carlsen <span style="color:var(--muted)">vs</span> Fabiano Caruana</div>
+            <div class="hist-game-meta">World Championship Match<br>2018 · London, England<br><span class="rank-badge">Carlsen: Rating 2835 (World #1)</span> <span class="rank-badge">Caruana: Rating 2832 (World #2)</span></div>
+          </div>
+          <div class="hist-game-body">
+            The closest World Championship in history! Carlsen and Caruana were separated by just 3 rating points — the closest ever. The Queen's Gambit and its relatives appeared throughout the match.
+            <br><br>All <strong>12 classical games were draws</strong> — the first time that ever happened in championship history. Carlsen then won all 3 rapid tiebreak games to retain his title.
+          </div>
+          <div class="fun-fact">Magnus Carlsen became World Champion at age 22 in 2013 and has held the title ever since. His peak rating of 2882 is the highest in history!</div>
+        </div>
+        <div class="hist-game">
+          <div class="hist-game-header">
+            <div class="hist-game-players">Mikhail Botvinnik <span style="color:var(--muted)">vs</span> José Raúl Capablanca</div>
+            <div class="hist-game-meta">AVRO Tournament<br>1938 · Netherlands<br><span class="rank-badge">Botvinnik: Rating ~2700</span> <span class="rank-badge">Capablanca: Former World Champion</span></div>
+          </div>
+          <div class="hist-game-body">
+            Called "<strong>The Queen's Gambit Masterpiece</strong>," this game is considered one of the greatest positional games ever played. Botvinnik used the Queen's Gambit Declined to build up a slow, crushing advantage — then sacrificed a piece to create a passed pawn that couldn't be stopped.
+            <br><br>The game ended with a beautiful rook and pawn endgame — a textbook example even today.
+          </div>
+          <div class="fun-fact">Capablanca was World Champion from 1921–1927 and was so naturally talented he learned chess by watching his father play at age 4, then beat him the next day!</div>
+        </div>
+      </div>
+
+      <div class="lesson-block">
+        <div class="block-label">🥊 What Black Can Play — And How to Beat It</div>
+        <div class="resp-grid">
+          <div class="resp-card">
+            <div class="resp-card-move">2...dxc4 — Accepted (QGA)</div>
+            <div class="resp-card-name">They Took the Pawn!</div>
+            <div class="resp-card-desc">Black takes the free pawn but gives up center control. White will play e4 and have two center pawns. Black must fight back quickly or get steamrolled.</div>
+            <div class="resp-card-counter">Play 3.e4 immediately! Then Nf3, Nc3 and attack. Don't waste time trying to win back the c4 pawn — build your center instead.</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">2...e6 — Declined (QGD)</div>
+            <div class="resp-card-name">Classic and Solid</div>
+            <div class="resp-card-desc">Black says "no thanks" to the pawn and solidly defends d5. The c8 bishop gets locked in, but Black has a very solid position. World Champion territory!</div>
+            <div class="resp-card-counter">Play 3.Nc3 Nf6 4.Bg5 — pin the f6 knight. Then e3, Nf3, castle queenside and attack! The Botvinnik-Capablanca game used exactly this setup.</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">2...c6 — Slav Defense</div>
+            <div class="resp-card-name">The Solid Wall</div>
+            <div class="resp-card-desc">Black supports d5 with the c-pawn, keeping the c8 bishop free. One of the most solid and popular defenses — no weaknesses!</div>
+            <div class="resp-card-counter">Play 3.Nc3 Nf6 4.Nf3 for the main Slav. Or 3.e3 for the slower Anti-Slav. The key is to play e4 at the right moment to break the center.</div>
+          </div>
+          <div class="resp-card">
+            <div class="resp-card-move">2...Nf6 — Indian Defenses</div>
+            <div class="resp-card-name">Modern Fighting Chess</div>
+            <div class="resp-card-desc">Black ignores d5 entirely and plays Nf6 instead. This leads to the King's Indian, Nimzo-Indian, or Grünfeld — all super sharp modern openings.</div>
+            <div class="resp-card-counter">After 3.Nc3 Bb4 (Nimzo-Indian), play 4.e3 solid style or 4.Qc2 for fighting chess. Don't let Black castle too quickly!</div>
+          </div>
+        </div>
+      </div>
+
       <div class="lesson-block quiz-block" id="quiz-13">
         <div class="block-label">Quick Check</div>
-        <div class="quiz-question">In the Queen's Gambit, what happens if Black accepts and takes on c4?</div>
+        <div class="quiz-question">Why is the Queen's Gambit NOT really a gambit?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(13,0,0,'Correct! If Black takes the pawn, White plays e4 and gets a powerful pawn center. That is why the Queen&apos;s Gambit is not a true gambit — White almost always gets the pawn back.')">
-            <div class="option-letter">A</div> White builds a big center with e4
+          <button class="quiz-option" onclick="answerQuiz(13,0,0,'Correct! If Black takes the c4 pawn, White plays e4 and gets an even bigger center. White gets the pawn back easily — it was never truly sacrificed!')">
+            <div class="option-letter">A</div> White gets the pawn back easily with e4 and a bigger center
           </button>
-          <button class="quiz-option" onclick="answerQuiz(13,1,0,'Correct! If Black takes the pawn, White plays e4 and gets a powerful pawn center. That is why the Queen&apos;s Gambit is not a true gambit — White almost always gets the pawn back.')">
-            <div class="option-letter">B</div> Black keeps the pawn permanently
+          <button class="quiz-option" onclick="answerQuiz(13,1,0,'Correct! If Black takes the c4 pawn, White plays e4 and gets an even bigger center. White gets the pawn back easily — it was never truly sacrificed!')">
+            <div class="option-letter">B</div> Black can never actually take the pawn
           </button>
-          <button class="quiz-option" onclick="answerQuiz(13,2,0,'Correct! If Black takes the pawn, White plays e4 and gets a powerful pawn center. That is why the Queen&apos;s Gambit is not a true gambit — White almost always gets the pawn back.')">
-            <div class="option-letter">C</div> White loses material
+          <button class="quiz-option" onclick="answerQuiz(13,2,0,'Correct! If Black takes the c4 pawn, White plays e4 and gets an even bigger center. White gets the pawn back easily — it was never truly sacrificed!')">
+            <div class="option-letter">C</div> White sacrifices the queen, not a pawn
           </button>
         </div>
         <div class="quiz-feedback" id="qfeedback-13"></div>
-      </div>`
+      </div>
   },
 
   // ── TACTICS: MORE PATTERNS ──
@@ -1413,6 +1763,285 @@ function renderLessonBoard(idx) {
   if (boards[idx]) boards[idx]();
 }
 
+
+// ─────────────────────────────────────────────
+// ANIMATED OPENING BOARDS
+// ─────────────────────────────────────────────
+function buildAnimBoard(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  for (let r = 8; r >= 1; r--) {
+    for (let fi = 0; fi < 8; fi++) {
+      const file = 'abcdefgh'[fi];
+      const sq = file + r;
+      const isLight = (fi + r) % 2 !== 0;
+      const div = document.createElement('div');
+      div.className = 'anim-sq ' + (isLight ? 'al' : 'ad');
+      div.id = containerId + '-' + sq;
+      el.appendChild(div);
+    }
+  }
+}
+
+function setAnimPieces(boardId, pos, highlights, redSqs, greenSqs) {
+  // Clear all pieces and highlights
+  document.querySelectorAll('#' + boardId + ' .anim-sq').forEach(sq => {
+    sq.textContent = '';
+    sq.classList.remove('hl','red','grn');
+  });
+  // Set pieces
+  for (const [sq, piece] of Object.entries(pos || {})) {
+    const el = document.getElementById(boardId + '-' + sq);
+    if (el) el.textContent = piece;
+  }
+  // Highlights
+  (highlights || []).forEach(sq => {
+    const el = document.getElementById(boardId + '-' + sq);
+    if (el) el.classList.add('hl');
+  });
+  (redSqs || []).forEach(sq => {
+    const el = document.getElementById(boardId + '-' + sq);
+    if (el) el.classList.add('red');
+  });
+  (greenSqs || []).forEach(sq => {
+    const el = document.getElementById(boardId + '-' + sq);
+    if (el) el.classList.add('grn');
+  });
+}
+
+function updateAnimUI(prefix, stepIdx, steps) {
+  const label = document.getElementById(prefix + '-step-label');
+  const dotsEl = document.getElementById(prefix + '-dots');
+  const prev = document.getElementById(prefix + '-prev');
+  const next = document.getElementById(prefix + '-next');
+  if (label) label.textContent = steps[stepIdx].label;
+  if (prev) prev.disabled = stepIdx === 0;
+  if (next) next.disabled = stepIdx === steps.length - 1;
+  if (dotsEl) {
+    dotsEl.innerHTML = steps.map((_, i) =>
+      `<div class="anim-dot${i === stepIdx ? ' active' : ''}"></div>`).join('');
+  }
+}
+
+// ── ITALIAN GAME ──
+const W = {K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙'};
+const BL = {K:'♚',Q:'♛',R:'♜',B:'♝',N:'♞',P:'♟'};
+
+const ITALIAN_STEPS = [
+  { label:'Starting Position — both sides ready to battle!',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         a2:W.P,b2:W.P,c2:W.P,d2:W.P,e2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:[], red:[], grn:[] },
+  { label:'1. e4 — White grabs the center! King pawn 2 squares forward 🎯',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:['e4'], red:[], grn:[] },
+  { label:'1...e5 — Black copies! Also grabs center space ⚡',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         e5:BL.P,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:['e5'], red:[], grn:[] },
+  { label:'2. Nf3 — Knight attacks e5! Develops a piece AND threatens 🐴',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         e5:BL.P,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,f3:W.N,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,h1:W.R}, hl:['f3'], red:['e5'], grn:[] },
+  { label:'2...Nc6 — Black defends e5 with the knight! 🛡️',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         e5:BL.P,c6:BL.N,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,f3:W.N,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,h1:W.R}, hl:['c6'], red:[], grn:[] },
+  { label:'3. Bc4 — ITALIAN! Bishop aims at f7 — Black\'s weakest square! 🎯',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         e5:BL.P,c6:BL.N,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,f3:W.N,c4:W.B,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,h1:W.R}, hl:['c4'], red:['f7'], grn:[] },
+];
+let italIdx = 0;
+
+function italStep(dir) {
+  italIdx = Math.max(0, Math.min(ITALIAN_STEPS.length-1, italIdx + dir));
+  const s = ITALIAN_STEPS[italIdx];
+  setAnimPieces('ital-board', s.pos, s.hl, s.red, s.grn);
+  updateAnimUI('ital', italIdx, ITALIAN_STEPS);
+}
+
+// ── SPANISH/RUY LOPEZ ──
+const SPANISH_STEPS = [
+  { label:'Starting Position — let\'s learn the Ruy López! 👑',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         a2:W.P,b2:W.P,c2:W.P,d2:W.P,e2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:[], red:[], grn:[] },
+  { label:'1. e4 e5 — Both sides claim the center! 🔥',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         e5:BL.P,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:['e4','e5'], red:[], grn:[] },
+  { label:'2. Nf3 — Knight attacks e5! Develop AND threaten 🐴',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         e5:BL.P,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,f3:W.N,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,h1:W.R}, hl:['f3'], red:['e5'], grn:[] },
+  { label:'2...Nc6 — Black defends e5. Now what? 🤔',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         e5:BL.P,c6:BL.N,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,f3:W.N,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,h1:W.R}, hl:['c6'], red:[], grn:[] },
+  { label:'3. Bb5 — RUY LÓPEZ! Pin the knight protecting e5! 📌',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         e5:BL.P,c6:BL.N,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,f3:W.N,b5:W.B,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,h1:W.R}, hl:['b5'], red:['c6'], grn:['e5'] },
+  { label:'3...a6 — Most popular! Black says "retreat or trade?" 🤨',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         b7:BL.P,c7:BL.P,d7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         e5:BL.P,c6:BL.N,a6:BL.P,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,f3:W.N,b5:W.B,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,h1:W.R}, hl:['a6'], red:['b5'], grn:[] },
+  { label:'4. Ba4! Retreat and keep the pressure! Don\'t trade yet 🧠',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         b7:BL.P,c7:BL.P,d7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         e5:BL.P,c6:BL.N,a6:BL.P,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,f3:W.N,a4:W.B,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,h1:W.R}, hl:['a4'], red:[], grn:['c6'] },
+];
+let spanIdx = 0;
+
+function spanStep(dir) {
+  spanIdx = Math.max(0, Math.min(SPANISH_STEPS.length-1, spanIdx + dir));
+  const s = SPANISH_STEPS[spanIdx];
+  setAnimPieces('span-board', s.pos, s.hl, s.red, s.grn);
+  updateAnimUI('span', spanIdx, SPANISH_STEPS);
+}
+
+// ── SICILIAN DEFENSE ──
+const SICILIAN_STEPS = [
+  { label:'Starting Position — Black is about to play the Sicilian! 🐉',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         a2:W.P,b2:W.P,c2:W.P,d2:W.P,e2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:[], red:[], grn:[] },
+  { label:'1. e4 — White plays e4. Attacking the center! 🎯',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:['e4'], red:[], grn:[] },
+  { label:'1...c5! THE SICILIAN! Fight for d4 without being symmetric! 🔥',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,d7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         c5:BL.P,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:['c5'], red:[], grn:['d4'] },
+  { label:'2. Nf3 — White develops, attacks the center again ♞',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,d7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         c5:BL.P,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,f3:W.N,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,h1:W.R}, hl:['f3'], red:[], grn:[] },
+  { label:'2...d6 — Black solidly supports the position 🏰',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         c5:BL.P,d6:BL.P,a2:W.P,b2:W.P,c2:W.P,d2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,f3:W.N,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,h1:W.R}, hl:['d6'], red:[], grn:[] },
+  { label:'3. d4! White opens the center — the key move! ⚡',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         c5:BL.P,d6:BL.P,a2:W.P,b2:W.P,c2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,d4:W.P,f3:W.N,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,h1:W.R}, hl:['d4'], red:['c5'], grn:[] },
+  { label:'3...cxd4 4.Nxd4 — Battle begins! Black trades, White recaptures 💥',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         d6:BL.P,a2:W.P,b2:W.P,c2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         e4:W.P,d4:W.N,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,h1:W.R}, hl:['d4'], red:[], grn:[] },
+];
+let sicilIdx = 0;
+
+function sicilStep(dir) {
+  sicilIdx = Math.max(0, Math.min(SICILIAN_STEPS.length-1, sicilIdx + dir));
+  const s = SICILIAN_STEPS[sicilIdx];
+  setAnimPieces('sicil-board', s.pos, s.hl, s.red, s.grn);
+  updateAnimUI('sicil', sicilIdx, SICILIAN_STEPS);
+}
+
+// ── QUEEN'S GAMBIT ──
+const QG_STEPS = [
+  { label:'Starting Position — time for the Queen\'s Gambit! ♟',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         a2:W.P,b2:W.P,c2:W.P,d2:W.P,e2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:[], red:[], grn:[] },
+  { label:'1. d4! — Queen\'s pawn opening. Control the center differently! 🏰',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,d7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         a2:W.P,b2:W.P,c2:W.P,e2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         d4:W.P,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:['d4'], red:[], grn:[] },
+  { label:'1...d5 — Black defends the center! Mirror move ⚖️',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         d5:BL.P,a2:W.P,b2:W.P,c2:W.P,e2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         d4:W.P,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:['d5'], red:[], grn:[] },
+  { label:'2. c4! — THE GAMBIT! "Free pawn, want it?" 🎁',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         d5:BL.P,a2:W.P,b2:W.P,e2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         d4:W.P,c4:W.P,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:['c4'], red:['d5'], grn:[] },
+  { label:'2...dxc4 — Black takes! But it\'s not free... ⚠️',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         c4:BL.P,a2:W.P,b2:W.P,e2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         d4:W.P,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:['c4'], red:[], grn:[] },
+  { label:'3. e4! — White grabs the WHOLE center! That pawn is gone 💪',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,e7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         c4:BL.P,a2:W.P,b2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         d4:W.P,e4:W.P,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:['e4','d4'], red:['c4'], grn:[] },
+  { label:'2...e6 — OR Black declines! "No thanks!" Solid position 🛡️',
+    pos:{a8:BL.R,b8:BL.N,c8:BL.B,d8:BL.Q,e8:BL.K,f8:BL.B,g8:BL.N,h8:BL.R,
+         a7:BL.P,b7:BL.P,c7:BL.P,f7:BL.P,g7:BL.P,h7:BL.P,
+         d5:BL.P,e6:BL.P,a2:W.P,b2:W.P,e2:W.P,f2:W.P,g2:W.P,h2:W.P,
+         d4:W.P,c4:W.P,a1:W.R,b1:W.N,c1:W.B,d1:W.Q,e1:W.K,f1:W.B,g1:W.N,h1:W.R}, hl:['e6','d5'], red:[], grn:['d5'] },
+];
+let qgIdx = 0;
+
+function qgStep(dir) {
+  qgIdx = Math.max(0, Math.min(QG_STEPS.length-1, qgIdx + dir));
+  const s = QG_STEPS[qgIdx];
+  setAnimPieces('qg-board', s.pos, s.hl, s.red, s.grn);
+  updateAnimUI('qg', qgIdx, QG_STEPS);
+}
+
+// Init all opening boards when a lesson renders
+function initOpeningBoards() {
+  // Italian
+  if (document.getElementById('ital-board')) {
+    buildAnimBoard('ital-board');
+    italIdx = 0;
+    setAnimPieces('ital-board', ITALIAN_STEPS[0].pos, [], [], []);
+    updateAnimUI('ital', 0, ITALIAN_STEPS);
+  }
+  // Spanish
+  if (document.getElementById('span-board')) {
+    buildAnimBoard('span-board');
+    spanIdx = 0;
+    setAnimPieces('span-board', SPANISH_STEPS[0].pos, [], [], []);
+    updateAnimUI('span', 0, SPANISH_STEPS);
+  }
+  // Sicilian
+  if (document.getElementById('sicil-board')) {
+    buildAnimBoard('sicil-board');
+    sicilIdx = 0;
+    setAnimPieces('sicil-board', SICILIAN_STEPS[0].pos, [], [], []);
+    updateAnimUI('sicil', 0, SICILIAN_STEPS);
+  }
+  // Queen's Gambit
+  if (document.getElementById('qg-board')) {
+    buildAnimBoard('qg-board');
+    qgIdx = 0;
+    setAnimPieces('qg-board', QG_STEPS[0].pos, [], [], []);
+    updateAnimUI('qg', 0, QG_STEPS);
+  }
+}
+
 // ── XP & LEVELS ──
 const LEVELS = [
   { min:0,   label:'Pawn',    lvl:1  },
@@ -1507,6 +2136,7 @@ function renderLesson(idx) {
 
   // Render lesson boards
   setTimeout(() => renderLessonBoard(idx), 50);
+  setTimeout(() => initOpeningBoards(), 80);
 }
 
 function goToLesson(idx) {
