@@ -474,7 +474,7 @@ function setupPuzzle(data) {
   // Update header
   const rating = puzzle.rating || '?';
   document.getElementById('puzzleRatingBadge').textContent = 'Rating: ' + rating;
-  document.getElementById('puzzleTitle').textContent = 'Find the best move — ' + (playerColor === 'w' ? 'White' : 'Black') + ' to move';
+  updatePuzzleTitle();
 
   // Themes
   const themes = (puzzle.themes || []);
