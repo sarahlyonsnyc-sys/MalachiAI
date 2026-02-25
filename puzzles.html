@@ -886,37 +886,41 @@ loadNextPuzzle();
 updateStats();
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function() {
   const SB_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
-  if (!window.supabase) return;
-  const _sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
-  async function injectProfileNav() {
-    const { data: { session } } = await _sb.auth.getSession();
-    const container = document.querySelector('.nav-right');
-    if (!container) return;
-    const widget = document.createElement('div');
-    widget.className = 'profile-nav';
-    if (session) {
-      const { data: profile } = await _sb.from('profiles').select('username,chess_rating').eq('id', session.user.id).single();
-      const initials = (profile?.username || '?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      const rating = profile?.chess_rating;
-      if (rating) {
-        const pill = document.createElement('div'); pill.className = 'profile-rating-pill';
-        pill.textContent = '♟ ' + rating; widget.appendChild(pill);
+  function tryInject() {
+    if (!window.supabase) { setTimeout(tryInject, 50); return; }
+    const _sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
+    _sb.auth.getSession().then(({ data: { session } }) => {
+      const container = document.querySelector('.nav-right');
+      if (!container) return;
+      const widget = document.createElement('div');
+      widget.className = 'profile-nav';
+      if (session) {
+        _sb.from('profiles').select('username,chess_rating').eq('id', session.user.id).single().then(({ data: profile }) => {
+          const initials = (profile?.username||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+          const rating = profile?.chess_rating;
+          if (rating) {
+            const pill = document.createElement('div'); pill.className='profile-rating-pill';
+            pill.textContent='♟ '+rating; widget.appendChild(pill);
+          }
+          const avatar = document.createElement('a'); avatar.href='profile.html';
+          avatar.className='profile-avatar-btn'; avatar.title='My Profile';
+          avatar.textContent=initials; widget.appendChild(avatar);
+          container.appendChild(widget);
+        });
+      } else {
+        const signin = document.createElement('a'); signin.href='login.html';
+        signin.className='profile-signin'; signin.textContent='Sign In';
+        widget.appendChild(signin); container.appendChild(widget);
       }
-      const avatar = document.createElement('a'); avatar.href = 'profile.html';
-      avatar.className = 'profile-avatar-btn'; avatar.title = 'My Profile';
-      avatar.textContent = initials; widget.appendChild(avatar);
-    } else {
-      const signin = document.createElement('a'); signin.href = 'login.html';
-      signin.className = 'profile-signin'; signin.textContent = 'Sign In'; widget.appendChild(signin);
-    }
-    container.appendChild(widget);
+    });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectProfileNav);
-  else injectProfileNav();
+  if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', tryInject);
+  else tryInject();
 })();
 </script>
 </body>
