@@ -111,10 +111,9 @@
       .move-controls,.move-history { width:360px; }
     }
 
-    /* Profile avatar nav widget */
     .profile-nav { display:flex; align-items:center; gap:10px; }
     .profile-avatar-btn { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#c9a84c,#8b6914); border:2px solid rgba(201,168,76,0.4); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:12px; font-weight:700; color:#000; cursor:pointer; text-decoration:none; transition:all 0.2s; flex-shrink:0; }
-    .profile-avatar-btn:hover { border-color:var(--gold,#c9a84c); transform:scale(1.08); }
+    .profile-avatar-btn:hover { border-color:#c9a84c; transform:scale(1.08); }
     .profile-rating-pill { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.08em; color:#c9a84c; background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.25); padding:4px 10px; white-space:nowrap; }
     .profile-signin { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:#c9a84c; text-decoration:none; border:1px solid rgba(201,168,76,0.3); padding:6px 14px; transition:all 0.2s; }
     .profile-signin:hover { background:rgba(201,168,76,0.08); }
@@ -793,60 +792,38 @@ renderBoard(null);
 // Auto-select first opening
 if (OPENINGS.length > 0) selectOpening(OPENINGS[0].eco);
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-// ── PROFILE NAV WIDGET (injected on all pages) ──
 (function() {
   const SB_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
   if (!window.supabase) return;
-  const { createClient } = window.supabase;
-  const _sb = createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
-
+  const _sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
   async function injectProfileNav() {
     const { data: { session } } = await _sb.auth.getSession();
-    // Find best nav container
-    const container = document.querySelector('.nav-right') || document.querySelector('.nav-links') || document.querySelector('nav ul');
+    const container = document.querySelector('.nav-right');
     if (!container) return;
-
     const widget = document.createElement('div');
     widget.className = 'profile-nav';
-
     if (session) {
       const { data: profile } = await _sb.from('profiles').select('username,chess_rating').eq('id', session.user.id).single();
       const initials = (profile?.username || '?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
       const rating = profile?.chess_rating;
-
       if (rating) {
-        const pill = document.createElement('div');
-        pill.className = 'profile-rating-pill';
-        pill.textContent = '♟ ' + rating;
-        widget.appendChild(pill);
+        const pill = document.createElement('div'); pill.className = 'profile-rating-pill';
+        pill.textContent = '♟ ' + rating; widget.appendChild(pill);
       }
-
-      const avatar = document.createElement('a');
-      avatar.href = 'profile.html';
-      avatar.className = 'profile-avatar-btn';
-      avatar.title = (profile?.username || '') + ' — View Profile';
-      avatar.textContent = initials;
-      widget.appendChild(avatar);
+      const avatar = document.createElement('a'); avatar.href = 'profile.html';
+      avatar.className = 'profile-avatar-btn'; avatar.title = 'My Profile';
+      avatar.textContent = initials; widget.appendChild(avatar);
     } else {
-      const signin = document.createElement('a');
-      signin.href = 'login.html';
-      signin.className = 'profile-signin';
-      signin.textContent = 'Sign In';
-      widget.appendChild(signin);
+      const signin = document.createElement('a'); signin.href = 'login.html';
+      signin.className = 'profile-signin'; signin.textContent = 'Sign In'; widget.appendChild(signin);
     }
-
     container.appendChild(widget);
   }
-
-  // Wait for DOM
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectProfileNav);
-  } else {
-    injectProfileNav();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectProfileNav);
+  else injectProfileNav();
 })();
 </script>
 </body>
