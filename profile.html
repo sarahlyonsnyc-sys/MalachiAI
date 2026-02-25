@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Malachi AI — My Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:  #0a0a0a; --dark: #111; --panel: #161616; --panel2: #1c1c1c;
+      --border: #2a2a2a; --gold: #c9a84c; --gold2: #e8c97a;
+      --cream: #f5f0e8; --muted: #6b6b6b; --green: #4caf50; --red: #e05068; --blue: #5b8dee;
+    }
+    *, body { background: var(--black); color: var(--cream); font-family: 'Outfit', sans-serif; }
+    body { min-height: 100vh; overflow-x: hidden; }
+    .chess-bg { position:fixed; inset:0; z-index:0; opacity:0.025; background-image:repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%); background-size:48px 48px; pointer-events:none; }
+
+    /* NAV */
+    nav { position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:18px 40px; border-bottom:1px solid var(--border); background:rgba(10,10,10,0.96); backdrop-filter:blur(12px); }
+    .logo { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .logo-icon { width:28px; height:28px; display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+    .logo-icon span { background:var(--gold); border-radius:1px; display:block; }
+    .logo-icon span:nth-child(2), .logo-icon span:nth-child(3) { background:transparent; border:1px solid var(--gold); }
+    .logo-text { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:700; color:#fff; }
+    .logo-text span { color:var(--gold); }
+    .nav-right { display:flex; align-items:center; gap:16px; }
+    .nav-link { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); text-decoration:none; padding:8px 14px; border:1px solid transparent; transition:all 0.2s; cursor:pointer; background:none; }
+    .nav-link:hover { color:var(--gold); border-color:var(--border); }
+
+    /* PAGE */
+    .page { position:relative; z-index:1; max-width:900px; margin:0 auto; padding:48px 24px; }
+
+    /* HERO CARD */
+    .profile-hero { background:var(--panel); border:1px solid var(--border); padding:40px; display:flex; align-items:center; gap:36px; margin-bottom:32px; position:relative; overflow:hidden; }
+    .profile-hero::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%); pointer-events:none; }
+    .avatar { width:96px; height:96px; border-radius:50%; background:linear-gradient(135deg, var(--gold), #8b6914); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:32px; font-weight:700; color:#000; flex-shrink:0; border:3px solid rgba(201,168,76,0.3); }
+    .profile-info { flex:1; }
+    .profile-name { font-family:'Cormorant Garamond',serif; font-size:36px; font-weight:700; color:#fff; margin-bottom:6px; }
+    .profile-role { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
+    .profile-email { font-size:13px; color:var(--muted); }
+    .rating-hero { text-align:center; background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.2); padding:24px 36px; flex-shrink:0; }
+    .rating-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .rating-number { font-family:'DM Mono',monospace; font-size:48px; font-weight:700; color:var(--gold); line-height:1; }
+    .rating-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-top:6px; }
+    .rating-change { display:inline-block; margin-top:8px; font-family:'DM Mono',monospace; font-size:12px; padding:3px 10px; border-radius:2px; }
+    .rating-change.up { background:rgba(76,175,80,0.15); color:var(--green); }
+    .rating-change.down { background:rgba(224,80,104,0.15); color:var(--red); }
+
+    /* GRID */
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
+    .stat-card { background:var(--panel); border:1px solid var(--border); padding:20px; text-align:center; }
+    .stat-card .val { font-family:'DM Mono',monospace; font-size:28px; font-weight:700; color:var(--gold); margin-bottom:4px; }
+    .stat-card .val.green { color:var(--green); }
+    .stat-card .val.blue { color:var(--blue); }
+    .stat-card .lbl { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
+
+    /* SECTIONS */
+    .section { background:var(--panel); border:1px solid var(--border); padding:28px; margin-bottom:24px; }
+    .section-title { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+
+    /* RATING HISTORY CHART */
+    .chart-wrap { position:relative; height:160px; }
+    .chart-svg { width:100%; height:100%; overflow:visible; }
+
+    /* GAME HISTORY */
+    .game-row { display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid var(--border); }
+    .game-row:last-child { border-bottom:none; }
+    .game-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .game-dot.win { background:var(--green); }
+    .game-dot.loss { background:var(--red); }
+    .game-dot.draw { background:var(--muted); }
+    .game-info { flex:1; font-size:12px; color:var(--muted); font-family:'DM Mono',monospace; }
+    .game-rating { font-family:'DM Mono',monospace; font-size:12px; }
+    .game-rating.up { color:var(--green); }
+    .game-rating.down { color:var(--red); }
+
+    /* SKILLS */
+    .skill-row { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
+    .skill-name { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; color:var(--cream); width:140px; flex-shrink:0; }
+    .skill-bar-bg { flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+    .skill-bar-fill { height:100%; border-radius:3px; transition:width 1s ease; }
+    .skill-val { font-family:'DM Mono',monospace; font-size:11px; color:var(--gold); width:36px; text-align:right; flex-shrink:0; }
+
+    /* EDIT FORM */
+    .edit-section { display:none; }
+    .edit-section.open { display:block; }
+    .form-group { margin-bottom:16px; }
+    .form-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:6px; }
+    .form-input { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--cream); font-family:'DM Mono',monospace; font-size:13px; padding:10px 14px; outline:none; transition:border-color 0.2s; }
+    .form-input:focus { border-color:var(--gold); }
+    .btn { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; padding:10px 20px; border:1px solid; cursor:pointer; transition:all 0.2s; }
+    .btn-gold { border-color:rgba(201,168,76,0.5); color:var(--gold); background:rgba(201,168,76,0.08); }
+    .btn-gold:hover { background:rgba(201,168,76,0.15); }
+    .btn-muted { border-color:var(--border); color:var(--muted); background:transparent; margin-left:10px; }
+    .btn-muted:hover { color:var(--cream); }
+
+    .empty-msg { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); text-align:center; padding:24px; }
+    .loading { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.15em; color:var(--muted); text-align:center; padding:60px; text-transform:uppercase; }
+  </style>
+</head>
+<body>
+<div class="chess-bg"></div>
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
+    <div class="logo-text">Malachi <span>AI</span></div>
+  </a>
+  <div class="nav-right">
+    <a href="learn.html" class="nav-link">Learn</a>
+    <a href="play.html" class="nav-link">Play</a>
+    <a href="puzzles.html" class="nav-link">Puzzles</a>
+    <button class="nav-link" id="signOutBtn" style="display:none">Sign Out</button>
+  </div>
+</nav>
+
+<div class="page" id="mainPage">
+  <div class="loading" id="loadingMsg">Loading profile...</div>
+
+  <div id="profileContent" style="display:none">
+    <!-- HERO -->
+    <div class="profile-hero">
+      <div class="avatar" id="avatarEl">?</div>
+      <div class="profile-info">
+        <div class="profile-name" id="nameEl">—</div>
+        <div class="profile-role" id="roleEl">—</div>
+        <div class="profile-email" id="emailEl">—</div>
+        <div style="margin-top:16px; display:flex; gap:10px;">
+          <button class="btn btn-gold" onclick="toggleEdit()">✏️ Edit Profile</button>
+          <a href="play.html" class="btn btn-muted" style="text-decoration:none;display:inline-flex;align-items:center">♟ Play Chess</a>
+        </div>
+      </div>
+      <div class="rating-hero">
+        <div class="rating-label">Chess Rating</div>
+        <div class="rating-number" id="ratingEl">—</div>
+        <div class="rating-sub" id="ratingSubEl">Unranked</div>
+        <div class="rating-change" id="ratingChangeEl" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- EDIT FORM -->
+    <div class="section edit-section" id="editSection">
+      <div class="section-title">Edit Profile</div>
+      <div class="form-group">
+        <label class="form-label">Display Name</label>
+        <input class="form-input" id="editName" type="text" placeholder="Your name"/>
+      </div>
+      <button class="btn btn-gold" onclick="saveProfile()">Save Changes</button>
+      <button class="btn btn-muted" onclick="toggleEdit()">Cancel</button>
+      <span id="saveMsg" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--green);margin-left:14px;display:none">Saved!</span>
+    </div>
+
+    <!-- STATS GRID -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="val" id="statGames">0</div>
+        <div class="lbl">Games Played</div>
+      </div>
+      <div class="stat-card">
+        <div class="val green" id="statWins">0</div>
+        <div class="lbl">Wins</div>
+      </div>
+      <div class="stat-card">
+        <div class="val" id="statWinRate">0%</div>
+        <div class="lbl">Win Rate</div>
+      </div>
+      <div class="stat-card">
+        <div class="val blue" id="statStreak">0</div>
+        <div class="lbl">Best Streak</div>
+      </div>
+    </div>
+
+    <!-- RATING CHART -->
+    <div class="section">
+      <div class="section-title">Rating History</div>
+      <div class="chart-wrap">
+        <svg class="chart-svg" id="ratingChart" viewBox="0 0 800 160" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="empty-msg" id="chartEmpty" style="display:none">Play games to build your rating history</div>
+    </div>
+
+    <!-- RECENT GAMES -->
+    <div class="section">
+      <div class="section-title">Recent Games</div>
+      <div id="gameHistory"><div class="empty-msg">No games recorded yet — go play!</div></div>
+    </div>
+
+    <!-- WHOLE CHILD SKILLS -->
+    <div class="section">
+      <div class="section-title">Whole Child Development</div>
+      <div id="skillsSection">
+        <div class="skill-row">
+          <div class="skill-name">Impulse Control</div>
+          <div class="skill-bar-bg"><div class="skill-bar-fill" id="bar-impulse" style="width:0%;background:var(--gold)"></div></div>
+          <div class="skill-val" id="val-impulse">—</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-name">Resilience</div>
+          <div class="skill-bar-bg"><div class="skill-bar-fill" id="bar-resilience" style="width:0%;background:var(--green)"></div></div>
+          <div class="skill-val" id="val-resilience">—</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-name">Emotional Reg.</div>
+          <div class="skill-bar-bg"><div class="skill-bar-fill" id="bar-emotion" style="width:0%;background:var(--blue)"></div></div>
+          <div class="skill-val" id="val-emotion">—</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-name">Focus</div>
+          <div class="skill-bar-bg"><div class="skill-bar-fill" id="bar-focus" style="width:0%;background:#9c6fe4"></div></div>
+          <div class="skill-val" id="val-focus">—</div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-name">Completion Rate</div>
+          <div class="skill-bar-bg"><div class="skill-bar-fill" id="bar-completion" style="width:0%;background:var(--gold2)"></div></div>
+          <div class="skill-val" id="val-completion">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
+const { createClient } = window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: true, storageKey: 'malachi-auth' }
+});
+
+let currentProfile = null;
+let currentProgress = null;
+
+function ratingToTitle(r) {
+  if (!r) return 'Unranked';
+  if (r < 800)  return 'Beginner';
+  if (r < 1000) return 'Novice';
+  if (r < 1200) return 'Intermediate';
+  if (r < 1400) return 'Club Player';
+  if (r < 1600) return 'Advanced';
+  if (r < 1800) return 'Expert';
+  if (r < 2000) return 'Candidate Master';
+  return 'Master';
+}
+
+function drawRatingChart(history) {
+  const svg = document.getElementById('ratingChart');
+  const empty = document.getElementById('chartEmpty');
+  if (!history || history.length < 2) {
+    svg.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  svg.style.display = 'block';
+  empty.style.display = 'none';
+
+  const W = 800, H = 160, PAD = 20;
+  const ratings = history.map(h => h.rating);
+  const minR = Math.min(...ratings) - 50;
+  const maxR = Math.max(...ratings) + 50;
+  const n = history.length;
+
+  const px = i => PAD + (i / (n-1)) * (W - PAD*2);
+  const py = r => H - PAD - ((r - minR) / (maxR - minR)) * (H - PAD*2);
+
+  // Gradient fill
+  let points = history.map((h,i) => `${px(i)},${py(h.rating)}`).join(' ');
+  let polyPoints = `${px(0)},${H} ` + points + ` ${px(n-1)},${H}`;
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="rg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#c9a84c" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="#c9a84c" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <polygon points="${polyPoints}" fill="url(#rg)"/>
+    <polyline points="${points}" fill="none" stroke="#c9a84c" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${history.map((h,i) => `
+      <circle cx="${px(i)}" cy="${py(h.rating)}" r="4" fill="${h.won ? '#4caf50' : '#e05068'}" stroke="#0a0a0a" stroke-width="1.5"/>
+    `).join('')}
+    <text x="${px(0)}" y="${H - 2}" font-family="DM Mono,monospace" font-size="9" fill="#6b6b6b">${ratings[0]}</text>
+    <text x="${px(n-1) - 20}" y="${H - 2}" font-family="DM Mono,monospace" font-size="9" fill="#6b6b6b">${ratings[n-1]}</text>
+  `;
+}
+
+async function loadProfile() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'login.html'; return; }
+
+  // Sign out button
+  document.getElementById('signOutBtn').style.display = 'block';
+  document.getElementById('signOutBtn').onclick = async () => {
+    await sb.auth.signOut(); window.location.href = 'login.html';
+  };
+
+  const [{ data: profile }, { data: progress }] = await Promise.all([
+    sb.from('profiles').select('*').eq('id', session.user.id).single(),
+    sb.from('progress').select('*').eq('user_id', session.user.id).single()
+  ]);
+
+  currentProfile = profile;
+  currentProgress = progress;
+
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('profileContent').style.display = 'block';
+
+  // Hero
+  const initials = (profile?.username || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('avatarEl').textContent = initials;
+  document.getElementById('nameEl').textContent = profile?.username || 'Unknown';
+  document.getElementById('roleEl').textContent = (profile?.role || 'student').toUpperCase();
+  document.getElementById('emailEl').textContent = session.user.email || '';
+  document.getElementById('editName').value = profile?.username || '';
+
+  // Rating
+  const rating = profile?.chess_rating || null;
+  document.getElementById('ratingEl').textContent = rating ? rating : '—';
+  document.getElementById('ratingSubEl').textContent = ratingToTitle(rating);
+
+  // Rating change from last game
+  const history = progress?.quiz_scores?.game_history || [];
+  const ratingHist = progress?.quiz_scores?.rating_history || [];
+  if (ratingHist.length >= 2) {
+    const last = ratingHist[ratingHist.length - 1];
+    const prev = ratingHist[ratingHist.length - 2];
+    const diff = last.rating - prev.rating;
+    const el = document.getElementById('ratingChangeEl');
+    el.style.display = 'inline-block';
+    el.textContent = (diff >= 0 ? '+' : '') + diff + ' last game';
+    el.className = 'rating-change ' + (diff >= 0 ? 'up' : 'down');
+  }
+
+  // Stats
+  const gamesPlayed = progress?.games_played || 0;
+  const gamesWon = progress?.games_won || 0;
+  const winRate = gamesPlayed > 0 ? Math.round(gamesWon / gamesPlayed * 100) : 0;
+  const behavior = progress?.quiz_scores || {};
+  const bestStreak = behavior.best_streak || 0;
+  document.getElementById('statGames').textContent = gamesPlayed;
+  document.getElementById('statWins').textContent = gamesWon;
+  document.getElementById('statWinRate').textContent = winRate + '%';
+  document.getElementById('statStreak').textContent = bestStreak;
+
+  // Rating chart
+  drawRatingChart(ratingHist);
+
+  // Recent games
+  const gameHistory = [...(behavior.game_history || [])].reverse().slice(0, 10);
+  if (gameHistory.length > 0) {
+    document.getElementById('gameHistory').innerHTML = gameHistory.map(g => {
+      const date = new Date(g.date);
+      const timeAgo = formatTimeAgo(date);
+      const ratingEntry = (behavior.rating_history || []).find(r => r.date === g.date);
+      const rDiff = ratingEntry ? (ratingEntry.change >= 0 ? '+' : '') + ratingEntry.change : '';
+      const rClass = ratingEntry ? (ratingEntry.change >= 0 ? 'up' : 'down') : '';
+      return `
+        <div class="game-row">
+          <div class="game-dot ${g.abandoned ? 'draw' : g.won ? 'win' : 'loss'}"></div>
+          <div class="game-info">
+            vs AI · ${g.totalMoves || '?'} moves · avg ${g.avgMoveTime || '?'}s/move
+            ${g.abandoned ? ' · <span style="color:var(--muted)">Abandoned</span>' : ''}
+          </div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${timeAgo}</div>
+          ${rDiff ? `<div class="game-rating ${rClass}">${rDiff}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Whole child skills
+  const moveTimes = behavior.move_times || [];
+  const avgTime = moveTimes.length > 0 ? moveTimes.reduce((a,b)=>a+b,0)/moveTimes.length : 0;
+  const impulse = Math.min(100, Math.max(0, Math.round(100 - (Math.max(0, 3 - avgTime) / 3) * 60)));
+  const resilience = Math.min(100, Math.max(0, Math.round(winRate * 0.6 + (behavior.completion_rate || 0) * 0.4)));
+  const emotion = Math.min(100, Math.round((behavior.completion_rate || 0)));
+  const focusTimes = moveTimes.filter(t => t >= 2 && t <= 30);
+  const focus = moveTimes.length > 0 ? Math.min(100, Math.round((focusTimes.length / moveTimes.length) * 100)) : 0;
+  const completion = behavior.completion_rate || 0;
+
+  setSkill('impulse', impulse);
+  setSkill('resilience', resilience);
+  setSkill('emotion', emotion);
+  setSkill('focus', focus);
+  setSkill('completion', completion);
+}
+
+function setSkill(id, val) {
+  setTimeout(() => {
+    const bar = document.getElementById('bar-' + id);
+    const valEl = document.getElementById('val-' + id);
+    if (bar) bar.style.width = val + '%';
+    if (valEl) valEl.textContent = val + '%';
+  }, 300);
+}
+
+function formatTimeAgo(date) {
+  const diff = Date.now() - date.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.floor(hrs / 24) + 'd ago';
+}
+
+function toggleEdit() {
+  document.getElementById('editSection').classList.toggle('open');
+}
+
+async function saveProfile() {
+  const newName = document.getElementById('editName').value.trim();
+  if (!newName) return;
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  await sb.from('profiles').update({ username: newName }).eq('id', session.user.id);
+  document.getElementById('nameEl').textContent = newName;
+  const initials = newName.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('avatarEl').textContent = initials;
+  const msg = document.getElementById('saveMsg');
+  msg.style.display = 'inline';
+  setTimeout(() => { msg.style.display = 'none'; toggleEdit(); }, 1500);
+}
+
+loadProfile();
+</script>
+</body>
+</html>

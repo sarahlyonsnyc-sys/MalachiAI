@@ -187,6 +187,14 @@
       #chessboard { width:min(480px,95vw); height:min(480px,95vw); }
       nav { padding:16px 20px; }
     }
+
+    /* Profile avatar nav widget */
+    .profile-nav { display:flex; align-items:center; gap:10px; }
+    .profile-avatar-btn { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#c9a84c,#8b6914); border:2px solid rgba(201,168,76,0.4); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:12px; font-weight:700; color:#000; cursor:pointer; text-decoration:none; transition:all 0.2s; flex-shrink:0; }
+    .profile-avatar-btn:hover { border-color:var(--gold,#c9a84c); transform:scale(1.08); }
+    .profile-rating-pill { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.08em; color:#c9a84c; background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.25); padding:4px 10px; white-space:nowrap; }
+    .profile-signin { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:#c9a84c; text-decoration:none; border:1px solid rgba(201,168,76,0.3); padding:6px 14px; transition:all 0.2s; }
+    .profile-signin:hover { background:rgba(201,168,76,0.08); }
   </style>
 </head>
 <body>
@@ -204,9 +212,11 @@
   <div class="nav-right">
     <a href="index.html" class="nav-back">Home</a>
     <a href="learn.html" class="nav-back">Learn</a>
-    <a href="puzzles.html" class="nav-back">Puzzles</a>
-    <a href="openings.html" class="nav-back">Openings</a>
     <a href="dashboard.html" class="nav-back">Dashboard</a>
+    <a href="profile.html" class="nav-back" id="profileLink" style="display:none">My Profile</a>
+    <div id="ratingBadge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;color:var(--gold);background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);padding:6px 12px;">
+      ♟ <span id="ratingBadgeVal">—</span>
+    </div>
     <div id="difficultyBtn" onclick="toggleDifficultyMenu()" style="cursor:pointer;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);padding:8px 14px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;color:var(--cream);position:relative;">
       <span id="difficultyLabel">⚡ NOVICE</span>
       <span style="color:var(--muted)">▾</span>
@@ -753,7 +763,6 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
 
-  // Use passed times if provided (from newGame), otherwise use current moveTimes
   const timesToUse = passedTimes || moveTimes;
   const avgMoveTime = passedAvgTime || (timesToUse.length > 0
     ? Math.round(timesToUse.reduce((a,b) => a+b, 0) / timesToUse.length)
@@ -761,26 +770,75 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
   const gameDuration = Math.round((Date.now() - gameStartTime) / 1000);
   const totalMoves = timesToUse.length;
 
-  // Get current progress row
   const { data: prog } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
   if (!prog) return;
 
   const gamesPlayed = (prog.games_played || 0) + 1;
   const gamesWon = (prog.games_won || 0) + (playerWon ? 1 : 0);
-
-  // Build quiz_scores as behavior data store
   const behaviorData = prog.quiz_scores || {};
   const allMoveTimes = behaviorData.move_times || [];
   allMoveTimes.push(...timesToUse);
   const gameHistory = behaviorData.game_history || [];
+  const gameDate = new Date().toISOString();
+
+  // ── ELO UPDATE (only for completed games, not abandoned) ──
+  let ratingChange = 0;
+  let newRating = currentChessRating;
+  if (!abandoned && totalMoves >= 4) {
+    const aiElo = DIFFICULTY_ELO[currentDifficulty] || 1000;
+    ratingChange = calcEloChange(currentChessRating, aiElo, playerWon);
+    newRating = Math.max(100, currentChessRating + ratingChange);
+    currentChessRating = newRating;
+
+    // Update rating badge live
+    const badge = document.getElementById('ratingBadgeVal');
+    if (badge) {
+      badge.textContent = newRating;
+      badge.style.color = ratingChange >= 0 ? '#4caf50' : '#e05068';
+      setTimeout(() => badge.style.color = 'var(--gold)', 3000);
+    }
+
+    // Update profiles table
+    await sb.from('profiles').update({ chess_rating: newRating }).eq('id', session.user.id);
+
+    // Show rating change in game modal
+    const msgEl = document.getElementById('modalMessage');
+    if (msgEl) {
+      const sign = ratingChange >= 0 ? '+' : '';
+      const existingRatingLine = msgEl.querySelector('.rating-line');
+      if (!existingRatingLine) {
+        const rLine = document.createElement('div');
+        rLine.className = 'rating-line';
+        rLine.style.cssText = 'font-family:"DM Mono",monospace;font-size:13px;margin-top:10px;';
+        rLine.innerHTML = `Rating: <span style="color:var(--gold)">${newRating}</span> <span style="color:${ratingChange >= 0 ? '#4caf50' : '#e05068'}">(${sign}${ratingChange})</span>`;
+        msgEl.appendChild(rLine);
+      }
+    }
+  }
+
   gameHistory.push({
-    date: new Date().toISOString(),
+    date: gameDate,
     won: playerWon,
     abandoned,
     avgMoveTime,
     totalMoves,
-    duration: gameDuration
+    duration: gameDuration,
+    difficulty: currentDifficulty
   });
+
+  // Rating history for chart
+  const ratingHistory = behaviorData.rating_history || [];
+  if (!abandoned && totalMoves >= 4) {
+    ratingHistory.push({ date: gameDate, rating: newRating, change: ratingChange, won: playerWon });
+  }
+
+  // Best streak tracking
+  const bestStreak = Math.max(behaviorData.best_streak || 0,
+    gameHistory.filter(g => !g.abandoned).reduce((streak, g, i, arr) => {
+      if (!g.won) return Math.max(streak, 0);
+      const run = arr.slice(0, i+1).reverse().findIndex(x => !x.won);
+      return Math.max(streak, run === -1 ? i+1 : run);
+    }, 0));
 
   await sb.from('progress').update({
     games_played: gamesPlayed,
@@ -789,8 +847,10 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
       ...behaviorData,
       move_times: allMoveTimes.slice(-200),
       game_history: gameHistory.slice(-50),
+      rating_history: ratingHistory.slice(-100),
       avg_move_time: Math.round(allMoveTimes.reduce((a,b)=>a+b,0) / allMoveTimes.length),
-      completion_rate: Math.round((gameHistory.filter(g=>!g.abandoned).length / gameHistory.length) * 100)
+      completion_rate: Math.round((gameHistory.filter(g=>!g.abandoned).length / gameHistory.length) * 100),
+      best_streak: bestStreak
     },
     updated_at: new Date().toISOString()
   }).eq('user_id', session.user.id);
@@ -846,32 +906,112 @@ buildLabels();
 renderBoard();
 showTip();
 
-// Check login and update nav
+// ── ELO RATING SYSTEM ──
+// AI difficulty maps to an approximate Elo equivalent
+const DIFFICULTY_ELO = {
+  novice: 600, casual: 900, club: 1200, advanced: 1500, master: 1900
+};
+
+function calcEloChange(playerRating, opponentRating, won) {
+  const K = 32;
+  const expected = 1 / (1 + Math.pow(10, (opponentRating - playerRating) / 400));
+  const score = won ? 1 : 0;
+  return Math.round(K * (score - expected));
+}
+
+let currentUserId = null;
+let currentChessRating = 1200; // default starting rating
+
+// Check login and load rating
 (async () => {
   const { data: { session } } = await sb.auth.getSession();
-  const nav = document.querySelector('.nav-links') || document.querySelector('nav');
-  if (!nav) return;
   if (session) {
-    const { data: profile } = await sb.from('profiles').select('username, role').eq('id', session.user.id).single();
+    currentUserId = session.user.id;
+    const { data: profile } = await sb.from('profiles').select('username, role, chess_rating').eq('id', session.user.id).single();
     if (profile) {
+      // Show profile link + rating badge
+      document.getElementById('profileLink').style.display = 'inline';
+      document.getElementById('ratingBadge').style.display = 'flex';
+      currentChessRating = profile.chess_rating || 1200;
+      document.getElementById('ratingBadgeVal').textContent = currentChessRating;
+
+      // Add username + sign out to nav
+      const nav = document.querySelector('.nav-right');
       const nameEl = document.createElement('span');
-      nameEl.style.cssText = 'font-family:"DM Mono",monospace;font-size:11px;color:var(--gold);letter-spacing:0.08em;';
+      nameEl.style.cssText = 'font-family:"DM Mono",monospace;font-size:11px;color:var(--cream);letter-spacing:0.08em;';
       nameEl.textContent = profile.username;
       nav.appendChild(nameEl);
       const signOutBtn = document.createElement('a');
       signOutBtn.href = '#';
-      signOutBtn.className = 'nav-link';
+      signOutBtn.style.cssText = 'font-family:"DM Mono",monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color 0.2s;';
       signOutBtn.textContent = 'Sign Out';
+      signOutBtn.onmouseover = () => signOutBtn.style.color = 'var(--gold)';
+      signOutBtn.onmouseout = () => signOutBtn.style.color = 'var(--muted)';
       signOutBtn.onclick = async (e) => { e.preventDefault(); await sb.auth.signOut(); window.location.href = 'login.html'; };
       nav.appendChild(signOutBtn);
     }
   } else {
+    const nav = document.querySelector('.nav-right');
     const signInBtn = document.createElement('a');
     signInBtn.href = 'login.html';
-    signInBtn.className = 'nav-link';
-    signInBtn.style.color = 'var(--gold)';
+    signInBtn.style.cssText = 'font-family:"DM Mono",monospace;font-size:11px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;';
     signInBtn.textContent = 'Sign In';
     nav.appendChild(signInBtn);
+  }
+})();
+</script>
+<script>
+// ── PROFILE NAV WIDGET (injected on all pages) ──
+(function() {
+  const SB_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
+  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
+  if (!window.supabase) return;
+  const { createClient } = window.supabase;
+  const _sb = createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
+
+  async function injectProfileNav() {
+    const { data: { session } } = await _sb.auth.getSession();
+    // Find best nav container
+    const container = document.querySelector('.nav-right') || document.querySelector('.nav-links') || document.querySelector('nav ul');
+    if (!container) return;
+
+    const widget = document.createElement('div');
+    widget.className = 'profile-nav';
+
+    if (session) {
+      const { data: profile } = await _sb.from('profiles').select('username,chess_rating').eq('id', session.user.id).single();
+      const initials = (profile?.username || '?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+      const rating = profile?.chess_rating;
+
+      if (rating) {
+        const pill = document.createElement('div');
+        pill.className = 'profile-rating-pill';
+        pill.textContent = '♟ ' + rating;
+        widget.appendChild(pill);
+      }
+
+      const avatar = document.createElement('a');
+      avatar.href = 'profile.html';
+      avatar.className = 'profile-avatar-btn';
+      avatar.title = (profile?.username || '') + ' — View Profile';
+      avatar.textContent = initials;
+      widget.appendChild(avatar);
+    } else {
+      const signin = document.createElement('a');
+      signin.href = 'login.html';
+      signin.className = 'profile-signin';
+      signin.textContent = 'Sign In';
+      widget.appendChild(signin);
+    }
+
+    container.appendChild(widget);
+  }
+
+  // Wait for DOM
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectProfileNav);
+  } else {
+    injectProfileNav();
   }
 })();
 </script>
