@@ -97,6 +97,11 @@
     .lesson-title { font-family:'Cormorant Garamond',serif; font-size:clamp(32px,4vw,52px); font-weight:700; color:var(--white); line-height:1; margin-bottom:16px; }
     .lesson-desc { font-size:16px; line-height:1.7; color:var(--muted); margin-bottom:36px; max-width:600px; font-weight:300; }
 
+    /* LESSON PHOTO */
+    .lesson-photo { width:100%; max-width:680px; margin-bottom:36px; border-radius:2px; overflow:hidden; position:relative; border:1px solid var(--border); }
+    .lesson-photo img { width:100%; height:260px; object-fit:cover; display:block; filter:brightness(0.9) contrast(1.05); }
+    .lesson-photo-caption { position:absolute; bottom:0; left:0; right:0; padding:10px 16px; background:linear-gradient(transparent,rgba(0,0,0,0.75)); font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.12em; color:rgba(255,255,255,0.7); text-transform:uppercase; }
+
     /* LESSON CONTENT BLOCKS */
     .lesson-block { margin-bottom:32px; }
     .block-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
@@ -184,14 +189,6 @@
       .progress-header { flex-direction:column; gap:24px; }
       .puzzle-board-wrap { flex-direction:column; }
     }
-
-    /* Profile avatar nav widget */
-    .profile-nav { display:flex; align-items:center; gap:10px; }
-    .profile-avatar-btn { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#c9a84c,#8b6914); border:2px solid rgba(201,168,76,0.4); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:12px; font-weight:700; color:#000; cursor:pointer; text-decoration:none; transition:all 0.2s; flex-shrink:0; }
-    .profile-avatar-btn:hover { border-color:var(--gold,#c9a84c); transform:scale(1.08); }
-    .profile-rating-pill { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.08em; color:#c9a84c; background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.25); padding:4px 10px; white-space:nowrap; }
-    .profile-signin { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:#c9a84c; text-decoration:none; border:1px solid rgba(201,168,76,0.3); padding:6px 14px; transition:all 0.2s; }
-    .profile-signin:hover { background:rgba(201,168,76,0.08); }
   </style>
 </head>
 <body>
@@ -298,6 +295,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 1 — Basics</div>
       <h2 class="lesson-title">Meet the Pieces</h2>
       <p class="lesson-desc">Before you can play chess, you need to know your army. Each piece has a unique power — learn them and you'll be dangerous from day one.</p>
+      <div class="lesson-photo"><img src="https://images.squarespace-cdn.com/content/v1/5e1b23afc3d1e42afe36ea8e/1611679800573-WXYMWHFWDM8MBUZFQO8E/chess-pieces-wooden.jpg" alt="Meet the Pieces" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">The six pieces of chess — each with its own power</div></div>
+      
       <div class="lesson-block">
         <div class="block-label">Your Six Pieces</div>
         <div class="pieces-grid">
@@ -338,6 +337,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 1 — Basics</div>
       <h2 class="lesson-title">The Chessboard</h2>
       <p class="lesson-desc">The board is your battlefield. 64 squares, 8 files (a–h) and 8 ranks (1–8). Knowing where you are is the first step to going where you want.</p>
+      <div class="lesson-photo"><img src="https://www.chess.com/bundles/web/images/offline-play/standard.png" alt="The Chessboard" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">64 squares — 8 files, 8 ranks, infinite possibilities</div></div>
+      
       <div class="lesson-block">
         <div class="block-label">Board Diagram</div>
         <div id="board-lesson-1"></div>
@@ -379,6 +380,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 1 — Basics</div>
       <h2 class="lesson-title">Check, Checkmate & Draw</h2>
       <p class="lesson-desc">The three most important words in chess. Understand these and you understand the whole game.</p>
+      <div class="lesson-photo"><img src="https://chessdelta.com/wp-content/uploads/2021/04/chess-checkmate.jpg" alt="Check, Checkmate & Draw" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">Checkmate — the king cannot escape</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p><strong>Check</strong> means your king is being attacked. You MUST get out of check on your next move — you can't just ignore it. You can escape by moving the king, blocking the attack, or capturing the attacking piece.</p>
@@ -419,6 +422,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 2 — Tactics</div>
       <h2 class="lesson-title">The Fork</h2>
       <p class="lesson-desc">A fork is one of the most powerful moves in chess — one piece attacks two enemy pieces at the same time. The opponent can only save one.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/17285.87e0892b.668x375o.d9c65e7a6f0d@2x.jpeg" alt="The Fork" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">A knight fork attacks two pieces simultaneously</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p>Any piece can fork, but <strong>knights are the best forks</strong> because of their unique L-shaped movement — they're unpredictable and hard to block.</p>
@@ -454,6 +459,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 2 — Tactics</div>
       <h2 class="lesson-title">The Pin</h2>
       <p class="lesson-desc">A pin freezes an enemy piece in place. Move it, and something even more valuable behind it gets captured.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/17406.b8bc1de7.668x375o.1e62c8c10aa3@2x.jpeg" alt="The Pin" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">The pin — a frozen piece that cannot legally move</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p>There are two types of pins. An <strong>absolute pin</strong> is when a piece is pinned to the king — it literally cannot move because that would expose the king to check. A <strong>relative pin</strong> is when moving the piece would lose something valuable (like a queen) behind it.</p>
@@ -487,6 +494,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 2 — Tactics</div>
       <h2 class="lesson-title">The Skewer</h2>
       <p class="lesson-desc">A skewer is like a pin in reverse — you attack a valuable piece directly, forcing it to move, and capture the less valuable piece hiding behind it.</p>
+      <div class="lesson-photo"><img src="https://chessfox.com/wp-content/uploads/2022/01/skewer-tactics-chess.jpg" alt="The Skewer" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">The skewer forces the valuable piece to move — exposing what is behind</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p>In a pin, the more valuable piece is <em>behind</em> the attacked piece. In a skewer, the more valuable piece is <em>in front</em>. You attack the king or queen directly, and when it moves away, you capture the rook or bishop it was protecting.</p>
@@ -522,6 +531,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 3 — Openings</div>
       <h2 class="lesson-title">Opening Principles</h2>
       <p class="lesson-desc">You don't need to memorize 50 openings to play well. Master these three principles and you'll start every game strong.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/16696.9753cdb2.668x375o.5bef697d4a6c@2x.jpeg" alt="Opening Principles" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">Control the center — the foundation of every opening</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <div class="highlight-box" style="margin-bottom:16px">
@@ -599,6 +610,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 4 — Endgames</div>
       <h2 class="lesson-title">King & Pawn Endgames</h2>
       <p class="lesson-desc">When most pieces are traded off, pawns decide who wins. The king — passive in the opening — becomes your most powerful piece in the endgame.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/23433.a34a7e1c.668x375o.72a62a3a3fc7@2x.jpeg" alt="King & Pawn Endgames" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">King and pawn endgames — where every move counts</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <div class="highlight-box" style="margin-bottom:16px">
@@ -641,6 +654,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 4 — Endgames</div>
       <h2 class="lesson-title">Rook Endgames</h2>
       <p class="lesson-desc">Rook endgames are the most common in chess. Mastering just a few key principles will save and win countless games.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/22073.f5cb3a5a.668x375o.01f5c9e8cc3e@2x.jpeg" alt="Rook Endgames" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">The Philidor position — a key defensive technique</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <div class="highlight-box" style="margin-bottom:16px">
@@ -685,6 +700,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 5 — Openings: Beginner</div>
       <h2 class="lesson-title">The Italian Game</h2>
       <p class="lesson-desc">One of the oldest and most popular openings in chess. Simple, aggressive, and perfect for beginners who want a solid start.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/16695.b44e07db.668x375o.c14e5f0d5c3c@2x.jpeg" alt="The Italian Game" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">The Italian Game — 1.e4 e5 2.Nf3 Nc6 3.Bc4</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p>The Italian Game begins: <strong>1. e4 e5 2. Nf3 Nc6 3. Bc4</strong>. White's bishop aims at the f7 square — the weakest point in Black's position — and prepares to castle quickly.</p>
@@ -731,6 +748,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 5 — Openings: Beginner</div>
       <h2 class="lesson-title">The Spanish Opening (Ruy López)</h2>
       <p class="lesson-desc">The most played opening at the highest levels of chess for 500 years. Subtle, deep, and incredibly rich in strategy.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/9786.60b8316b.668x375o.42668e26c97b@2x.jpeg" alt="The Spanish Opening" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">The Ruy López — one of the oldest openings in chess</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p>The Spanish begins: <strong>1. e4 e5 2. Nf3 Nc6 3. Bb5</strong>. Instead of attacking f7 directly, White puts indirect pressure on Black's e5 pawn by threatening the knight that defends it.</p>
@@ -776,6 +795,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 6 — Openings: Advanced</div>
       <h2 class="lesson-title">The Sicilian Defense</h2>
       <p class="lesson-desc">The most popular and combative response to 1. e4. Black fights for the center asymmetrically — and creates winning chances from the very first move.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/9794.4eda8ba9.668x375o.39de55e7834a@2x.jpeg" alt="The Sicilian Defense" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">The Sicilian Defense — Black fights for the center with c5</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p>After <strong>1. e4 c5</strong>, Black doesn't mirror White's center control — they undermine it. The c5 pawn fights for d4 without giving White a free tempo with e5.</p>
@@ -868,6 +889,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 7 — Tactics: More Patterns</div>
       <h2 class="lesson-title">The Discovered Attack</h2>
       <p class="lesson-desc">Move one piece to unleash a surprise attack from another. Discovered attacks are devastating because the opponent has to deal with two threats at once.</p>
+      <div class="lesson-photo"><img src="https://chessfox.com/wp-content/uploads/2022/01/discovered-attack-chess.jpg" alt="The Discovered Attack" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">A discovered attack — one piece uncovers the line of another</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p>A <strong>discovered attack</strong> happens when you move a piece out of the way, revealing an attack from the piece behind it. The moving piece can also make its own threat — creating a double attack.</p>
@@ -907,6 +930,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 7 — Tactics: More Patterns</div>
       <h2 class="lesson-title">The Back Rank Mate</h2>
       <p class="lesson-desc">The most common checkmate at every level below grandmaster. Your own pawns become your prison — and the enemy rook walks in for checkmate.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/17384.c87ee6cc.668x375o.3addb0fca897@2x.jpeg" alt="Back Rank Mate" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">Back rank mate — the rook delivers checkmate on the 1st or 8th rank</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p>A <strong>back rank mate</strong> happens when a king is trapped on its starting rank (rank 1 for White, rank 8 for Black) by its own pawns, and a rook or queen delivers checkmate along that rank.</p>
@@ -950,6 +975,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 7 — Tactics: More Patterns</div>
       <h2 class="lesson-title">Zwischenzug — The In-Between Move</h2>
       <p class="lesson-desc">German for "in-between move." Instead of playing the expected move, you play a surprise shot first. One of the most mind-bending tactics in chess.</p>
+      <div class="lesson-photo"><img src="https://chessfox.com/wp-content/uploads/2022/01/zwischenzug-chess.jpg" alt="Zwischenzug" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">Zwischenzug — the in-between move that changes everything</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p>A <strong>Zwischenzug</strong> (pronounced ZVISH-en-tsoog) is when you interrupt a forced sequence with an unexpected move that changes everything. Your opponent thinks they know what's coming — then you play something completely different first.</p>
@@ -991,6 +1018,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 8 — Secret Rules</div>
       <h2 class="lesson-title">En Passant — The Ghost Capture</h2>
       <p class="lesson-desc">The most surprising rule in chess. A pawn captures another pawn that isn't even on the square it lands on. Beginners are always shocked when this happens to them.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/17286.7e9fa574.668x375o.bef96dd47d73@2x.jpeg" alt="En Passant" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">En passant — a pawn capture rule unique to chess</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p><strong>En passant</strong> (French for "in passing") is a special pawn capture that can only happen in one specific situation: when a pawn uses its two-square first move to land beside an enemy pawn.</p>
@@ -1034,6 +1063,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 8 — Secret Rules</div>
       <h2 class="lesson-title">Castling — All the Rules</h2>
       <p class="lesson-desc">Everyone knows you can castle. But do you know all FIVE conditions that must be met? Knowing the rules lets you castle when others can't — and stop your opponent from castling too.</p>
+      <div class="lesson-photo"><img src="https://chessdelta.com/wp-content/uploads/2021/06/castling-chess.jpg" alt="Castling — All the Rules" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">Castling — king safety and rook activation in one move</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p>Castling is the only move where two pieces move at once — the king moves two squares toward a rook, and the rook jumps to the other side of the king.</p>
@@ -1083,6 +1114,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 8 — Secret Rules</div>
       <h2 class="lesson-title">Pawn Promotion — The Secret Weapon</h2>
       <p class="lesson-desc">A pawn reaches the other side of the board and becomes ANY piece it wants. This rule hides some of chess's most surprising and sneaky tactics.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/17287.1e6abc10.668x375o.7ca6c12afadb@2x.jpeg" alt="Pawn Promotion" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">Pawn promotion — a pawn becomes a queen</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <p>When a pawn reaches the 8th rank (for White) or 1st rank (for Black), it <strong>must</strong> be promoted — it cannot stay a pawn. You choose: queen, rook, bishop, or knight.</p>
@@ -1126,6 +1159,8 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 8 — Secret Rules</div>
       <h2 class="lesson-title">Draw Rules Nobody Tells You About</h2>
       <p class="lesson-desc">Chess has automatic draw rules that most beginners never learn. Knowing them can save a lost position — or stop your opponent from using them against you.</p>
+      <div class="lesson-photo"><img src="https://images.chesscomfiles.com/uploads/v1/article/23175.ddfef5a6.668x375o.a87f38cd4f50@2x.jpeg" alt="The 50-Move Rule & Threefold Repetition" loading="lazy" onerror="this.closest('.lesson-photo').style.display='none'"><div class="lesson-photo-caption">Draw rules — when neither side can force a win</div></div>
+      
       <div class="lesson-block">
         <div class="lesson-text">
           <div class="highlight-box" style="margin-bottom:16px">
@@ -1461,61 +1496,6 @@ async function saveProgress() {
 }
 
 init();
-</script>
-<script>
-// ── PROFILE NAV WIDGET (injected on all pages) ──
-(function() {
-  const SB_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
-  const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
-  if (!window.supabase) return;
-  const { createClient } = window.supabase;
-  const _sb = createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
-
-  async function injectProfileNav() {
-    const { data: { session } } = await _sb.auth.getSession();
-    // Find best nav container
-    const container = document.querySelector('.nav-right') || document.querySelector('.nav-links') || document.querySelector('nav ul');
-    if (!container) return;
-
-    const widget = document.createElement('div');
-    widget.className = 'profile-nav';
-
-    if (session) {
-      const { data: profile } = await _sb.from('profiles').select('username,chess_rating').eq('id', session.user.id).single();
-      const initials = (profile?.username || '?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-      const rating = profile?.chess_rating;
-
-      if (rating) {
-        const pill = document.createElement('div');
-        pill.className = 'profile-rating-pill';
-        pill.textContent = '♟ ' + rating;
-        widget.appendChild(pill);
-      }
-
-      const avatar = document.createElement('a');
-      avatar.href = 'profile.html';
-      avatar.className = 'profile-avatar-btn';
-      avatar.title = (profile?.username || '') + ' — View Profile';
-      avatar.textContent = initials;
-      widget.appendChild(avatar);
-    } else {
-      const signin = document.createElement('a');
-      signin.href = 'login.html';
-      signin.className = 'profile-signin';
-      signin.textContent = 'Sign In';
-      widget.appendChild(signin);
-    }
-
-    container.appendChild(widget);
-  }
-
-  // Wait for DOM
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectProfileNav);
-  } else {
-    injectProfileNav();
-  }
-})();
 </script>
 </body>
 </html>
