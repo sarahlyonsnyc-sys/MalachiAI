@@ -961,20 +961,22 @@ function renderBoard() {
 }
 
 function onSquareClick(sq) {
-  // Determine whose pieces I can move
   const myPieceColor = (gameMode === 'online') ? (myColor === 'white' ? 'w' : 'b') : 'w';
+  const gameTurn = game.turn();
+  const myTurn = (gameMode === 'online')
+    ? (myColor === 'white' ? gameTurn === 'w' : gameTurn === 'b')
+    : gameTurn === 'w';
 
-  if (gameMode === 'online') {
-    const myTurn = (myColor === 'white') ? game.turn() === 'w' : game.turn() === 'b';
-    if (!myTurn) return;
-  } else {
-    if (game.turn() !== 'w') return;
-  }
+  console.log('[CLICK] sq:', sq, 'myColor:', myColor, 'gameTurn:', gameTurn, 'myTurn:', myTurn, 'selectedSquare:', selectedSquare);
+
+  if (!myTurn) { console.log('[CLICK] not my turn, ignoring'); return; }
 
   const piece = game.get(sq);
+  console.log('[CLICK] piece on sq:', piece, 'myPieceColor:', myPieceColor);
 
   if (selectedSquare) {
     if (possibleMoves.includes(sq)) {
+      console.log('[CLICK] making move', selectedSquare, '->', sq);
       makePlayerMove(selectedSquare, sq);
       return;
     }
@@ -984,7 +986,12 @@ function onSquareClick(sq) {
     clearSelection();
     return;
   }
-  if (piece && piece.color === myPieceColor) { selectSquare(sq); }
+  if (piece && piece.color === myPieceColor) {
+    console.log('[CLICK] selecting piece at', sq);
+    selectSquare(sq);
+  } else {
+    console.log('[CLICK] no selectable piece at', sq, '- piece:', piece?.color, 'need:', myPieceColor);
+  }
 }
 
 function selectSquare(sq) {
