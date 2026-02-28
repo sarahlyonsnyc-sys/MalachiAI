@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Realtime Test</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body { font-family: monospace; background: #111; color: #eee; padding: 40px; font-size: 16px; }
+  button { padding: 12px 24px; margin: 8px; font-size: 16px; cursor: pointer; background: #c9a84c; border: none; color: #000; font-weight: bold; }
+  #log { background: #222; padding: 20px; margin-top: 20px; min-height: 200px; border: 1px solid #444; white-space: pre-wrap; }
+  input { padding: 10px; font-size: 16px; background: #222; color: #eee; border: 1px solid #444; width: 200px; }
+  .ok { color: #4caf50; }
+  .err { color: #f44336; }
+  .recv { color: #64b5f6; }
+</style>
+</head>
+<body>
+
+<h2>Supabase Realtime Broadcast Test</h2>
+
+<div>
+  <button onclick="subscribe()">1. Subscribe to channel "test-room"</button>
+  <button onclick="sendMsg()">2. Send a message</button>
+  <button onclick="unsub()">Unsubscribe</button>
+</div>
+<div style="margin-top:16px">
+  Message: <input id="msgInput" value="hello world" />
+</div>
+
+<div id="log">Waiting for actions...\n</div>
+
+<script>
+const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
+
+const { createClient } = window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let channel = null;
+
+function log(msg, cls) {
+  const el = document.getElementById('log');
+  const time = new Date().toLocaleTimeString();
+  el.innerHTML += `<span class="${cls||''}">[${time}] ${msg}</span>\n`;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function subscribe() {
+  if (channel) { log('Already subscribed, unsubscribing first...'); await unsub(); }
+
+  log('Creating channel "test-room"...');
+  channel = sb.channel('test-room', {
+    config: { broadcast: { self: true } }
+  });
+
+  channel.on('broadcast', { event: 'msg' }, ({ payload }) => {
+    log('📨 RECEIVED: ' + JSON.stringify(payload), 'recv');
+  });
+
+  channel.subscribe((status, err) => {
+    if (status === 'SUBSCRIBED') {
+      log('✅ SUBSCRIBED successfully!', 'ok');
+    } else if (status === 'CHANNEL_ERROR') {
+      log('❌ CHANNEL_ERROR: ' + JSON.stringify(err), 'err');
+    } else {
+      log('Status: ' + status);
+    }
+  });
+}
+
+async function sendMsg() {
+  if (!channel) { log('❌ Not subscribed yet!', 'err'); return; }
+  const msg = document.getElementById('msgInput').value;
+  log('Sending: ' + msg);
+  const res = await channel.send({
+    type: 'broadcast',
+    event: 'msg',
+    payload: { text: msg, from: window.location.href, t: Date.now() }
+  });
+  log('Send result: ' + JSON.stringify(res), res === 'ok' ? 'ok' : 'err');
+}
+
+async function unsub() {
+  if (channel) {
+    await sb.removeChannel(channel);
+    channel = null;
+    log('Unsubscribed');
+  }
+}
+</script>
+</body>
+</html>
