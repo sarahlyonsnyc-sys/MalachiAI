@@ -533,15 +533,14 @@ document.addEventListener('mousemove', e => {
 // ════════════════════════════════════════════
 // GAME MODE & ONLINE MULTIPLAYER
 // ════════════════════════════════════════════
-let gameMode = 'ai'; // 'ai' | 'online'
+let gameMode = 'ai';
 let onlineChannel = null;
-let onlineGameCode = null;
-let myColor = 'white'; // which color the local player controls
+let myColor = 'white';
+let myId = Math.random().toString(36).slice(2); // unique per browser tab
 let onlineOpponentName = 'Opponent';
 let currentUserName = 'You';
-let isMyTurn = false;
 
-// ── Mode selection ──
+// ── Helpers ──
 function selectMode(mode) {
   if (mode === 'ai') {
     gameMode = 'ai';
@@ -562,64 +561,73 @@ function backToModeSelect() {
   document.getElementById('modeScreen').style.display = 'flex';
 }
 
-// ── Lobby tabs ──
 function switchLobbyTab(tab) {
-  document.getElementById('tabCreate').classList.toggle('active', tab==='create');
-  document.getElementById('tabJoin').classList.toggle('active', tab==='join');
-  document.getElementById('lobbyCreate').style.display = tab==='create' ? '' : 'none';
-  document.getElementById('lobbyJoin').style.display = tab==='join' ? '' : 'none';
+  document.getElementById('tabCreate').classList.toggle('active', tab === 'create');
+  document.getElementById('tabJoin').classList.toggle('active', tab === 'join');
+  document.getElementById('lobbyCreate').style.display = tab === 'create' ? '' : 'none';
+  document.getElementById('lobbyJoin').style.display = tab === 'join' ? '' : 'none';
 }
 
-// ── Generate random 4-letter game code ──
 function genCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-  return Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+  return Array.from({length:4}, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random()*23)]).join('');
 }
 
-// ── Create online game (HOST = White) ──
+// ── Single channel setup used by both host and joiner ──
+function setupChannel(code) {
+  if (onlineChannel) sb.removeChannel(onlineChannel);
+
+  // self:true so we receive our OWN broadcasts — we filter by sender id
+  onlineChannel = sb.channel('mg-' + code, {
+    config: { broadcast: { self: true } }
+  });
+
+  onlineChannel.on('broadcast', { event: 'move' }, ({ payload }) => {
+    if (payload.from === myId) return; // ignore our own echoed move
+    console.log('[RECV move]', payload.uci);
+    applyOpponentMove(payload.uci);
+  });
+
+  onlineChannel.on('broadcast', { event: 'resign' }, ({ payload }) => {
+    if (payload.from === myId) return;
+    handleOpponentResign();
+  });
+
+  return onlineChannel;
+}
+
+// ── HOST creates game ──
 async function createOnlineGame() {
   const code = genCode();
-  onlineGameCode = code;
-  myColor = 'white';
   gameMode = 'online';
+  myColor = 'white';
 
   document.getElementById('gameCodeDisplay').textContent = code;
   document.getElementById('gameCodeDisplay').style.display = 'inline-block';
   document.getElementById('createBtn').style.display = 'none';
   document.getElementById('createStatus').textContent = 'Share this code with your friend';
-  document.getElementById('createSubstatus').textContent = 'They enter the code on the Join tab. Game starts instantly when they join.';
+  document.getElementById('createSubstatus').textContent = 'Game starts the moment they join.';
   document.getElementById('waitingBadge').style.display = 'flex';
   document.getElementById('createIcon').textContent = '⏳';
 
-  onlineChannel = sb.channel('malachi-game-' + code, {
-    config: { broadcast: { self: false, ack: false } }
-  });
+  const ch = setupChannel(code);
 
-  onlineChannel.on('broadcast', { event: 'join' }, async ({ payload }) => {
-    console.log('[HOST] join received from', payload.name);
+  // Host also listens for joiner announcing themselves
+  ch.on('broadcast', { event: 'hello' }, async ({ payload }) => {
+    if (payload.from === myId) return;
+    console.log('[HOST] joiner hello from', payload.name);
     onlineOpponentName = payload.name || 'Opponent';
-    await onlineChannel.send({ type: 'broadcast', event: 'ready', payload: { name: currentUserName || 'Host' } });
+    // Reply so joiner knows we exist
+    await ch.send({ type:'broadcast', event:'welcome',
+      payload: { from: myId, name: currentUserName || 'Host' } });
     startOnlineGame('white');
   });
 
-  onlineChannel.on('broadcast', { event: 'move' }, ({ payload }) => {
-    console.log('[HOST] move received:', payload.move);
-    receiveOnlineMove(payload.move);
-  });
-
-  onlineChannel.on('broadcast', { event: 'resign' }, () => handleOpponentResign());
-  onlineChannel.on('broadcast', { event: 'ping' }, ({payload}) => {
-    console.log('🏓 [HOST] PING RECEIVED:', payload);
-  });
-
-  onlineChannel.subscribe((status, err) => {
-    console.log('[HOST] channel status:', status, err || '');
-    if (status === 'SUBSCRIBED') console.log('[HOST] ✅ Ready to receive broadcasts on channel: malachi-game-' + onlineGameCode);
-    if (status === 'CHANNEL_ERROR') console.error('[HOST] ❌ Channel error:', err);
+  ch.subscribe((status) => {
+    console.log('[HOST] status:', status);
   });
 }
 
-// ── Join online game (JOINER = Black) ──
+// ── JOINER joins game ──
 async function joinOnlineGame() {
   const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
   if (code.length !== 4) {
@@ -628,169 +636,119 @@ async function joinOnlineGame() {
     return;
   }
 
-  onlineGameCode = code;
-  myColor = 'black';
   gameMode = 'online';
+  myColor = 'black';
 
   document.getElementById('lobbyJoin').innerHTML = `
     <div class="lobby-state-icon" style="animation:lobbyPulse 1s infinite">🔗</div>
-    <div class="lobby-status">Connecting to game ${code}…</div>
+    <div class="lobby-status">Connecting to <b>${code}</b>…</div>
     <div class="lobby-dots" style="margin-top:16px"><span></span><span></span><span></span></div>
     <button class="lobby-btn secondary" style="margin-top:24px" onclick="backToModeSelect()">← Cancel</button>
   `;
 
-  onlineChannel = sb.channel('malachi-game-' + code, {
-    config: { broadcast: { self: false, ack: false } }
-  });
+  const ch = setupChannel(code);
 
-  onlineChannel.on('broadcast', { event: 'ready' }, ({ payload }) => {
-    console.log('[JOINER] ready received from', payload.name);
+  // Joiner listens for host's welcome reply
+  ch.on('broadcast', { event: 'welcome' }, ({ payload }) => {
+    if (payload.from === myId) return;
+    console.log('[JOINER] welcome from', payload.name);
     onlineOpponentName = payload.name || 'Opponent';
     startOnlineGame('black');
   });
 
-  onlineChannel.on('broadcast', { event: 'move' }, ({ payload }) => {
-    console.log('[JOINER] move received:', payload.move);
-    receiveOnlineMove(payload.move);
-  });
-
-  onlineChannel.on('broadcast', { event: 'resign' }, () => handleOpponentResign());
-  onlineChannel.on('broadcast', { event: 'ping' }, ({payload}) => {
-    console.log('🏓 [JOINER] PING RECEIVED:', payload);
-  });
-
-  onlineChannel.subscribe(async (status, err) => {
-    console.log('[JOINER] channel status:', status, err || '');
+  ch.subscribe(async (status) => {
+    console.log('[JOINER] status:', status);
     if (status === 'SUBSCRIBED') {
-      console.log('[JOINER] ✅ Subscribed — sending join to channel: malachi-game-' + onlineGameCode);
-      const res = await onlineChannel.send({
-        type: 'broadcast', event: 'join',
-        payload: { name: currentUserName || 'Player' }
-      });
-      console.log('[JOINER] join send result:', res);
+      // Announce ourselves to the host
+      await ch.send({ type:'broadcast', event:'hello',
+        payload: { from: myId, name: currentUserName || 'Player' } });
     }
-    if (status === 'CHANNEL_ERROR') console.error('[JOINER] ❌ Channel error:', err);
   });
 }
 
-// ── Start the online game (called on both sides after handshake) ──
+// ── Start game on both sides ──
 function startOnlineGame(color) {
   myColor = color;
-  isMyTurn = (color === 'white');
-
   document.getElementById('lobbyScreen').style.display = 'none';
 
   game = new Chess();
   selectedSquare = null;
+  possibleMoves = [];
+  lastMove = null;
 
   document.getElementById('playerName').textContent = currentUserName || 'You';
   document.getElementById('opponentName').textContent = onlineOpponentName;
-
-  if (color === 'white') {
-    document.getElementById('playerColorLabel').textContent = 'White ♙';
-    document.getElementById('opponentColor').textContent = 'Black ♟';
-  } else {
-    document.getElementById('playerColorLabel').textContent = 'Black ♟';
-    document.getElementById('opponentColor').textContent = 'White ♙';
-  }
-
+  document.getElementById('playerColorLabel').textContent = color === 'white' ? 'White ♙' : 'Black ♟';
+  document.getElementById('opponentColor').textContent = color === 'white' ? 'Black ♟' : 'White ♙';
   document.querySelector('.thinking-text').textContent = onlineOpponentName + ' is thinking…';
-
-  document.getElementById('statusBanner').textContent = color === 'white'
-    ? '⚔️ You play White — make your move!'
-    : '⏳ Waiting for White to move…';
 
   buildLabels();
   renderBoard();
   updatePanels();
-  // Force overlay state on game start before updateOnlineTurnUI
-  const overlay = document.getElementById('thinkingOverlay');
-  if (!isMyTurn) {
-    overlay.classList.add('active');
-    overlay.style.display = '';
-  } else {
-    overlay.classList.remove('active');
-    overlay.style.display = '';
-  }
   updateOnlineTurnUI();
 }
 
-// ── Receive a move from the opponent ──
-function receiveOnlineMove(uci) {
-  console.log('[RECEIVE] applying move:', uci, 'current turn:', game.turn(), 'myColor:', myColor);
+// ── Apply a move received from opponent ──
+function applyOpponentMove(uci) {
   const from = uci.slice(0,2), to = uci.slice(2,4), promo = uci[4];
   const move = game.move({ from, to, promotion: promo || 'q' });
-  if (!move) { console.error('[RECEIVE] move failed:', uci); return; }
-
-  console.log('[RECEIVE] move applied, new turn:', game.turn());
+  if (!move) { console.error('[RECV] invalid move:', uci); return; }
+  lastMove = { from, to };
   SFX.play(move.captured ? 'capture' : 'move');
-  renderBoard();
   addMoveToHistory(move, move.color);
+  renderBoard();
   updatePanels();
   checkGameOver();
-  updateOnlineTurnUI(); // derives myTurn from game.turn() — no manual flag needed
-
-  setTimeout(() => {
-    const wrap = document.querySelector(`#chessboard [data-sq="${to}"] .piece-wrap`);
-    if (wrap) { wrap.classList.add('bounce'); setTimeout(() => wrap.classList.remove('bounce'), 300); }
-  }, 20);
+  updateOnlineTurnUI();
 }
 
-// ── Send our move to opponent ──
+// ── Send our move ──
 async function sendOnlineMove(uci) {
-  if (!onlineChannel) { console.error('[MOVE] no channel!'); return; }
-  console.log('[MOVE] sending:', uci);
+  if (!onlineChannel) return;
   const res = await onlineChannel.send({
     type: 'broadcast', event: 'move',
-    payload: { move: uci }
+    payload: { from: myId, uci }
   });
-  console.log('[MOVE] send result:', res);
+  console.log('[SEND move]', uci, res);
 }
 
-// ── Update UI based on online turn ──
+// ── Turn UI — derived purely from game state ──
 function updateOnlineTurnUI() {
-  // Derive turn from actual game state — never trust manual isMyTurn tracking
   const gameTurn = game.turn(); // 'w' or 'b'
-  const myTurn = (myColor === 'white' && gameTurn === 'w') || (myColor === 'black' && gameTurn === 'b');
-  isMyTurn = myTurn; // sync the flag to match reality
+  const myTurn = (myColor === 'white') ? gameTurn === 'w' : gameTurn === 'b';
+  console.log('[TURN] myColor:', myColor, 'gameTurn:', gameTurn, '→ myTurn:', myTurn);
 
   const overlay = document.getElementById('thinkingOverlay');
-  const turnText = document.querySelector('.turn-text');
-  const turnDot = document.querySelector('.turn-dot');
+  overlay.style.display = '';
+  overlay.classList.toggle('active', !myTurn);
 
-  overlay.style.display = ''; // clear any inline style
+  const turnText = document.querySelector('.turn-text');
+  const turnDot  = document.querySelector('.turn-dot');
   if (myTurn) {
-    overlay.classList.remove('active');
     if (turnText) turnText.textContent = 'Your Turn';
-    if (turnDot) turnDot.style.background = 'var(--gold)';
+    if (turnDot)  turnDot.style.background = 'var(--gold)';
     document.getElementById('statusBanner').textContent = '♟ Your turn to move';
     document.getElementById('playerCard').classList.add('active');
     document.getElementById('aiCard').classList.remove('active');
   } else {
-    overlay.classList.add('active');
     if (turnText) turnText.textContent = "Opponent's Turn";
-    if (turnDot) turnDot.style.background = 'var(--muted)';
-    document.getElementById('statusBanner').textContent = '⏳ Waiting for ' + onlineOpponentName + '...';
+    if (turnDot)  turnDot.style.background = 'var(--muted)';
+    document.getElementById('statusBanner').textContent = '⏳ Waiting for ' + onlineOpponentName + '…';
     document.getElementById('aiCard').classList.add('active');
     document.getElementById('playerCard').classList.remove('active');
   }
-  console.log('[TURN] myColor:', myColor, 'gameTurn:', gameTurn, 'myTurn:', myTurn);
 }
 
-// ── Handle opponent resign ──
 function handleOpponentResign() {
-  game = { isGameOver: () => false, turn: () => 'w' }; // prevent further moves
   showModal('👑', onlineOpponentName + ' Resigned!', 'You win! Well played.', true);
 }
 
-// ── Leave online game & cleanup ──
 function leaveOnlineGame() {
   if (onlineChannel) {
-    onlineChannel.send({ type: 'broadcast', event: 'resign', payload: {} }).catch(()=>{});
+    onlineChannel.send({ type:'broadcast', event:'resign', payload:{ from: myId } }).catch(()=>{});
     sb.removeChannel(onlineChannel);
     onlineChannel = null;
   }
-  onlineGameCode = null;
   gameMode = 'ai';
   // Reset lobby UI
   document.getElementById('createBtn').style.display = '';
@@ -968,13 +926,11 @@ function renderBoard() {
 }
 
 function onSquareClick(sq) {
-  // In AI mode: only white can click. In online mode: only click on your turn
   if (gameMode === 'online') {
-    const gameTurn = game.turn();
-    const myTurn = (myColor === 'white' && gameTurn === 'w') || (myColor === 'black' && gameTurn === 'b');
+    const myTurn = (myColor === 'white') ? game.turn() === 'w' : game.turn() === 'b';
     if (!myTurn) return;
   } else {
-    if (game.turn() !== 'w') return; // vs AI: player is always white
+    if (game.turn() !== 'w') return;
   }
   const piece = game.get(sq);
 
@@ -1008,9 +964,12 @@ function clearSelection() {
 function makePlayerMove(from, to) {
   // In online mode, block moves if it's not your turn or wrong color
   if (gameMode === 'online') {
-    if (!isMyTurn) return;
-    const pieceColor = game.get(from)?.color;
-    if ((myColor === 'white' && pieceColor !== 'w') || (myColor === 'black' && pieceColor !== 'b')) return;
+    const myTurn = (myColor === 'white') ? game.turn() === 'w' : game.turn() === 'b';
+    if (!myTurn) return;
+    const piece = game.get(from);
+    if (!piece) return;
+    if (myColor === 'white' && piece.color !== 'w') return;
+    if (myColor === 'black' && piece.color !== 'b') return;
   }
   // Track how long player thought before moving
   const thinkTime = (Date.now() - moveStartTime) / 1000;
@@ -1033,7 +992,7 @@ function makePlayerMove(from, to) {
   if (gameMode === 'online') {
     const uci = move.from + move.to + (move.promotion || '');
     sendOnlineMove(uci);
-    updateOnlineTurnUI(); // derives isMyTurn from game.turn() automatically
+    updateOnlineTurnUI();
   } else {
     // vs AI — trigger AI response
     if (!game.game_over()) setTimeout(aiMove, 400);
