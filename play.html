@@ -717,19 +717,19 @@ function startOnlineGame(color) {
 
 // ── Receive a move from the opponent ──
 function receiveOnlineMove(uci) {
+  console.log('[RECEIVE] applying move:', uci, 'current turn:', game.turn(), 'myColor:', myColor);
   const from = uci.slice(0,2), to = uci.slice(2,4), promo = uci[4];
   const move = game.move({ from, to, promotion: promo || 'q' });
-  if (!move) return;
+  if (!move) { console.error('[RECEIVE] move failed:', uci); return; }
 
-  isMyTurn = true;
+  console.log('[RECEIVE] move applied, new turn:', game.turn());
   SFX.play(move.captured ? 'capture' : 'move');
   renderBoard();
   addMoveToHistory(move, move.color);
   updatePanels();
   checkGameOver();
-  updateOnlineTurnUI();
+  updateOnlineTurnUI(); // derives myTurn from game.turn() — no manual flag needed
 
-  // Bounce animation on the destination square
   setTimeout(() => {
     const wrap = document.querySelector(`#chessboard [data-sq="${to}"] .piece-wrap`);
     if (wrap) { wrap.classList.add('bounce'); setTimeout(() => wrap.classList.remove('bounce'), 300); }
@@ -749,12 +749,18 @@ async function sendOnlineMove(uci) {
 
 // ── Update UI based on online turn ──
 function updateOnlineTurnUI() {
+  // Derive turn from actual game state — never trust manual isMyTurn tracking
+  const gameTurn = game.turn(); // 'w' or 'b'
+  const myTurn = (myColor === 'white' && gameTurn === 'w') || (myColor === 'black' && gameTurn === 'b');
+  isMyTurn = myTurn; // sync the flag to match reality
+
   const overlay = document.getElementById('thinkingOverlay');
   const turnText = document.querySelector('.turn-text');
   const turnDot = document.querySelector('.turn-dot');
-  if (isMyTurn) {
+
+  overlay.style.display = ''; // clear any inline style
+  if (myTurn) {
     overlay.classList.remove('active');
-    overlay.style.display = '';
     if (turnText) turnText.textContent = 'Your Turn';
     if (turnDot) turnDot.style.background = 'var(--gold)';
     document.getElementById('statusBanner').textContent = '♟ Your turn to move';
@@ -762,13 +768,13 @@ function updateOnlineTurnUI() {
     document.getElementById('aiCard').classList.remove('active');
   } else {
     overlay.classList.add('active');
-    overlay.style.display = '';
     if (turnText) turnText.textContent = "Opponent's Turn";
     if (turnDot) turnDot.style.background = 'var(--muted)';
     document.getElementById('statusBanner').textContent = '⏳ Waiting for ' + onlineOpponentName + '...';
     document.getElementById('aiCard').classList.add('active');
     document.getElementById('playerCard').classList.remove('active');
   }
+  console.log('[TURN] myColor:', myColor, 'gameTurn:', gameTurn, 'myTurn:', myTurn);
 }
 
 // ── Handle opponent resign ──
@@ -1007,11 +1013,9 @@ function makePlayerMove(from, to) {
   checkGameOver();
 
   if (gameMode === 'online') {
-    // Send move to opponent and flip turn
     const uci = move.from + move.to + (move.promotion || '');
     sendOnlineMove(uci);
-    isMyTurn = false;
-    updateOnlineTurnUI();
+    updateOnlineTurnUI(); // derives isMyTurn from game.turn() automatically
   } else {
     // vs AI — trigger AI response
     if (!game.game_over()) setTimeout(aiMove, 400);
