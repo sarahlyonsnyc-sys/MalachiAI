@@ -782,6 +782,31 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     params: { eventsPerSecond: 10 }
   }
 });
+// ── SOUND EFFECTS ──
+const SFX = (() => {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  function tone(freq, type, duration, gain=0.3) {
+    try {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(gain, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      o.start(); o.stop(ctx.currentTime + duration);
+    } catch(e) {}
+  }
+  return {
+    play(type) {
+      if (ctx.state === 'suspended') ctx.resume();
+      if (type === 'move')    { tone(440, 'sine', 0.08, 0.2); }
+      if (type === 'capture') { tone(300, 'sawtooth', 0.15, 0.3); }
+      if (type === 'check')   { tone(550, 'square', 0.2, 0.25); }
+    }
+  };
+})();
+
+
 
 // ── TRACKING ──
 let moveStartTime = Date.now();   // when player's turn started
