@@ -160,7 +160,9 @@
     </div>
 
     <div style="position:relative;display:inline-block;line-height:0;">
-    <div id="board"></div>
+      <div id="board"></div>
+      <svg id="move-arrow-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50;" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
 
     <div class="move-history" id="moveHistory">
       <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:0.08em;">Select an opening to begin</span>
@@ -708,10 +710,6 @@ function goToMove(idx) {
   const lastUCI = displayIndex > 0 ? playedMoves[displayIndex-1] : null;
   if (lastMove) {
     SFX.play(lastMove.captured ? 'capture' : 'move');
-    // Animate dots from→to
-    if (lastUCI) {
-      animateMoveArrow(lastUCI.slice(0,2), lastUCI.slice(2,4));
-    }
     setTimeout(() => {
       const toSq = lastUCI ? lastUCI.slice(2,4) : null;
       if (toSq) {
@@ -721,6 +719,10 @@ function goToMove(idx) {
     }, 20);
   }
   renderBoard(lastUCI);
+  // Animate dots AFTER board renders so layout is stable
+  if (lastMove && lastUCI) {
+    requestAnimationFrame(() => animateMoveArrow(lastUCI.slice(0,2), lastUCI.slice(2,4)));
+  }
   renderMoveHistory();
 }
 
@@ -756,78 +758,58 @@ function playAll() {
 
 
 // ── MOVE DOT ANIMATION ──
-function sqToXY(sq) {
-  // sq = 'e4', returns center pixel of that square on the 480px board
-  const file = 'abcdefgh'.indexOf(sq[0]);
-  const rank = parseInt(sq[1]) - 1;
-  // White at bottom: rank 1 = row 7 (bottom), rank 8 = row 0 (top)
-  const col = file;
-  const row = 7 - rank;
-  const SQ = 60;
-  return { x: col * SQ + SQ / 2, y: row * SQ + SQ / 2 };
-}
+
 
 function animateMoveArrow(fromSq, toSq) {
   const svg = document.getElementById('move-arrow-svg');
-  if (!svg) return;
+  const boardEl = document.getElementById('board');
+  if (!svg || !boardEl) return;
   svg.innerHTML = '';
 
-  const from = sqToXY(fromSq);
-  const to   = sqToXY(toSq);
+  const boardSize = boardEl.offsetWidth || 480;
+  const SQ = boardSize / 8;
+  svg.setAttribute('viewBox', `0 0 ${boardSize} ${boardSize}`);
+
+  function sqCenter(sq) {
+    const f = 'abcdefgh'.indexOf(sq[0]);
+    const r = parseInt(sq[1]) - 1;
+    return { x: f * SQ + SQ/2, y: (7-r) * SQ + SQ/2 };
+  }
+
+  const from = sqCenter(fromSq);
+  const to   = sqCenter(toSq);
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const dist = Math.sqrt(dx*dx + dy*dy);
+  const NUM_DOTS = Math.max(4, Math.round(dist / 20));
+  const DURATION = 420;
+  const GAP = 50;
 
-  // Number of dots scales with distance
-  const NUM_DOTS = Math.max(5, Math.round(dist / 18));
-  const DOT_R = 5;
-  const TRAIL_DURATION = 480; // ms total for all dots to travel
-  const DOT_GAP = 55; // ms stagger between dots
-
-  // Draw dots that travel from → to, staggered
   for (let i = 0; i < NUM_DOTS; i++) {
     const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    dot.setAttribute('r', DOT_R);
-    dot.setAttribute('cx', from.x);
-    dot.setAttribute('cy', from.y);
-    dot.setAttribute('fill', i === NUM_DOTS - 1 ? '#e8c97a' : 'rgba(255,220,100,0.85)');
+    const isLead = i === NUM_DOTS - 1;
+    dot.setAttribute('r', isLead ? 6 : 4);
+    dot.setAttribute('fill', isLead ? '#f0c040' : '#f5d876');
     dot.setAttribute('opacity', '0');
     svg.appendChild(dot);
 
-    const delay = i * DOT_GAP;
-    const t = TRAIL_DURATION;
+    const delay = i * GAP;
+    const start = performance.now() + delay;
 
-    // Animate using requestAnimationFrame
-    const startTime = performance.now() + delay;
-    (function animDot(dot, sx, sy, ex, ey, duration, start) {
-      function frame(now) {
-        const elapsed = now - start;
-        if (elapsed < 0) { requestAnimationFrame(frame); return; }
-        const progress = Math.min(elapsed / duration, 1);
-        // ease in-out
-        const eased = progress < 0.5 ? 2*progress*progress : -1+(4-2*progress)*progress;
-        const cx = sx + (ex - sx) * eased;
-        const cy = sy + (ey - sy) * eased;
-        dot.setAttribute('cx', cx);
-        dot.setAttribute('cy', cy);
-        // Fade in for first 20%, hold, fade out for last 30%
-        let opacity;
-        if (progress < 0.2) opacity = progress / 0.2;
-        else if (progress > 0.7) opacity = (1 - progress) / 0.3;
-        else opacity = 1;
-        dot.setAttribute('opacity', opacity * 0.9);
-        if (progress < 1) {
-          requestAnimationFrame(frame);
-        } else {
-          dot.setAttribute('opacity', 0);
-        }
+    (function(d, sx, sy, ex, ey, dur, t0) {
+      function tick(now) {
+        const p = Math.min((now - t0) / dur, 1);
+        if (p < 0) { requestAnimationFrame(tick); return; }
+        const e = p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2;
+        d.setAttribute('cx', sx + (ex-sx)*e);
+        d.setAttribute('cy', sy + (ey-sy)*e);
+        d.setAttribute('opacity', p < 0.15 ? p/0.15 : p > 0.75 ? (1-p)/0.25 : 1);
+        if (p < 1) requestAnimationFrame(tick);
+        else d.remove();
       }
-      requestAnimationFrame(frame);
-    })(dot, from.x, from.y, to.x, to.y, t, startTime);
+      requestAnimationFrame(tick);
+    })(dot, from.x, from.y, to.x, to.y, DURATION, start);
   }
-
-  // Clear SVG after animation finishes
-  setTimeout(() => { if (svg) svg.innerHTML = ''; }, TRAIL_DURATION + NUM_DOTS * DOT_GAP + 100);
 }
 
 // ── RENDER ──
