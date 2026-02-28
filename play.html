@@ -592,7 +592,7 @@ async function createOnlineGame() {
   document.getElementById('createIcon').textContent = '⏳';
 
   onlineChannel = sb.channel('malachi-game-' + code, {
-    config: { broadcast: { self: true, ack: false } }
+    config: { broadcast: { self: false, ack: false } }
   });
 
   onlineChannel.on('broadcast', { event: 'join' }, async ({ payload }) => {
@@ -608,9 +608,14 @@ async function createOnlineGame() {
   });
 
   onlineChannel.on('broadcast', { event: 'resign' }, () => handleOpponentResign());
+  onlineChannel.on('broadcast', { event: 'ping' }, ({payload}) => {
+    console.log('🏓 [HOST] PING RECEIVED:', payload);
+  });
 
   onlineChannel.subscribe((status, err) => {
     console.log('[HOST] channel status:', status, err || '');
+    if (status === 'SUBSCRIBED') console.log('[HOST] ✅ Ready to receive broadcasts on channel: malachi-game-' + onlineGameCode);
+    if (status === 'CHANNEL_ERROR') console.error('[HOST] ❌ Channel error:', err);
   });
 }
 
@@ -635,7 +640,7 @@ async function joinOnlineGame() {
   `;
 
   onlineChannel = sb.channel('malachi-game-' + code, {
-    config: { broadcast: { self: true, ack: false } }
+    config: { broadcast: { self: false, ack: false } }
   });
 
   onlineChannel.on('broadcast', { event: 'ready' }, ({ payload }) => {
@@ -650,17 +655,21 @@ async function joinOnlineGame() {
   });
 
   onlineChannel.on('broadcast', { event: 'resign' }, () => handleOpponentResign());
+  onlineChannel.on('broadcast', { event: 'ping' }, ({payload}) => {
+    console.log('🏓 [JOINER] PING RECEIVED:', payload);
+  });
 
   onlineChannel.subscribe(async (status, err) => {
     console.log('[JOINER] channel status:', status, err || '');
     if (status === 'SUBSCRIBED') {
-      console.log('[JOINER] subscribed — sending join event');
+      console.log('[JOINER] ✅ Subscribed — sending join to channel: malachi-game-' + onlineGameCode);
       const res = await onlineChannel.send({
         type: 'broadcast', event: 'join',
         payload: { name: currentUserName || 'Player' }
       });
       console.log('[JOINER] join send result:', res);
     }
+    if (status === 'CHANNEL_ERROR') console.error('[JOINER] ❌ Channel error:', err);
   });
 }
 
@@ -694,6 +703,15 @@ function startOnlineGame(color) {
   buildLabels();
   renderBoard();
   updatePanels();
+  // Force overlay state on game start before updateOnlineTurnUI
+  const overlay = document.getElementById('thinkingOverlay');
+  if (!isMyTurn) {
+    overlay.classList.add('active');
+    overlay.style.display = '';
+  } else {
+    overlay.classList.remove('active');
+    overlay.style.display = '';
+  }
   updateOnlineTurnUI();
 }
 
@@ -733,14 +751,23 @@ async function sendOnlineMove(uci) {
 function updateOnlineTurnUI() {
   const overlay = document.getElementById('thinkingOverlay');
   const turnText = document.querySelector('.turn-text');
+  const turnDot = document.querySelector('.turn-dot');
   if (isMyTurn) {
-    overlay.style.display = 'none';
+    overlay.classList.remove('active');
+    overlay.style.display = '';
     if (turnText) turnText.textContent = 'Your Turn';
+    if (turnDot) turnDot.style.background = 'var(--gold)';
     document.getElementById('statusBanner').textContent = '♟ Your turn to move';
+    document.getElementById('playerCard').classList.add('active');
+    document.getElementById('aiCard').classList.remove('active');
   } else {
-    overlay.style.display = 'flex';
+    overlay.classList.add('active');
+    overlay.style.display = '';
     if (turnText) turnText.textContent = "Opponent's Turn";
+    if (turnDot) turnDot.style.background = 'var(--muted)';
     document.getElementById('statusBanner').textContent = '⏳ Waiting for ' + onlineOpponentName + '...';
+    document.getElementById('aiCard').classList.add('active');
+    document.getElementById('playerCard').classList.remove('active');
   }
 }
 
@@ -1485,6 +1512,20 @@ let currentChessRating = 1200; // default starting rating
     injectProfileNav();
   }
 })();
+
+// ── REALTIME DEBUG — call testBroadcast() in console to verify channel works ──
+window.testBroadcast = async function() {
+  if (!onlineChannel) { console.error('No channel — join a game first'); return; }
+  console.log('Channel state:', onlineChannel.state);
+  const res = await onlineChannel.send({
+    type: 'broadcast', event: 'ping', payload: { msg: 'hello from ' + (currentUserName||'?'), t: Date.now() }
+  });
+  console.log('Ping send result:', res);
+};
+onlineChannel && onlineChannel.on && onlineChannel.on('broadcast', { event: 'ping' }, ({payload}) => {
+  console.log('🏓 PING RECEIVED:', payload);
+});
+
 </script>
 </body>
 </html>
