@@ -892,13 +892,18 @@ function buildLabels() {
   const ranks = document.getElementById('rankLabels');
   files.innerHTML = '';
   ranks.innerHTML = '';
-  'abcdefgh'.split('').forEach(f => {
+  const flipped = (gameMode === 'online' && myColor === 'black');
+  const fileOrder = flipped ? 'hgfedcba' : 'abcdefgh';
+  fileOrder.split('').forEach(f => {
     const d = document.createElement('div');
     d.className = 'board-label';
     d.textContent = f;
     files.appendChild(d);
   });
-  for (let r = 8; r >= 1; r--) {
+  const rankStart = flipped ? 1 : 8;
+  const rankEnd = flipped ? 8 : 1;
+  const rankStep = flipped ? 1 : -1;
+  for (let r = rankStart; r !== rankEnd + rankStep; r += rankStep) {
     const d = document.createElement('div');
     d.className = 'board-label';
     d.textContent = r;
@@ -923,9 +928,15 @@ function renderBoard() {
     });
   }
 
-  for (let rank = 8; rank >= 1; rank--) {
-    for (let fileIdx = 0; fileIdx < 8; fileIdx++) {
-      const file = 'abcdefgh'[fileIdx];
+  const flipped = (gameMode === 'online' && myColor === 'black');
+  const ranks = flipped ? [1,2,3,4,5,6,7,8] : [8,7,6,5,4,3,2,1];
+  const files = flipped ? ['h','g','f','e','d','c','b','a'] : ['a','b','c','d','e','f','g','h'];
+
+  for (let ri = 0; ri < 8; ri++) {
+    const rank = ranks[ri];
+    for (let fi = 0; fi < 8; fi++) {
+      const file = files[fi];
+      const fileIdx = 'abcdefgh'.indexOf(file);
       const sqName = file + rank;
       const piece = game.get(sqName);
       const isLight = (fileIdx + rank) % 2 !== 0;
@@ -957,7 +968,14 @@ function renderBoard() {
 }
 
 function onSquareClick(sq) {
-  if (game.turn() !== 'w') return; // only player moves
+  // In AI mode: only white can click. In online mode: only click on your turn
+  if (gameMode === 'online') {
+    const gameTurn = game.turn();
+    const myTurn = (myColor === 'white' && gameTurn === 'w') || (myColor === 'black' && gameTurn === 'b');
+    if (!myTurn) return;
+  } else {
+    if (game.turn() !== 'w') return; // vs AI: player is always white
+  }
   const piece = game.get(sq);
 
   if (selectedSquare) {
