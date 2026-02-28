@@ -692,19 +692,13 @@ function receiveOnlineMove(uci) {
 
   isMyTurn = true;
   SFX.play(move.captured ? 'capture' : 'move');
-  // Online: broadcast move to opponent
-  if (gameMode === 'online') {
-    const uci = move.from + move.to + (move.promotion || '');
-    sendOnlineMove(uci);
-    isMyTurn = false;
-    updateOnlineTurnUI();
-  }
   renderBoard();
+  addMoveToHistory(move, move.color);
   updatePanels();
   checkGameOver();
   updateOnlineTurnUI();
 
-  // Bounce animation
+  // Bounce animation on the destination square
   setTimeout(() => {
     const wrap = document.querySelector(`#chessboard [data-sq="${to}"] .piece-wrap`);
     if (wrap) { wrap.classList.add('bounce'); setTimeout(() => wrap.classList.remove('bounce'), 300); }
@@ -961,10 +955,22 @@ function makePlayerMove(from, to) {
 
   lastMove = { from, to };
   clearSelection();
-  addMoveToHistory(move, 'w');
+  addMoveToHistory(move, move.color);
   showTip();
+  renderBoard();
+  updatePanels();
   checkGameOver();
-  if (!game.game_over()) setTimeout(aiMove, 400);
+
+  if (gameMode === 'online') {
+    // Send move to opponent and flip turn
+    const uci = move.from + move.to + (move.promotion || '');
+    sendOnlineMove(uci);
+    isMyTurn = false;
+    updateOnlineTurnUI();
+  } else {
+    // vs AI — trigger AI response
+    if (!game.game_over()) setTimeout(aiMove, 400);
+  }
 }
 
 function aiMove() {
