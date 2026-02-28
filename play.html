@@ -180,6 +180,129 @@
     .modal p { font-size:15px; color:var(--muted); margin-bottom:36px; line-height:1.6; }
     .modal-actions { display:flex; gap:12px; justify-content:center; }
 
+
+    /* ── MODE SELECT SCREEN ── */
+    #modeScreen {
+      position: fixed; inset: 0; z-index: 500;
+      background: var(--black);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 0;
+    }
+    .mode-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 700; color: var(--white);
+      letter-spacing: 0.04em; margin-bottom: 8px;
+      text-align: center;
+    }
+    .mode-subtitle {
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      letter-spacing: 0.2em; color: var(--muted);
+      text-transform: uppercase; margin-bottom: 52px; text-align: center;
+    }
+    .mode-cards {
+      display: flex; gap: 24px; flex-wrap: wrap; justify-content: center;
+      padding: 0 24px;
+    }
+    .mode-card {
+      width: 280px; background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 36px 28px; cursor: pointer;
+      transition: all 0.25s; position: relative; overflow: hidden;
+      text-align: center;
+    }
+    .mode-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%);
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .mode-card:hover { border-color: rgba(201,168,76,0.5); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.5); }
+    .mode-card:hover::before { opacity: 1; }
+    .mode-card-icon { font-size: 48px; margin-bottom: 16px; display: block; }
+    .mode-card-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+    .mode-card-desc { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+    .mode-card-btn {
+      display: inline-block;
+      font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--gold);
+      border: 1px solid rgba(201,168,76,0.35); padding: 9px 20px;
+      transition: all 0.2s; background: rgba(201,168,76,0.05);
+    }
+    .mode-card:hover .mode-card-btn { background: rgba(201,168,76,0.15); border-color: var(--gold); }
+
+    /* ── LOBBY / MATCHMAKING SCREEN ── */
+    #lobbyScreen {
+      position: fixed; inset: 0; z-index: 500;
+      background: var(--black);
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 28px;
+    }
+    .lobby-title { font-family: 'Cormorant Garamond', serif; font-size: 32px; color: var(--white); font-weight: 700; }
+    .lobby-box {
+      background: var(--panel); border: 1px solid var(--border);
+      padding: 40px 48px; text-align: center; width: 420px; max-width: 95vw;
+    }
+    .lobby-state-icon { font-size: 52px; margin-bottom: 16px; display: block;
+      animation: lobbyPulse 2s ease-in-out infinite; }
+    @keyframes lobbyPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.08);opacity:0.8} }
+    .lobby-status { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.08em; color: var(--cream); margin-bottom: 8px; }
+    .lobby-substatus { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .lobby-game-code {
+      font-family: 'DM Mono', monospace; font-size: 28px; letter-spacing: 0.3em;
+      color: var(--gold); border: 1px solid rgba(201,168,76,0.3);
+      padding: 12px 24px; margin: 20px 0; display: inline-block;
+      background: rgba(201,168,76,0.05);
+    }
+    .lobby-input {
+      width: 100%; background: #0d0d0d; border: 1px solid var(--border);
+      color: var(--cream); font-family: 'DM Mono', monospace;
+      font-size: 22px; letter-spacing: 0.3em; text-align: center;
+      padding: 14px; margin: 16px 0; text-transform: uppercase;
+      outline: none; transition: border-color 0.2s;
+    }
+    .lobby-input:focus { border-color: rgba(201,168,76,0.5); }
+    .lobby-input::placeholder { color: var(--muted); letter-spacing: 0.15em; font-size: 16px; }
+    .lobby-tabs { display: flex; gap: 0; margin-bottom: 28px; border: 1px solid var(--border); }
+    .lobby-tab {
+      flex: 1; padding: 12px; font-family: 'DM Mono', monospace;
+      font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+      background: none; border: none; color: var(--muted); cursor: pointer; transition: all 0.2s;
+    }
+    .lobby-tab.active { background: rgba(201,168,76,0.08); color: var(--gold); }
+    .lobby-btn {
+      width: 100%; padding: 14px; font-family: 'DM Mono', monospace;
+      font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
+      background: var(--gold); color: #000; border: none; cursor: pointer;
+      transition: all 0.2s; font-weight: 700; margin-top: 8px;
+    }
+    .lobby-btn:hover { background: var(--gold2); }
+    .lobby-btn.secondary {
+      background: none; color: var(--muted); border: 1px solid var(--border);
+      margin-top: 12px;
+    }
+    .lobby-btn.secondary:hover { color: var(--cream); border-color: var(--muted); }
+    .lobby-dots span {
+      display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gold); margin: 0 3px; opacity: 0.3;
+      animation: dotBlink 1.4s ease-in-out infinite;
+    }
+    .lobby-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .lobby-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBlink { 0%,80%,100%{opacity:0.3} 40%{opacity:1} }
+    .online-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: 'DM Mono', monospace; font-size: 10px;
+      color: #4caf50; letter-spacing: 0.08em;
+    }
+    .online-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:#4caf50; display:inline-block; animation: onlinePulse 2s infinite; }
+    @keyframes onlinePulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .vs-divider {
+      font-family: 'Cormorant Garamond', serif; font-size: 14px;
+      color: var(--muted); text-align: center; margin: 16px 0;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .vs-divider::before, .vs-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
     @media (max-width:900px) {
       .game-layout { grid-template-columns:1fr; grid-template-rows:auto 1fr auto; }
       .panel-left { flex-direction:row; flex-wrap:wrap; padding:16px; gap:12px; }
@@ -212,8 +335,6 @@
   <div class="nav-right">
     <a href="index.html" class="nav-back">Home</a>
     <a href="learn.html" class="nav-back">Learn</a>
-    <a href="puzzles.html" class="nav-back">Puzzles</a>
-    <a href="openings.html" class="nav-back">Openings</a>
     <a href="dashboard.html" class="nav-back">Dashboard</a>
     <a href="profile.html" class="nav-back" id="profileLink" style="display:none">My Profile</a>
     <div id="ratingBadge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;color:var(--gold);background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);padding:6px 12px;">
@@ -248,6 +369,64 @@
   </div>
 </nav>
 
+
+<!-- ════ MODE SELECT SCREEN ════ -->
+<div id="modeScreen">
+  <div class="mode-title">Malachi Chess</div>
+  <div class="mode-subtitle">Choose your game</div>
+  <div class="mode-cards">
+    <div class="mode-card" onclick="selectMode('ai')">
+      <span class="mode-card-icon">🤖</span>
+      <div class="mode-card-title">vs Malachi AI</div>
+      <div class="mode-card-desc">Challenge our multilevel AI — from friendly Novice to near-perfect Master. Great for training and learning.</div>
+      <div class="mode-card-btn">Play vs AI →</div>
+    </div>
+    <div class="mode-card" onclick="selectMode('online')">
+      <span class="mode-card-icon">🌐</span>
+      <div class="mode-card-title">Play Online</div>
+      <div class="mode-card-desc">Challenge another player in real-time. Create a private game or join a friend with a game code.</div>
+      <div class="mode-card-btn">Play Online →</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ LOBBY SCREEN ════ -->
+<div id="lobbyScreen">
+  <div class="lobby-title">Online Play</div>
+  <div class="lobby-box" id="lobbyBox">
+    <!-- Lobby tabs -->
+    <div class="lobby-tabs">
+      <button class="lobby-tab active" id="tabCreate" onclick="switchLobbyTab('create')">Create Game</button>
+      <button class="lobby-tab" id="tabJoin" onclick="switchLobbyTab('join')">Join Game</button>
+    </div>
+
+    <!-- CREATE tab content -->
+    <div id="lobbyCreate">
+      <div class="lobby-state-icon" id="createIcon">♟</div>
+      <div class="lobby-status" id="createStatus">Ready to create a game</div>
+      <div class="lobby-substatus" id="createSubstatus">Click below to generate your game code and wait for an opponent.</div>
+      <div class="lobby-game-code" id="gameCodeDisplay" style="display:none">----</div>
+      <div class="online-badge" id="waitingBadge" style="display:none;margin:12px auto;justify-content:center">
+        Waiting for opponent <span class="lobby-dots"><span></span><span></span><span></span></span>
+      </div>
+      <button class="lobby-btn" id="createBtn" onclick="createOnlineGame()">Generate Game Code</button>
+    </div>
+
+    <!-- JOIN tab content -->
+    <div id="lobbyJoin" style="display:none">
+      <div class="lobby-state-icon">🔗</div>
+      <div class="lobby-status">Enter game code</div>
+      <div class="lobby-substatus">Ask your friend for their 4-letter game code.</div>
+      <input class="lobby-input" id="joinCodeInput" maxlength="4" placeholder="XXXX" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z]/g,'')"/>
+      <button class="lobby-btn" onclick="joinOnlineGame()">Join Game</button>
+    </div>
+
+    <div class="vs-divider">or</div>
+    <button class="lobby-btn secondary" onclick="backToModeSelect()">← Back to Mode Select</button>
+  </div>
+</div>
+
+
 <!-- GAME LAYOUT -->
 <div class="game-layout">
 
@@ -256,8 +435,8 @@
     <div>
       <div class="panel-title">Players</div>
       <div class="player-card" id="aiCard">
-        <div class="player-name">Malachi AI</div>
-        <div class="player-color">Black ♟</div>
+        <div class="player-name" id="opponentName">Malachi AI</div>
+        <div class="player-color" id="opponentColor">Black ♟</div>
         <div class="captured" id="capturedByAI"></div>
         <div class="material-score" id="aiScore"></div>
       </div>
@@ -270,8 +449,8 @@
 
     <div>
       <div class="player-card active" id="playerCard">
-        <div class="player-name">You</div>
-        <div class="player-color">White ♙</div>
+        <div class="player-name" id="playerName">You</div>
+        <div class="player-color" id="playerColorLabel">White ♙</div>
         <div class="captured" id="capturedByPlayer"></div>
         <div class="material-score" id="playerScore"></div>
       </div>
@@ -280,6 +459,7 @@
     <div class="game-controls">
       <button class="btn-control" onclick="undoMove()">↩ Undo</button>
       <button class="btn-control" onclick="newGame()" id="newGameBtn">New Game</button>
+      <button class="btn-control" onclick="goToMenu()" style="border-color:rgba(201,168,76,0.3);color:var(--gold)">⊞ Menu</button>
     </div>
   </div>
 
@@ -348,6 +528,239 @@ document.addEventListener('mousemove', e => {
   cursor.style.top = e.clientY + 'px';
   setTimeout(() => { ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px'; }, 80);
 });
+
+
+// ════════════════════════════════════════════
+// GAME MODE & ONLINE MULTIPLAYER
+// ════════════════════════════════════════════
+let gameMode = 'ai'; // 'ai' | 'online'
+let onlineChannel = null;
+let onlineGameCode = null;
+let myColor = 'white'; // which color the local player controls
+let onlineOpponentName = 'Opponent';
+let currentUserName = 'You';
+let isMyTurn = false;
+
+// ── Mode selection ──
+function selectMode(mode) {
+  if (mode === 'ai') {
+    gameMode = 'ai';
+    document.getElementById('modeScreen').style.display = 'none';
+    document.getElementById('opponentName').textContent = 'Malachi AI';
+    document.getElementById('opponentColor').textContent = 'Black ♟';
+    document.getElementById('playerName').textContent = currentUserName || 'You';
+    newGame();
+  } else {
+    document.getElementById('modeScreen').style.display = 'none';
+    document.getElementById('lobbyScreen').style.display = 'flex';
+  }
+}
+
+function backToModeSelect() {
+  leaveOnlineGame();
+  document.getElementById('lobbyScreen').style.display = 'none';
+  document.getElementById('modeScreen').style.display = 'flex';
+}
+
+// ── Lobby tabs ──
+function switchLobbyTab(tab) {
+  document.getElementById('tabCreate').classList.toggle('active', tab==='create');
+  document.getElementById('tabJoin').classList.toggle('active', tab==='join');
+  document.getElementById('lobbyCreate').style.display = tab==='create' ? '' : 'none';
+  document.getElementById('lobbyJoin').style.display = tab==='join' ? '' : 'none';
+}
+
+// ── Generate random 4-letter game code ──
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  return Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+
+// ── Create online game ──
+async function createOnlineGame() {
+  const code = genCode();
+  onlineGameCode = code;
+  myColor = 'white';
+  gameMode = 'online';
+
+  document.getElementById('gameCodeDisplay').textContent = code;
+  document.getElementById('gameCodeDisplay').style.display = 'inline-block';
+  document.getElementById('createBtn').style.display = 'none';
+  document.getElementById('createStatus').textContent = 'Share this code with your friend';
+  document.getElementById('createSubstatus').textContent = 'They enter the code on the Join tab. Game starts instantly when they join.';
+  document.getElementById('waitingBadge').style.display = 'flex';
+  document.getElementById('createIcon').textContent = '⏳';
+
+  // Subscribe to Supabase Realtime channel for this game code
+  onlineChannel = sb.channel('game:' + code, { config: { broadcast: { self: false } } });
+
+  onlineChannel
+    .on('broadcast', { event: 'join' }, ({ payload }) => {
+      // Opponent joined!
+      onlineOpponentName = payload.name || 'Opponent';
+      startOnlineGame(code, 'white');
+    })
+    .on('broadcast', { event: 'move' }, ({ payload }) => {
+      receiveOnlineMove(payload.move);
+    })
+    .on('broadcast', { event: 'resign' }, () => {
+      handleOpponentResign();
+    })
+    .subscribe();
+}
+
+// ── Join online game ──
+async function joinOnlineGame() {
+  const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  if (code.length !== 4) {
+    document.getElementById('joinCodeInput').style.borderColor = '#e74c3c';
+    setTimeout(() => document.getElementById('joinCodeInput').style.borderColor = '', 1000);
+    return;
+  }
+
+  onlineGameCode = code;
+  myColor = 'black';
+  gameMode = 'online';
+
+  // Subscribe and broadcast join
+  onlineChannel = sb.channel('game:' + code, { config: { broadcast: { self: false } } });
+
+  onlineChannel
+    .on('broadcast', { event: 'move' }, ({ payload }) => {
+      receiveOnlineMove(payload.move);
+    })
+    .on('broadcast', { event: 'resign' }, () => {
+      handleOpponentResign();
+    })
+    .subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        // Tell the host we joined
+        await onlineChannel.send({
+          type: 'broadcast', event: 'join',
+          payload: { name: currentUserName || 'Opponent' }
+        });
+        startOnlineGame(code, 'black');
+      }
+    });
+}
+
+// ── Start the online game ──
+function startOnlineGame(code, color) {
+  myColor = color;
+  isMyTurn = (color === 'white'); // white moves first
+
+  // Hide lobby, show game
+  document.getElementById('lobbyScreen').style.display = 'none';
+
+  // Reset game
+  game = new Chess();
+  selectedSquare = null;
+
+  // Update player labels
+  document.getElementById('playerName').textContent = currentUserName || 'You';
+  document.getElementById('opponentName').textContent = onlineOpponentName;
+
+  if (color === 'white') {
+    document.getElementById('playerColorLabel').textContent = 'White ♙';
+    document.getElementById('opponentColor').textContent = 'Black ♟';
+  } else {
+    document.getElementById('playerColorLabel').textContent = 'Black ♟';
+    document.getElementById('opponentColor').textContent = 'White ♙';
+  }
+
+  // Update thinking overlay text
+  document.querySelector('.thinking-text').textContent = onlineOpponentName + ' is thinking...';
+
+  // Update status
+  document.getElementById('statusBanner').textContent = color === 'white'
+    ? '⚔️ You play White — make your first move!'
+    : '⏳ Waiting for White to move...';
+
+  renderBoard();
+  buildLabels();
+  updatePanels();
+
+  // Show/hide thinking overlay based on whose turn
+  updateOnlineTurnUI();
+}
+
+// ── Receive a move from the opponent ──
+function receiveOnlineMove(uci) {
+  const from = uci.slice(0,2), to = uci.slice(2,4), promo = uci[4];
+  const move = game.move({ from, to, promotion: promo || 'q' });
+  if (!move) return;
+
+  isMyTurn = true;
+  SFX.play(move.captured ? 'capture' : 'move');
+  // Online: broadcast move to opponent
+  if (gameMode === 'online') {
+    const uci = move.from + move.to + (move.promotion || '');
+    sendOnlineMove(uci);
+    isMyTurn = false;
+    updateOnlineTurnUI();
+  }
+  renderBoard();
+  updatePanels();
+  checkGameOver();
+  updateOnlineTurnUI();
+
+  // Bounce animation
+  setTimeout(() => {
+    const wrap = document.querySelector(`#chessboard [data-sq="${to}"] .piece-wrap`);
+    if (wrap) { wrap.classList.add('bounce'); setTimeout(() => wrap.classList.remove('bounce'), 300); }
+  }, 20);
+}
+
+// ── Send our move to opponent ──
+async function sendOnlineMove(uci) {
+  if (!onlineChannel) return;
+  await onlineChannel.send({
+    type: 'broadcast', event: 'move',
+    payload: { move: uci }
+  });
+}
+
+// ── Update UI based on online turn ──
+function updateOnlineTurnUI() {
+  const overlay = document.getElementById('thinkingOverlay');
+  const turnText = document.querySelector('.turn-text');
+  if (isMyTurn) {
+    overlay.style.display = 'none';
+    if (turnText) turnText.textContent = 'Your Turn';
+    document.getElementById('statusBanner').textContent = '♟ Your turn to move';
+  } else {
+    overlay.style.display = 'flex';
+    if (turnText) turnText.textContent = "Opponent's Turn";
+    document.getElementById('statusBanner').textContent = '⏳ Waiting for ' + onlineOpponentName + '...';
+  }
+}
+
+// ── Handle opponent resign ──
+function handleOpponentResign() {
+  game = { isGameOver: () => false, turn: () => 'w' }; // prevent further moves
+  showModal('👑', onlineOpponentName + ' Resigned!', 'You win! Well played.', true);
+}
+
+// ── Leave online game & cleanup ──
+function leaveOnlineGame() {
+  if (onlineChannel) {
+    onlineChannel.send({ type: 'broadcast', event: 'resign', payload: {} }).catch(()=>{});
+    sb.removeChannel(onlineChannel);
+    onlineChannel = null;
+  }
+  onlineGameCode = null;
+  gameMode = 'ai';
+  // Reset lobby UI
+  document.getElementById('createBtn').style.display = '';
+  document.getElementById('gameCodeDisplay').style.display = 'none';
+  document.getElementById('waitingBadge').style.display = 'none';
+  document.getElementById('createStatus').textContent = 'Ready to create a game';
+  document.getElementById('createSubstatus').textContent = 'Click below to generate your game code and wait for an opponent.';
+  document.getElementById('createIcon').textContent = '♟';
+  document.getElementById('joinCodeInput').value = '';
+  switchLobbyTab('create');
+  document.querySelector('.thinking-text').textContent = 'Malachi is thinking...';
+}
 
 // ── CHESS ENGINE ──
 let game = new Chess();
@@ -530,6 +943,12 @@ function clearSelection() {
 }
 
 function makePlayerMove(from, to) {
+  // In online mode, block moves if it's not your turn or wrong color
+  if (gameMode === 'online') {
+    if (!isMyTurn) return;
+    const pieceColor = game.get(from)?.color;
+    if ((myColor === 'white' && pieceColor !== 'w') || (myColor === 'black' && pieceColor !== 'b')) return;
+  }
   // Track how long player thought before moving
   const thinkTime = (Date.now() - moveStartTime) / 1000;
   moveTimes.push(Math.round(thinkTime));
@@ -549,6 +968,7 @@ function makePlayerMove(from, to) {
 }
 
 function aiMove() {
+  if (gameMode === 'online') return; // no AI in online mode
   const cfg = DIFFICULTY_LEVELS[currentDifficulty];
   document.getElementById('thinkingOverlay').classList.add('active');
   document.getElementById('aiCard').classList.add('active');
@@ -858,7 +1278,22 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
   }).eq('user_id', session.user.id);
 }
 
+
+function goToMenu() {
+  if (gameMode === 'online') leaveOnlineGame();
+  game = new Chess();
+  selectedSquare = null;
+  document.getElementById('modeScreen').style.display = 'flex';
+}
+
 function newGame() {
+  if (gameMode === 'online') {
+    if (confirm('Leave the current online game?')) {
+      leaveOnlineGame();
+      document.getElementById('modeScreen').style.display = 'flex';
+    }
+    return;
+  }
   // Capture current times BEFORE resetting
   const timesToSave = [...moveTimes];
   const gameWasOver = game.game_over();
@@ -972,6 +1407,16 @@ let currentChessRating = 1200; // default starting rating
   const _sb = createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
 
   async function injectProfileNav() {
+    // Also grab the username for online play display
+    try {
+      const { data:{ session } } = await sb.auth.getSession();
+      if (session) {
+        const { data: prof } = await sb.from('progress').select('username').eq('user_id', session.user.id).single();
+        if (prof?.username) currentUserName = prof.username;
+        else currentUserName = session.user.email.split('@')[0];
+        document.getElementById('playerName').textContent = currentUserName;
+      }
+    } catch(e) {}
     const { data: { session } } = await _sb.auth.getSession();
     // Find best nav container
     const container = document.querySelector('.nav-right') || document.querySelector('.nav-links') || document.querySelector('nav ul');
