@@ -726,7 +726,11 @@ function updateOnlineTurnUI() {
 
   const overlay = document.getElementById('thinkingOverlay');
   overlay.style.display = '';
-  overlay.classList.toggle('active', !myTurn);
+  if (myTurn) {
+    overlay.classList.remove('active');
+  } else {
+    overlay.classList.add('active');
+  }
 
   const turnText = document.querySelector('.turn-text');
   const turnDot  = document.querySelector('.turn-dot');
@@ -957,12 +961,16 @@ function renderBoard() {
 }
 
 function onSquareClick(sq) {
+  // Determine whose pieces I can move
+  const myPieceColor = (gameMode === 'online') ? (myColor === 'white' ? 'w' : 'b') : 'w';
+
   if (gameMode === 'online') {
     const myTurn = (myColor === 'white') ? game.turn() === 'w' : game.turn() === 'b';
     if (!myTurn) return;
   } else {
     if (game.turn() !== 'w') return;
   }
+
   const piece = game.get(sq);
 
   if (selectedSquare) {
@@ -970,13 +978,13 @@ function onSquareClick(sq) {
       makePlayerMove(selectedSquare, sq);
       return;
     }
-    if (piece && piece.color === 'w') {
+    if (piece && piece.color === myPieceColor) {
       selectSquare(sq); return;
     }
     clearSelection();
     return;
   }
-  if (piece && piece.color === 'w') { selectSquare(sq); }
+  if (piece && piece.color === myPieceColor) { selectSquare(sq); }
 }
 
 function selectSquare(sq) {
