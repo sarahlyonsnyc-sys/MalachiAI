@@ -582,8 +582,12 @@ function setupChannel(code) {
   });
 
   onlineChannel.on('broadcast', { event: 'move' }, ({ payload }) => {
-    if (payload.from === myId) return; // ignore our own echoed move
-    console.log('[RECV move]', payload.uci);
+    console.log('📨 move broadcast received, payload.from:', payload.from, 'myId:', myId, 'same?', payload.from === myId);
+    if (payload.from === myId) {
+      console.log('🔇 ignoring own move echo');
+      return;
+    }
+    console.log('📬 passing to applyOpponentMove:', payload.uci);
     applyOpponentMove(payload.uci);
   });
 
@@ -690,9 +694,11 @@ function startOnlineGame(color) {
 
 // ── Apply a move received from opponent ──
 function applyOpponentMove(uci) {
+  console.log('⚡ applyOpponentMove called with:', uci, '| game.turn():', game.turn(), '| myColor:', myColor);
   const from = uci.slice(0,2), to = uci.slice(2,4), promo = uci[4];
   const move = game.move({ from, to, promotion: promo || 'q' });
-  if (!move) { console.error('[RECV] invalid move:', uci); return; }
+  if (!move) { console.error('❌ move failed for uci:', uci); return; }
+  console.log('✅ move applied, new game.turn():', game.turn());
   lastMove = { from, to };
   SFX.play(move.captured ? 'capture' : 'move');
   addMoveToHistory(move, move.color);
