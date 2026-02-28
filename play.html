@@ -591,31 +591,27 @@ async function createOnlineGame() {
   document.getElementById('waitingBadge').style.display = 'flex';
   document.getElementById('createIcon').textContent = '⏳';
 
-  // Build channel with ALL listeners BEFORE subscribing
-  onlineChannel = sb.channel('game:' + code, {
-    config: { broadcast: { self: false } }
+  onlineChannel = sb.channel('malachi-game-' + code, {
+    config: { broadcast: { self: true, ack: false } }
   });
 
-  onlineChannel
-    .on('broadcast', { event: 'join' }, async ({ payload }) => {
-      // Joiner connected — save their name, send ready signal, start game
-      onlineOpponentName = payload.name || 'Opponent';
-      // Confirm to joiner that we're ready and send our name
-      await onlineChannel.send({
-        type: 'broadcast', event: 'ready',
-        payload: { name: currentUserName || 'Host' }
-      });
-      startOnlineGame('white');
-    })
-    .on('broadcast', { event: 'move' }, ({ payload }) => {
-      receiveOnlineMove(payload.move);
-    })
-    .on('broadcast', { event: 'resign' }, () => {
-      handleOpponentResign();
-    })
-    .subscribe((status) => {
-      console.log('[Malachi] Host channel status:', status);
-    });
+  onlineChannel.on('broadcast', { event: 'join' }, async ({ payload }) => {
+    console.log('[HOST] join received from', payload.name);
+    onlineOpponentName = payload.name || 'Opponent';
+    await onlineChannel.send({ type: 'broadcast', event: 'ready', payload: { name: currentUserName || 'Host' } });
+    startOnlineGame('white');
+  });
+
+  onlineChannel.on('broadcast', { event: 'move' }, ({ payload }) => {
+    console.log('[HOST] move received:', payload.move);
+    receiveOnlineMove(payload.move);
+  });
+
+  onlineChannel.on('broadcast', { event: 'resign' }, () => handleOpponentResign());
+
+  onlineChannel.subscribe((status, err) => {
+    console.log('[HOST] channel status:', status, err || '');
+  });
 }
 
 // ── Join online game (JOINER = Black) ──
@@ -631,41 +627,41 @@ async function joinOnlineGame() {
   myColor = 'black';
   gameMode = 'online';
 
-  // Show joining state
   document.getElementById('lobbyJoin').innerHTML = `
     <div class="lobby-state-icon" style="animation:lobbyPulse 1s infinite">🔗</div>
     <div class="lobby-status">Connecting to game ${code}…</div>
-    <div class="lobby-substatus">Establishing connection with host.</div>
     <div class="lobby-dots" style="margin-top:16px"><span></span><span></span><span></span></div>
+    <button class="lobby-btn secondary" style="margin-top:24px" onclick="backToModeSelect()">← Cancel</button>
   `;
 
-  // Build channel with ALL listeners BEFORE subscribing
-  onlineChannel = sb.channel('game:' + code, {
-    config: { broadcast: { self: false } }
+  onlineChannel = sb.channel('malachi-game-' + code, {
+    config: { broadcast: { self: true, ack: false } }
   });
 
-  onlineChannel
-    .on('broadcast', { event: 'ready' }, ({ payload }) => {
-      // Host confirmed — game starts
-      onlineOpponentName = payload.name || 'Opponent';
-      startOnlineGame('black');
-    })
-    .on('broadcast', { event: 'move' }, ({ payload }) => {
-      receiveOnlineMove(payload.move);
-    })
-    .on('broadcast', { event: 'resign' }, () => {
-      handleOpponentResign();
-    })
-    .subscribe(async (status) => {
-      console.log('[Malachi] Joiner channel status:', status);
-      if (status === 'SUBSCRIBED') {
-        // Now that WE are subscribed, announce our presence to the host
-        await onlineChannel.send({
-          type: 'broadcast', event: 'join',
-          payload: { name: currentUserName || 'Player' }
-        });
-      }
-    });
+  onlineChannel.on('broadcast', { event: 'ready' }, ({ payload }) => {
+    console.log('[JOINER] ready received from', payload.name);
+    onlineOpponentName = payload.name || 'Opponent';
+    startOnlineGame('black');
+  });
+
+  onlineChannel.on('broadcast', { event: 'move' }, ({ payload }) => {
+    console.log('[JOINER] move received:', payload.move);
+    receiveOnlineMove(payload.move);
+  });
+
+  onlineChannel.on('broadcast', { event: 'resign' }, () => handleOpponentResign());
+
+  onlineChannel.subscribe(async (status, err) => {
+    console.log('[JOINER] channel status:', status, err || '');
+    if (status === 'SUBSCRIBED') {
+      console.log('[JOINER] subscribed — sending join event');
+      const res = await onlineChannel.send({
+        type: 'broadcast', event: 'join',
+        payload: { name: currentUserName || 'Player' }
+      });
+      console.log('[JOINER] join send result:', res);
+    }
+  });
 }
 
 // ── Start the online game (called on both sides after handshake) ──
@@ -724,11 +720,13 @@ function receiveOnlineMove(uci) {
 
 // ── Send our move to opponent ──
 async function sendOnlineMove(uci) {
-  if (!onlineChannel) return;
-  await onlineChannel.send({
+  if (!onlineChannel) { console.error('[MOVE] no channel!'); return; }
+  console.log('[MOVE] sending:', uci);
+  const res = await onlineChannel.send({
     type: 'broadcast', event: 'move',
     payload: { move: uci }
   });
+  console.log('[MOVE] send result:', res);
 }
 
 // ── Update UI based on online turn ──
@@ -782,7 +780,10 @@ const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
 const { createClient } = supabase.createClient ? supabase : window.supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, storageKey: 'malachi-auth' }
+  auth: { persistSession: true, storageKey: 'malachi-auth' },
+  realtime: {
+    params: { eventsPerSecond: 10 }
+  }
 });
 
 // ── TRACKING ──
