@@ -102,7 +102,7 @@
       aspect-ratio:1;
       display:flex; align-items:center; justify-content:center;
       position:relative;
-      cursor:none;
+      cursor:pointer;
       transition:background 0.15s;
     }
     .square.light { background:var(--sq-light); }
@@ -123,6 +123,7 @@
       filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
     }
     .square:hover .piece { transform:scale(1.1); }
+    .piece { pointer-events: none; user-select: none; }
     .piece.white-piece { filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6)) brightness(1.1); }
     .piece.black-piece { filter:drop-shadow(0 2px 6px rgba(0,0,0,0.8)); }
 
