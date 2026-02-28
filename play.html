@@ -576,7 +576,7 @@ function genCode() {
   return Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
 }
 
-// ── Create online game ──
+// ── Create online game (HOST = White) ──
 async function createOnlineGame() {
   const code = genCode();
   onlineGameCode = code;
@@ -591,14 +591,21 @@ async function createOnlineGame() {
   document.getElementById('waitingBadge').style.display = 'flex';
   document.getElementById('createIcon').textContent = '⏳';
 
-  // Subscribe to Supabase Realtime channel for this game code
-  onlineChannel = sb.channel('game:' + code, { config: { broadcast: { self: false } } });
+  // Build channel with ALL listeners BEFORE subscribing
+  onlineChannel = sb.channel('game:' + code, {
+    config: { broadcast: { self: false } }
+  });
 
   onlineChannel
-    .on('broadcast', { event: 'join' }, ({ payload }) => {
-      // Opponent joined!
+    .on('broadcast', { event: 'join' }, async ({ payload }) => {
+      // Joiner connected — save their name, send ready signal, start game
       onlineOpponentName = payload.name || 'Opponent';
-      startOnlineGame(code, 'white');
+      // Confirm to joiner that we're ready and send our name
+      await onlineChannel.send({
+        type: 'broadcast', event: 'ready',
+        payload: { name: currentUserName || 'Host' }
+      });
+      startOnlineGame('white');
     })
     .on('broadcast', { event: 'move' }, ({ payload }) => {
       receiveOnlineMove(payload.move);
@@ -606,10 +613,12 @@ async function createOnlineGame() {
     .on('broadcast', { event: 'resign' }, () => {
       handleOpponentResign();
     })
-    .subscribe();
+    .subscribe((status) => {
+      console.log('[Malachi] Host channel status:', status);
+    });
 }
 
-// ── Join online game ──
+// ── Join online game (JOINER = Black) ──
 async function joinOnlineGame() {
   const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
   if (code.length !== 4) {
@@ -622,10 +631,25 @@ async function joinOnlineGame() {
   myColor = 'black';
   gameMode = 'online';
 
-  // Subscribe and broadcast join
-  onlineChannel = sb.channel('game:' + code, { config: { broadcast: { self: false } } });
+  // Show joining state
+  document.getElementById('lobbyJoin').innerHTML = `
+    <div class="lobby-state-icon" style="animation:lobbyPulse 1s infinite">🔗</div>
+    <div class="lobby-status">Connecting to game ${code}…</div>
+    <div class="lobby-substatus">Establishing connection with host.</div>
+    <div class="lobby-dots" style="margin-top:16px"><span></span><span></span><span></span></div>
+  `;
+
+  // Build channel with ALL listeners BEFORE subscribing
+  onlineChannel = sb.channel('game:' + code, {
+    config: { broadcast: { self: false } }
+  });
 
   onlineChannel
+    .on('broadcast', { event: 'ready' }, ({ payload }) => {
+      // Host confirmed — game starts
+      onlineOpponentName = payload.name || 'Opponent';
+      startOnlineGame('black');
+    })
     .on('broadcast', { event: 'move' }, ({ payload }) => {
       receiveOnlineMove(payload.move);
     })
@@ -633,30 +657,27 @@ async function joinOnlineGame() {
       handleOpponentResign();
     })
     .subscribe(async (status) => {
+      console.log('[Malachi] Joiner channel status:', status);
       if (status === 'SUBSCRIBED') {
-        // Tell the host we joined
+        // Now that WE are subscribed, announce our presence to the host
         await onlineChannel.send({
           type: 'broadcast', event: 'join',
-          payload: { name: currentUserName || 'Opponent' }
+          payload: { name: currentUserName || 'Player' }
         });
-        startOnlineGame(code, 'black');
       }
     });
 }
 
-// ── Start the online game ──
-function startOnlineGame(code, color) {
+// ── Start the online game (called on both sides after handshake) ──
+function startOnlineGame(color) {
   myColor = color;
-  isMyTurn = (color === 'white'); // white moves first
+  isMyTurn = (color === 'white');
 
-  // Hide lobby, show game
   document.getElementById('lobbyScreen').style.display = 'none';
 
-  // Reset game
   game = new Chess();
   selectedSquare = null;
 
-  // Update player labels
   document.getElementById('playerName').textContent = currentUserName || 'You';
   document.getElementById('opponentName').textContent = onlineOpponentName;
 
@@ -668,19 +689,15 @@ function startOnlineGame(code, color) {
     document.getElementById('opponentColor').textContent = 'White ♙';
   }
 
-  // Update thinking overlay text
-  document.querySelector('.thinking-text').textContent = onlineOpponentName + ' is thinking...';
+  document.querySelector('.thinking-text').textContent = onlineOpponentName + ' is thinking…';
 
-  // Update status
   document.getElementById('statusBanner').textContent = color === 'white'
-    ? '⚔️ You play White — make your first move!'
-    : '⏳ Waiting for White to move...';
+    ? '⚔️ You play White — make your move!'
+    : '⏳ Waiting for White to move…';
 
-  renderBoard();
   buildLabels();
+  renderBoard();
   updatePanels();
-
-  // Show/hide thinking overlay based on whose turn
   updateOnlineTurnUI();
 }
 
