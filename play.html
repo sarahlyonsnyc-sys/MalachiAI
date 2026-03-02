@@ -20,8 +20,8 @@
       --cream:  #f5f0e8;
       --muted:  #6b6b6b;
       --white:  #ffffff;
-      --sq-light: #e8d5a3;
-      --sq-dark:  #8b6914;
+      --sq-light: #f0d9b5;
+      --sq-dark:  #b58863;
       --sq-sel:   rgba(201,168,76,0.6);
       --sq-move:  rgba(201,168,76,0.35);
       --sq-check: rgba(220,50,50,0.5);
@@ -82,50 +82,68 @@
 
     /* CENTER - board */
     .board-area { display:flex; align-items:center; justify-content:center; padding:40px; position:relative; }
-    .board-wrapper { position:relative; }
+    /* Board wrapper with integrated coordinate labels */
+    .board-wrapper { position:relative; display:inline-block; }
+    .board-with-coords { display:inline-grid; grid-template-columns:18px 1fr; grid-template-rows:1fr 18px; }
+    .board-ranks { display:flex; flex-direction:column; justify-content:space-around; padding:2px 0; }
+    .board-files { display:flex; justify-content:space-around; padding:0 2px; }
+    .board-label {
+      font-family:'DM Mono',monospace; font-size:10px;
+      color:rgba(0,0,0,0.5); text-align:center; line-height:1;
+    }
+    .square.dark .board-label-sq  { color:var(--sq-light); }
+    .square.light .board-label-sq { color:var(--sq-dark); }
 
-    /* rank/file labels */
-    .board-labels-files { display:flex; justify-content:space-around; padding:0 0 6px 32px; }
-    .board-labels-ranks { position:absolute; left:0; top:32px; display:flex; flex-direction:column; height:calc(100% - 38px); justify-content:space-around; }
-    .board-label { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); width:24px; text-align:center; }
+    /* Coordinate labels drawn inside corner squares */
+    .coord-file, .coord-rank {
+      position:absolute; font-family:'DM Mono',monospace;
+      font-size:10px; font-weight:600; line-height:1;
+      user-select:none; pointer-events:none;
+    }
+    .coord-file { bottom:2px; right:3px; }
+    .coord-rank { top:2px; left:3px; }
 
     #chessboard {
       display:grid;
       grid-template-columns:repeat(8,1fr);
       width:min(560px, calc(100vw - 560px));
       height:min(560px, calc(100vw - 560px));
-      border:2px solid var(--gold);
-      box-shadow:0 0 60px rgba(201,168,76,0.15), 0 0 0 1px rgba(201,168,76,0.1);
-      position:relative;
+      border:3px solid #362c1e;
+      box-shadow:0 8px 32px rgba(0,0,0,0.5);
     }
     .square {
       aspect-ratio:1;
       display:flex; align-items:center; justify-content:center;
       position:relative;
       cursor:pointer;
-      transition:background 0.15s;
     }
-    .square.light { background:var(--sq-light); }
-    .square.dark  { background:var(--sq-dark); }
-    .square.selected { background:var(--sq-sel) !important; }
-    .square.possible-move::after { content:''; position:absolute; width:30%; height:30%; background:rgba(201,168,76,0.6); border-radius:50%; }
-    .square.possible-capture { box-shadow:inset 0 0 0 4px rgba(201,168,76,0.7); }
-    .square.in-check { background:var(--sq-check) !important; }
-    .square.last-move { background:rgba(201,168,76,0.2) !important; }
+    .square.light { background:#f0d9b5; }
+    .square.dark  { background:#b58863; }
+    .square.selected { background:rgba(20,85,30,0.5) !important; }
+    .square.possible-move::after {
+      content:''; position:absolute;
+      width:32%; height:32%;
+      background:rgba(0,0,0,0.2);
+      border-radius:50%;
+      pointer-events:none;
+    }
+    .square.possible-capture::before {
+      content:''; position:absolute; inset:0;
+      border-radius:50%;
+      box-shadow:inset 0 0 0 5px rgba(0,0,0,0.2);
+      pointer-events:none;
+    }
+    .square.in-check { background:rgba(220,20,20,0.65) !important; }
+    .square.last-move { background:rgba(20,85,30,0.4) !important; }
 
     .piece {
-      font-size:clamp(28px, 4vw, 44px);
-      line-height:1;
-      user-select:none;
-      position:relative;
-      z-index:2;
-      transition:transform 0.1s;
-      filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+      width:100%; height:100%;
+      display:flex; align-items:center; justify-content:center;
+      pointer-events:none; user-select:none;
+      transition:transform 0.08s ease;
     }
-    .square:hover .piece { transform:scale(1.1); }
-    .piece { pointer-events: none; user-select: none; }
-    .piece.white-piece { filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6)) brightness(1.1); }
-    .piece.black-piece { filter:drop-shadow(0 2px 6px rgba(0,0,0,0.8)); }
+    .piece svg { width:80%; height:80%; display:block; }
+    .square:hover .piece { transform:scale(1.06); }
 
     /* AI thinking overlay */
     .thinking-overlay {
@@ -466,9 +484,9 @@
   <!-- CENTER BOARD -->
   <div class="board-area">
     <div class="board-wrapper">
-      <div class="board-labels-files" id="fileLabels"></div>
+      <div id="fileLabels" style="display:none"></div>
       <div style="display:flex; gap:0;">
-        <div class="board-labels-ranks" id="rankLabels"></div>
+        <div id="rankLabels" style="display:none"></div>
         <div style="position:relative;">
           <div id="chessboard"></div>
           <div class="thinking-overlay" id="thinkingOverlay">
@@ -1059,6 +1077,24 @@ function renderBoard() {
         svgEl.innerHTML = PIECE_SVG[piece.color + piece.type];
         p.appendChild(svgEl);
         sq.appendChild(p);
+      }
+
+      // Draw coordinates inside corner squares (Lichess style)
+      const isLastRank = (ri === 7);
+      const isFirstFile = (fi === 0);
+      if (isFirstFile) {
+        const rankLabel = document.createElement('span');
+        rankLabel.className = 'coord-rank';
+        rankLabel.textContent = rank;
+        rankLabel.style.color = isLight ? '#b58863' : '#f0d9b5';
+        sq.appendChild(rankLabel);
+      }
+      if (isLastRank) {
+        const fileLabel = document.createElement('span');
+        fileLabel.className = 'coord-file';
+        fileLabel.textContent = file;
+        fileLabel.style.color = isLight ? '#b58863' : '#f0d9b5';
+        sq.appendChild(fileLabel);
       }
 
       sq.addEventListener('click', () => onSquareClick(sqName));
