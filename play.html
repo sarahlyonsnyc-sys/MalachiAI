@@ -134,7 +134,7 @@
       pointer-events:none;
     }
     .square.in-check { background:rgba(220,20,20,0.65) !important; }
-    .square.last-move { background:rgba(20,85,30,0.4) !important; }
+    .square.last-move { background:rgba(201,168,76,0.35) !important; }
 
     .piece {
       width:100%; height:100%;
@@ -1169,6 +1169,10 @@ function makePlayerMove(from, to) {
   const move = game.move({ from, to, promotion });
   if (!move) { clearSelection(); return; }
 
+  if (move.captured) SFX.play('capture');
+  else SFX.play('move');
+  if (game.in_check()) SFX.play('check');
+
   lastMove = { from, to };
   clearSelection();
   addMoveToHistory(move, move.color);
@@ -1201,6 +1205,9 @@ function aiMove() {
     const best = getBestMove(cfg.depth, cfg.mistakeRate, cfg.randomness);
     if (best) {
       const move = game.move(best);
+      if (move.captured) SFX.play('capture');
+      else SFX.play('move');
+      if (game.in_check()) SFX.play('check');
       lastMove = { from: move.from, to: move.to };
       addMoveToHistory(move, 'b');
     }
