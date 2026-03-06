@@ -1566,14 +1566,16 @@ const DIFFICULTY_ELO = {
 };
 
 function calcEloChange(playerRating, opponentRating, won) {
-  const K = 32;
+  // Higher K-factor for new/low-rated players so rating finds true level faster
+  // K=40 below 1000, K=32 for 1000-1500, K=24 above 1500
+  const K = playerRating < 1000 ? 40 : playerRating < 1500 ? 32 : 24;
   const expected = 1 / (1 + Math.pow(10, (opponentRating - playerRating) / 400));
   const score = won ? 1 : 0;
   return Math.round(K * (score - expected));
 }
 
 let currentUserId = null;
-let currentChessRating = 1200; // default starting rating
+let currentChessRating = 800; // default starting rating — climbs as you play
 
 // Check login and load rating
 (async () => {
@@ -1585,7 +1587,7 @@ let currentChessRating = 1200; // default starting rating
       // Show profile link + rating badge
       document.getElementById('profileLink').style.display = 'inline';
       document.getElementById('ratingBadge').style.display = 'flex';
-      currentChessRating = profile.chess_rating || 1200;
+      currentChessRating = profile.chess_rating || 800;
       document.getElementById('ratingBadgeVal').textContent = currentChessRating;
 
       // Add username + sign out to nav
