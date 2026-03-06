@@ -773,6 +773,7 @@ function onPuzzleSolved() {
   addHistory(currentPuzzle?.rating || '?', true);
   updateStats();
   window._savePuzzleProgress?.(true, currentPuzzle, hintUsed);
+  console.log('[Puzzle] Saving solved:', currentPuzzle?.id);
 
   const overlay = document.getElementById('feedbackOverlay');
   overlay.className = 'feedback-overlay show success';
@@ -790,6 +791,7 @@ function onPuzzleFailed(from, to) {
   addHistory(currentPuzzle?.rating || '?', false);
   updateStats();
   window._savePuzzleProgress?.(false, currentPuzzle, false);
+  console.log('[Puzzle] Saving failed:', currentPuzzle?.id);
 
   const overlay = document.getElementById('feedbackOverlay');
   overlay.className = 'feedback-overlay show fail';
@@ -943,7 +945,14 @@ updateStats();
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
   // ── PUZZLE PROGRESS SAVE ──
   window._savePuzzleProgress = async function(solved, puzzle, hintWasUsed) {
-    if (!window._puzzleSB || !window._puzzleSession) return;
+    // Wait up to 5s for session to be ready
+    let w = 0;
+    while ((!window._puzzleSB || !window._puzzleSession) && w < 5000) {
+      await new Promise(r => setTimeout(r, 150)); w += 150;
+    }
+    if (!window._puzzleSB || !window._puzzleSession) {
+      console.warn('Puzzle save: no session after wait'); return;
+    }
     try {
       const { data: prog } = await window._puzzleSB.from('progress')
         .select('quiz_scores').eq('user_id', window._puzzleSession.user.id).single();
