@@ -546,109 +546,179 @@ let answerGiven = false;
 
 const MODULES = [
 
-  // ── MODULE 1: WORKING MEMORY (Board Recall) ──
+  // ── MODULE 1: WORKING MEMORY ──
   {
     domain: 'working_memory',
     title: 'Board Recall',
-    intro: { icon: '🧠', title: 'Board Recall', desc: 'You\'ll see a chess position for 5 seconds. Then pieces vanish. Answer from memory. Don\'t worry if you don\'t know chess — focus on where the pieces are, not what they\'re called.' },
+    intro: { icon: '🧠', title: 'Board Recall', desc: 'Study each position for 5 seconds — then pieces vanish. Answer from memory. As the module progresses, positions get more complex. Focus on what you see, not chess knowledge.' },
     questions: [
       {
         type: 'recall',
         showFen: '8/8/8/4P3/3p4/8/8/8 w - - 0 1',
         question: 'Where was the white pawn (♙)?',
         options: ['e5', 'd5', 'e4', 'd4'],
-        answer: 'e5',
-        showTime: 5
+        answer: 'e5', showTime: 5
       },
       {
         type: 'recall',
         showFen: '8/8/3r4/8/8/5N2/8/8 w - - 0 1',
         question: 'Where was the black rook (♜)?',
         options: ['d6', 'e6', 'd5', 'f3'],
-        answer: 'd6',
-        showTime: 5
+        answer: 'd6', showTime: 5
       },
       {
         type: 'recall',
         showFen: '8/2p5/8/8/8/4B3/8/8 w - - 0 1',
         question: 'Where was the white bishop (♗)?',
         options: ['e4', 'e3', 'f4', 'c7'],
-        answer: 'e3',
-        showTime: 5
+        answer: 'e3', showTime: 5
       },
       {
         type: 'recall',
-        showFen: '8/8/8/2q5/8/8/3R4/8 w - - 0 1',
-        question: 'Where was the black queen (♛)?',
-        options: ['c5', 'd5', 'c4', 'd3'],
-        answer: 'c5',
-        showTime: 5
-      },
-      {
-        type: 'recall',
-        showFen: '8/8/1n6/8/8/6B1/8/8 w - - 0 1',
+        showFen: '8/8/1n3b2/8/8/3R4/8/8 w - - 0 1',
         question: 'Where was the black knight (♞)?',
-        options: ['b6', 'c6', 'b5', 'g3'],
-        answer: 'b6',
-        showTime: 5
+        options: ['b6', 'f6', 'b5', 'd3'],
+        answer: 'b6', showTime: 5
+      },
+      {
+        type: 'recall',
+        showFen: '8/8/1n3b2/8/8/3R4/8/8 w - - 0 1',
+        question: 'Where was the white rook (♖)?',
+        options: ['d3', 'd4', 'e3', 'c3'],
+        answer: 'd3', showTime: 5
+      },
+      {
+        type: 'recall',
+        showFen: '8/3q4/8/2N5/8/5p2/8/8 w - - 0 1',
+        question: 'Where was the black queen (♛)?',
+        options: ['d7', 'e7', 'd6', 'c7'],
+        answer: 'd7', showTime: 5
+      },
+      {
+        type: 'recall',
+        showFen: '8/3q4/8/2N5/8/5p2/8/8 w - - 0 1',
+        question: 'Where was the white knight (♘)?',
+        options: ['c6', 'c5', 'd5', 'b5'],
+        answer: 'c5', showTime: 5
+      },
+      {
+        type: 'recall',
+        showFen: 'r3k2r/8/3Q4/8/8/8/8/R3K2R w KQkq - 0 1',
+        question: 'Where was the white queen (♕)?',
+        options: ['d5', 'd6', 'e6', 'c6'],
+        answer: 'd6', showTime: 6
+      },
+      {
+        type: 'recall',
+        showFen: 'r3k2r/8/3Q4/8/8/8/8/R3K2R w KQkq - 0 1',
+        question: 'How many rooks were on the board in total?',
+        options: ['2', '3', '4', '1'],
+        answer: '4', showTime: 6
+      },
+      {
+        type: 'recall',
+        showFen: '2r1k3/3n4/8/4B3/3P4/8/5Q2/4K3 w - - 0 1',
+        question: 'Where was the black knight (♞)?',
+        options: ['d7', 'e7', 'c7', 'd6'],
+        answer: 'd7', showTime: 6
       },
     ]
   },
 
-  // ── MODULE 2: PATTERN RECOGNITION (harder — real positions, tactical themes) ──
+  // ── MODULE 2: PATTERN RECOGNITION ──
   {
     domain: 'pattern_recognition',
     title: 'Board Patterns',
-    intro: { icon: '⚡', title: 'Pattern Recognition', desc: 'Study each position and answer quickly. These are real chess structures — you have 10 seconds. This measures how fast your brain identifies patterns under pressure.' },
+    intro: { icon: '⚡', title: 'Pattern Recognition', desc: 'Study each position — you have 10 seconds. These are real chess structures pulled from master games. Identify patterns as fast as possible. Questions get harder as you go.' },
     questions: [
       {
         type: 'pattern',
         fen: 'r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 6 6',
-        question: 'Both sides have their bishops on c4/c5 pointing at each other. What does this position look like?',
-        options: ['Symmetrical — both sides mirrored', 'White is attacking, Black is defending', 'Black has more pieces developed', 'White has more space'],
-        answer: 'Symmetrical — both sides mirrored',
+        question: 'Look at the bishops on c4 and c5. What is their relationship?',
+        options: ['They are on the same diagonal', 'They mirror each other across the center', 'One threatens the other', 'They are on opposite color squares'],
+        answer: 'They mirror each other across the center',
+        showTime: 10
+      },
+      {
+        type: 'pattern',
+        fen: 'r1bqkb1r/pp3ppp/2np1n2/2p1p3/2B1P3/2NP1N2/PPP2PPP/R1BQK2R w KQkq - 0 7',
+        question: 'White has pawns on c3, d3, and e4. What describes this pawn structure?',
+        options: ['An open center', 'A solid pawn chain pointing at Black', 'Isolated pawns', 'A pawn majority on the queenside'],
+        answer: 'A solid pawn chain pointing at Black',
         showTime: 10
       },
       {
         type: 'pattern',
         fen: '6k1/5ppp/8/8/8/8/5PPP/6K1 w - - 0 1',
-        question: 'Look at the pawn structure. Which statement is true?',
-        options: ['White has more pawns', 'Both sides have identical pawn structure', 'Black pawns are more advanced', 'White pawns are on rank 3, Black on rank 7'],
-        answer: 'Both sides have identical pawn structure',
+        question: 'How many total pawns are on the board and what is the structure?',
+        options: ['6 pawns, identical structure for both sides', '8 pawns, White has more', '6 pawns, Black has more advanced pawns', '4 pawns, symmetrical'],
+        answer: '6 pawns, identical structure for both sides',
         showTime: 10
       },
       {
         type: 'pattern',
         fen: 'r3k2r/ppp2ppp/2n5/3qp3/3P4/2NB1N2/PPP2PPP/R2QK2R w KQkq - 0 1',
-        question: 'The queens are on d1 and d5. How many White pieces are between them on the d-file?',
-        options: ['None', 'One — a pawn only', 'Two — a pawn and a bishop', 'Three pieces'],
-        answer: 'Two — a pawn and a bishop',
+        question: 'The queens face each other. What piece is directly between them on the d-file?',
+        options: ['A pawn on d4', 'Nothing — d-file is open between them', 'A knight on d3', 'A bishop on d3'],
+        answer: 'A pawn on d4',
         showTime: 10
+      },
+      {
+        type: 'pattern',
+        fen: '2rq1rk1/pp3ppp/2n1pn2/3p4/3P1B2/2NBP3/PP3PPP/R2QR1K1 w - - 0 1',
+        question: 'White has a bishop on f4 and d3. What color squares do BOTH bishops cover?',
+        options: ['Both on light squares', 'One light, one dark — they cover both colors', 'Both on dark squares', 'They are on the same diagonal'],
+        answer: 'One light, one dark — they cover both colors',
+        showTime: 12
+      },
+      {
+        type: 'pattern',
+        fen: 'r2qk2r/pp1n1ppp/2p1pn2/3p4/2PP4/2NBPN2/PP3PPP/R2QK2R w KQkq - 0 1',
+        question: 'Which player has more pieces developed from their starting squares?',
+        options: ['White — more minor pieces active', 'Equal — same number developed', 'Black — more minor pieces active', 'Cannot tell from this position'],
+        answer: 'White — more minor pieces active',
+        showTime: 12
       },
       {
         type: 'pattern',
         fen: '8/pp4pp/2p1kp2/8/8/2P1KP2/PP4PP/8 w - - 0 1',
-        question: 'How many pawns does each side have?',
+        question: 'Count every pawn on the board. How many does each side have?',
         options: ['White 5, Black 6', 'White 6, Black 6', 'White 6, Black 5', 'White 5, Black 5'],
         answer: 'White 6, Black 6',
-        showTime: 10
+        showTime: 12
       },
       {
         type: 'pattern',
         fen: 'r1b1kb1r/ppppqppp/2n2n2/4p3/2B1P3/2N2N2/PPPPQPPP/R1B1K2R w KQkq - 6 6',
-        question: 'Both queens are on the e-file. Where exactly are they?',
-        options: ['Both on e1 and e8', 'White on e2, Black on e7', 'White on e1, Black on e7', 'White on e4, Black on e5'],
+        question: 'Both queens are on the e-file. What are their exact squares?',
+        options: ['Both on e4 and e5', 'White on e2, Black on e7', 'White on e1, Black on e8', 'White on e3, Black on e6'],
         answer: 'White on e2, Black on e7',
         showTime: 10
+      },
+      {
+        type: 'pattern',
+        fen: '8/3p1p2/3P1P2/8/8/3p1p2/3P1P2/8 w - - 0 1',
+        question: 'Looking at the board, how many pawns are on the d-file total?',
+        options: ['1', '2', '3', '4'],
+        answer: '4',
+        showTime: 12
+      },
+      {
+        type: 'pattern',
+        fen: 'r1bqkbnr/pp2pppp/2n5/2pp4/3PP3/2N2N2/PPP2PPP/R1BQKB1R w KQkq - 0 5',
+        question: 'Both sides have pawns clashing in the center. What is the tension on d4/d5 and e4/e5?',
+        options: ['White pawns are more advanced', 'Black has more central pawns', 'Both sides have equal central tension', 'There is no central tension'],
+        answer: 'Both sides have equal central tension',
+        showTime: 12
       },
     ]
   },
 
-  // ── MODULE 3: PROCESSING SPEED — board shown, highlight the piece ──
+  // ── MODULE 3: PROCESSING SPEED ──
   {
     domain: 'processing_speed',
     title: 'Quick Decisions',
-    intro: { icon: '🎯', title: 'Processing Speed', desc: 'A piece is highlighted on the board. Answer YES or NO — can it legally reach the target square in one move? Be fast — you have 6 seconds.' },
+    intro: { icon: '🎯', title: 'Processing Speed', desc: 'A piece is on the board with squares highlighted. Answer YES or NO — can the piece reach the target in one legal move? Speed and accuracy both count. You have 6 seconds.' },
     questions: [
       {
         type: 'yesno',
@@ -694,17 +764,45 @@ const MODULES = [
       },
       {
         type: 'yesno',
-        fen: '8/8/8/8/8/8/8/1N6 w - - 0 1',
-        question: 'Knight on b1 — can it reach c3 in one move?',
+        fen: '8/8/8/8/4N3/8/8/8 w - - 0 1',
+        question: 'Knight on e4 — can it reach d6 in one move?',
         answer: true,
-        highlights: ['b1', 'c3']
+        highlights: ['e4', 'd6']
       },
       {
         type: 'yesno',
         fen: '8/8/8/8/8/8/8/3Q4 w - - 0 1',
-        question: 'Queen on d1 — can it reach d8 in one move?',
+        question: 'Queen on d1 — can it reach g4 in one move?',
         answer: true,
-        highlights: ['d1', 'd8']
+        highlights: ['d1', 'g4']
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/4N3/8/8/8 w - - 0 1',
+        question: 'Knight on e4 — can it reach e6 in one move?',
+        answer: false,
+        highlights: ['e4', 'e6']
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/8/5B2/8/8 w - - 0 1',
+        question: 'Bishop on f3 — can it reach b7 in one move?',
+        answer: true,
+        highlights: ['f3', 'b7']
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/8/8/8/3K4 w - - 0 1',
+        question: 'King on d1 — can it reach d3 in one move?',
+        answer: false,
+        highlights: ['d1', 'd3']
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/8/8/8/3K4 w - - 0 1',
+        question: 'King on d1 — can it reach e2 in one move?',
+        answer: true,
+        highlights: ['d1', 'e2']
       },
     ],
     speedBonus: true
@@ -714,58 +812,85 @@ const MODULES = [
   {
     domain: 'inhibitory_control',
     title: 'The Better Move',
-    intro: { icon: '🔒', title: 'Inhibitory Control', desc: 'In each position, one move looks obvious. Your job is to decide — is the obvious move actually the RIGHT move? This tests your ability to pause and think before acting.' },
+    intro: { icon: '🔒', title: 'Inhibitory Control', desc: 'One move looks obvious in each position. Is it actually right? Resist your first impulse and think it through. Positions get trickier as you go.' },
     questions: [
       {
         type: 'inhibit',
         fen: '4k3/8/8/8/8/8/4Q3/4K3 w - - 0 1',
-        question: 'White queen is on e2. The obvious move is Qe8+ (check). Is it the BEST move?',
-        options: ['Yes — take the check', 'No — there\'s something better', 'Yes — it wins immediately', 'No — it\'s actually illegal'],
-        answer: 'Yes — it wins immediately',
-        explanation: 'Qe8 IS checkmate here — the obvious move is correct. Sometimes the first instinct is right.',
-        showTime: 12
+        question: 'White queen is on e2. The obvious move is Qe8+. Is it the BEST move?',
+        options: ['Yes — check is always good', 'No — queen will be captured', 'Yes — it is checkmate', 'No — king can escape easily'],
+        answer: 'Yes — it is checkmate',
+        explanation: 'Qe8 is checkmate — the king has no escape. Sometimes the obvious move IS the right move.',
+        showTime: 14
       },
       {
         type: 'inhibit',
         fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4',
-        question: 'White can capture the pawn on e5 with the knight. Should White take it?',
-        options: ['Yes — free pawn, take it', 'No — it loses a piece after Nxe5 Nxe5 Bxe5', 'Yes — it gains material', 'No — pawns aren\'t worth taking'],
-        answer: 'No — it loses a piece after Nxe5 Nxe5 Bxe5',
-        explanation: 'The "free" pawn is a trap. Taking it leads to losing your own bishop — a classic inhibitory control test.',
-        showTime: 12
+        question: 'White can capture the pawn on e5 with Nxe5. Is this a good idea?',
+        options: ['Yes — winning a free pawn', 'No — Black plays Nxe5 then d4 winning the bishop', 'Yes — material is material', 'No — knights should not go to the edge'],
+        answer: 'No — Black plays Nxe5 then d4 winning the bishop',
+        explanation: 'After Nxe5 Nxe5, the bishop on c4 is hanging AND attacked by d4. White loses a piece.',
+        showTime: 15
       },
       {
         type: 'inhibit',
         fen: '8/8/8/4k3/8/4K3/8/8 w - - 0 1',
-        question: 'Kings are on e3 and e5 facing each other. Is it legal for White king to move to e4?',
-        options: ['Yes — advance the king', 'No — kings can\'t move next to each other', 'Yes — it\'s a good move', 'No — it\'s not White\'s turn'],
-        answer: 'No — kings can\'t move next to each other',
-        explanation: 'Kings can never occupy adjacent squares — moving to e4 would put White in check from the black king on e5.',
-        showTime: 12
+        question: 'Kings are on e3 and e5. The obvious idea is for White to advance to e4 to gain space. Why is e4 illegal?',
+        options: ['Wrong — e4 is legal and good', 'Kings cannot pass through each other', 'Kings cannot occupy adjacent squares — e4 is adjacent to e5', 'It is not White\'s turn'],
+        answer: 'Kings cannot occupy adjacent squares — e4 is adjacent to e5',
+        explanation: 'e4 would place the White king directly next to the Black king on e5 — kings can never be adjacent.',
+        showTime: 14
       },
       {
         type: 'inhibit',
-        fen: 'r3k3/8/8/8/8/8/8/R3K3 w Q - 0 1',
-        question: 'White has a rook and king. The obvious move is to advance the rook up the board. Is there a better idea?',
-        options: ['No — advance the rook', 'Yes — castle queenside first to activate the rook', 'No — the rook is already active', 'Yes — move the king instead'],
-        answer: 'Yes — castle queenside first to activate the rook',
-        explanation: 'Castling connects the rook to the center more efficiently than moving it one square at a time.',
-        showTime: 12
+        fen: '5rk1/pp3ppp/8/3q4/8/8/PP3PPP/3QR1K1 w - - 0 1',
+        question: 'White queen on d1 can take the Black queen on d5 immediately. Should White do it?',
+        options: ['Yes — always trade queens when ahead', 'Yes — removing the queen wins', 'No — after Qxd5 Black plays Rxe1 winning the rook', 'No — queens should not be traded early'],
+        answer: 'No — after Qxd5 Black plays Rxe1 winning the rook',
+        explanation: 'The "free" queen capture leaves the e1 rook hanging. Always check what your opponent does AFTER your move.',
+        showTime: 15
+      },
+      {
+        type: 'inhibit',
+        fen: 'r1bqk2r/pppp1ppp/2n2n2/4p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 4 5',
+        question: 'It\'s move 5. White\'s king is still in the center on e1. What should White prioritize?',
+        options: ['Attack immediately with d4', 'Castle to safety before attacking', 'Develop another piece first', 'Push the a-pawn for space'],
+        answer: 'Castle to safety before attacking',
+        explanation: 'A king in the center in the opening is vulnerable. Castle first, then launch your attack.',
+        showTime: 16
+      },
+      {
+        type: 'inhibit',
+        fen: '8/8/4k3/4p3/4P3/4K3/8/8 w - - 0 1',
+        question: 'Both kings face each other on the e-file with pawns blocking. White king is on e3, Black on e6. Is Ke4 a good move for White?',
+        options: ['Yes — advance toward the enemy pawn', 'No — Ke4 walks into opposition and loses', 'Yes — king centralization is key', 'No — the pawn is poisoned'],
+        answer: 'No — Ke4 walks into opposition and loses',
+        explanation: 'Ke4 gives Black the opposition with Ke6→... After Ke4 the pawns are locked and Black holds easily. White needs a different plan.',
+        showTime: 18
+      },
+      {
+        type: 'inhibit',
+        fen: 'r3kb1r/ppp2ppp/2n5/3qp3/3P4/2N5/PPP1BPPP/R2QK2R w KQkq - 0 1',
+        question: 'White plays d4xe5 capturing the pawn. Black queen on d5 can recapture. What is wrong with this plan for White?',
+        options: ['Nothing — winning a pawn is good', 'After dxe5 Qxe5 Black centralized queen is very strong', 'The pawn cannot actually capture that way', 'White should play Nxe5 instead'],
+        answer: 'After dxe5 Qxe5 Black centralized queen is very strong',
+        explanation: 'Trading your pawn just to give the opponent a dominant centralized queen is usually a bad deal.',
+        showTime: 18
       },
     ]
   },
 
-  // ── MODULE 5: FLUID REASONING — board shown for spatial questions ──
+  // ── MODULE 5: FLUID REASONING ──
   {
     domain: 'fluid_reasoning',
     title: 'Pure Logic',
-    intro: { icon: '💡', title: 'Fluid Reasoning', desc: 'Logic puzzles using chess pieces — figure out the rules from the board. This measures raw reasoning, not chess knowledge.' },
+    intro: { icon: '💡', title: 'Fluid Reasoning', desc: 'Multi-step logic problems using the chessboard. Each question builds on a rule — figure it out, then apply it. These get significantly harder. Take your time.' },
     questions: [
       {
         type: 'logic',
         fen: '8/8/8/8/8/8/8/R7 w - - 0 1',
         highlights: ['a1', 'b2', 'a8', 'h1', 'a3'],
-        question: 'A rook moves only in straight lines (horizontal or vertical). The rook is on a1. Which square can it NOT reach in one move?',
+        question: 'A rook moves only in straight lines (horizontal or vertical). The rook is on a1. Which highlighted square can it NOT reach in one move?',
         options: ['a8', 'h1', 'b2', 'a3'],
         answer: 'b2',
         explanation: 'b2 is diagonal from a1 — rooks cannot move diagonally.',
@@ -775,44 +900,85 @@ const MODULES = [
         type: 'logic',
         fen: '8/8/8/8/4N3/8/8/8 w - - 0 1',
         highlights: ['e4', 'd2', 'f2', 'c3', 'g3', 'c5', 'g5', 'd6', 'f6'],
-        question: 'A knight on e4 moves in an L-shape (2+1). The highlighted squares show all its possible moves. How many landing squares does it have?',
+        question: 'A knight on e4 moves in an L-shape. All reachable squares are highlighted. How many are there?',
         options: ['6', '7', '8', '4'],
         answer: '8',
         explanation: 'A knight in the center always has exactly 8 possible squares it can reach.',
-        showTime: 20
+        showTime: 18
       },
       {
         type: 'logic',
         fen: '8/8/8/8/3B4/8/8/8 w - - 0 1',
         highlights: ['d4', 'a1', 'g7', 'a7', 'h8', 'b2', 'f6', 'c3', 'e5', 'c5', 'e3', 'b6', 'f2'],
-        question: 'The bishop on d4 moves only diagonally. All its reachable squares are highlighted. Which color squares does it stay on?',
-        options: ['Only light squares', 'Only dark squares', 'Both colors', 'It depends on direction'],
-        answer: 'Only light squares',
-        explanation: 'Diagonals always stay on the same color — a bishop is permanently bound to the color it starts on.',
+        question: 'The bishop on d4 only moves diagonally. All reachable squares are highlighted. What do they have in common?',
+        options: ['They are all on light squares', 'They are all on dark squares', 'They alternate colors', 'They form an X pattern only'],
+        answer: 'They are all on light squares',
+        explanation: 'Diagonals always stay on the same color — this bishop is permanently bound to light squares.',
         showTime: 20
       },
       {
         type: 'logic',
         fen: '8/8/8/8/3Q4/8/8/8 w - - 0 1',
-        question: 'The queen combines rook and bishop moves. From d4 on an empty board, how many squares can it reach in one move?',
+        question: 'The queen combines rook and bishop. From d4 on an empty board, how many total squares can it reach in one move?',
         options: ['14', '21', '27', '32'],
         answer: '27',
-        explanation: 'Rook covers 14 squares + bishop covers 13 squares = 27 total from d4.',
-        showTime: 25
+        explanation: 'Rook lines cover 14 squares (7 in each of 2 axes) + bishop diagonals cover 13 squares = 27.',
+        showTime: 22
+      },
+      {
+        type: 'logic',
+        fen: '8/8/8/8/3N4/8/8/8 w - - 0 1',
+        highlights: ['d4'],
+        question: 'A knight on d4 has 8 possible moves in the center. If the knight moves to the corner square a1 instead, how many moves does it have from there?',
+        options: ['8', '4', '2', '6'],
+        answer: '2',
+        explanation: 'From a corner, a knight can only reach b3 and c2 — just 2 squares. Corner squares severely limit knights.',
+        showTime: 22
       },
       {
         type: 'logic',
         fen: '8/8/8/8/8/8/3P4/8 w - - 0 1',
         highlights: ['d2', 'd3', 'd4'],
-        question: 'This pawn on d2 can move forward 1 or 2 squares on its first move. If it moves to d4, can it then move back to d2?',
-        options: ['Yes — pieces can always move back', 'No — pawns can only move forward', 'Yes — but only diagonally', 'No — it would need to capture first'],
-        answer: 'No — pawns can only move forward',
-        explanation: 'Pawns are unique — they can never retreat. Once advanced, they keep going until they promote or are captured.',
+        question: 'This pawn on d2 can advance 1 or 2 squares on its first move. After it moves to d4, can it legally move back to d2 or d3?',
+        options: ['Yes — any piece can move back', 'No — pawns can never move backward', 'Yes — but only one square at a time', 'No — only after it promotes'],
+        answer: 'No — pawns can never move backward',
+        explanation: 'Pawns are the only chess piece with no ability to retreat. This makes pawn moves permanent.',
+        showTime: 16
+      },
+      {
+        type: 'logic',
+        fen: '8/8/8/8/8/8/8/4K3 w - - 0 1',
+        highlights: ['e1', 'd1', 'd2', 'e2', 'f2', 'f1'],
+        question: 'A king on e1 can move to any adjacent square (highlighted). How many squares can a king on e1 reach in one move?',
+        options: ['8', '5', '3', '6'],
+        answer: '5',
+        explanation: 'On e1 (back rank), the king cannot move below rank 1. It has 5 squares: d1, d2, e2, f2, f1.',
         showTime: 18
+      },
+      {
+        type: 'logic',
+        fen: '8/8/8/3p4/4P3/8/8/8 w - - 0 1',
+        highlights: ['e4', 'd5', 'd6', 'e5', 'f5'],
+        question: 'A pawn captures diagonally forward. The white pawn is on e4, the black pawn on d5. Which of these statements is true?',
+        options: ['The white pawn can capture the black pawn', 'The white pawn can move to d5 without capturing', 'The black pawn can capture the white pawn by moving forward', 'Neither pawn can interact with the other'],
+        answer: 'The white pawn can capture the black pawn',
+        explanation: 'e4 to d5 is one square diagonally forward for White — a legal capture. Pawns move straight but capture diagonally.',
+        showTime: 22
+      },
+      {
+        type: 'logic',
+        fen: '8/8/8/8/8/8/8/R6R w - - 0 1',
+        highlights: ['a1', 'h1', 'e1'],
+        question: 'Two rooks sit on a1 and h1. A king wants to reach e1 safely but rooks control entire ranks and files. Can the king safely stand on e1?',
+        options: ['Yes — rooks do not attack sideways', 'No — e1 is on rank 1 which both rooks control', 'Yes — only one rook controls rank 1', 'No — rooks always guard 16 squares each'],
+        answer: 'No — e1 is on rank 1 which both rooks control',
+        explanation: 'Both rooks are on rank 1 and together control every square on that rank. Any king stepping onto rank 1 would be in check.',
+        showTime: 25
       },
     ]
   }
 ];
+
 
 // ── START ──
 function startAssessment() {
