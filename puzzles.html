@@ -448,7 +448,7 @@ async function loadNextPuzzle() {
   try {
     if (puzzleQueue.length === 0) await refillQueue();
     const p = puzzleQueue.shift();
-    currentPuzzle = { id:p.id, fen:p.fen, moves:p.moves, rating:p.rating, themes:(p.themes||'').split(' ').filter(Boolean) };
+    currentPuzzle = { id:p.id, fen:p.fen, moves:p.moves, rating:p.rating, themes: Array.isArray(p.themes) ? p.themes : (p.themes||'').split(' ').filter(Boolean) };
     setupPuzzle({ puzzle: currentPuzzle });
   } catch(e) { showError(e); }
 }
@@ -983,9 +983,11 @@ updateStats();
       pd.bestStreak = Math.max(pd.bestStreak||0, stats.bestStreak||0);
       pd.lastPlayed = new Date().toISOString();
 
-      await window._puzzleSB.from('progress').update({
+      const { error: saveErr } = await window._puzzleSB.from('progress').update({
         quiz_scores: { ...qs, puzzle_progress: pd }
       }).eq('user_id', window._puzzleSession.user.id);
+      if (saveErr) console.error('[Puzzle] Supabase write error:', saveErr);
+      else console.log('[Puzzle] Saved OK — solved:', pd.solved, 'failed:', pd.failed);
     } catch(e) { console.warn('Puzzle save failed', e); }
   };
 
