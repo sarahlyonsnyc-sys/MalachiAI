@@ -1438,8 +1438,8 @@ function checkGameOver() {
         icon.textContent = '♔'; title.textContent = 'You Win!';
         const nextLevel = {explorer:'Challenger',challenger:'Rival',rival:'Competitor',competitor:'Master'}[currentDifficulty];
         msg.textContent = nextLevel
-          ? \`Excellent! You beat \${DIFFICULTY_LEVELS[currentDifficulty].label}. Ready to try \${nextLevel}?\`
-          : 'Incredible — you beat Master level. You\'re a chess master!';
+          ? 'Excellent! You beat ' + DIFFICULTY_LEVELS[currentDifficulty].label + '. Ready to try ' + nextLevel + '?'
+          : 'Incredible — you beat Master level. You are a chess master!';
         playerWon = true;
       } else {
         icon.textContent = '♚'; title.textContent = 'Checkmate';
