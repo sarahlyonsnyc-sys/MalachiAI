@@ -400,6 +400,7 @@ async function loadProfile() {
   document.getElementById('nameEl').textContent = profile?.username || 'Unknown';
   document.getElementById('roleEl').textContent = (profile?.role || 'student').toUpperCase();
   document.getElementById('emailEl').textContent = session.user.email || '';
+  console.log('[Profile] Logged in as:', session.user.id, session.user.email);
   document.getElementById('editName').value = profile?.username || '';
 
   // Rating — handle provisional (null = unrated)
@@ -568,6 +569,9 @@ async function loadProfile() {
   loadCognitiveAssessment(session.user.id);
 
   // Puzzle & opening progress
+  console.log('[Profile] behavior keys:', Object.keys(behavior));
+  console.log('[Profile] puzzle_progress:', behavior.puzzle_progress);
+  console.log('[Profile] opening_progress:', behavior.opening_progress);
   loadPuzzleProgress(behavior);
   loadOpeningProgress(behavior);
 }
@@ -927,14 +931,14 @@ function loadOpeningProgress(behavior) {
   const od = behavior?.opening_progress;
   if (!od || Object.keys(od.studied||{}).length === 0) return;
 
-  const studied = Object.values(od.studied)
-    .sort((a,b) => b.count - a.count);
-
+  const studied = Object.values(od.studied).sort((a,b) => b.count - a.count);
   const totalOpenings = studied.length;
   const totalSessions = od.totalSessions || 0;
+  const quizzed = studied.filter(o => o.bestScore !== null && o.bestScore !== undefined);
+  const avgBest = quizzed.length > 0
+    ? Math.round(quizzed.reduce((s,o) => s + o.bestScore, 0) / quizzed.length) : null;
+  const lastStudied = od.lastPlayed ? formatTimeAgo(new Date(od.lastPlayed)) : null;
   const mostStudied = studied[0];
-  const lastStudied = od.lastPlayed
-    ? formatTimeAgo(new Date(od.lastPlayed)) : null;
 
   el.innerHTML = `
     <div class="prog-grid" style="margin-bottom:20px">
@@ -948,16 +952,35 @@ function loadOpeningProgress(behavior) {
         <div class="prog-stat-lbl">Study Sessions</div>
         ${mostStudied ? `<div class="prog-stat-sub">Most: ${mostStudied.name.split(' ').slice(0,2).join(' ')}</div>` : ''}
       </div>
+      ${avgBest !== null ? `
+      <div class="prog-stat">
+        <div class="prog-stat-val">${avgBest}%</div>
+        <div class="prog-stat-lbl">Avg Quiz Score</div>
+        <div class="prog-stat-sub">${quizzed.length} opening${quizzed.length!==1?'s':''} tested</div>
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${studied.filter(o=>(o.bestScore||0)===100).length}</div>
+        <div class="prog-stat-lbl">Mastered</div>
+        <div class="prog-stat-sub">100% quiz score</div>
+      </div>` : ''}
     </div>
+
     <div style="margin-bottom:8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Your Repertoire</div>
-    ${studied.slice(0,10).map(o => {
+    ${studied.slice(0, 10).map(o => {
       const last = o.lastStudied ? formatTimeAgo(new Date(o.lastStudied)) : '';
+      const hasQuiz = o.bestScore !== null && o.bestScore !== undefined;
+      const scoreColor = !hasQuiz ? 'var(--muted)' : o.bestScore === 100 ? '#4caf50' : o.bestScore >= 70 ? '#c9a84c' : '#e05068';
+      const scoreLabel = hasQuiz ? `${o.bestScore}%` : 'Not tested';
+      const mastered = o.bestScore === 100 ? ' 🏆' : '';
       return `<div class="opening-row">
         <div>
-          <div class="opening-name">${o.name}</div>
-          <div class="opening-eco">${o.eco}${last ? ' · ' + last : ''}</div>
+          <div class="opening-name">${o.name}${mastered}</div>
+          <div class="opening-eco">${o.eco}${last ? ' · ' + last : ''} · ${o.count} session${o.count!==1?'s':''}</div>
         </div>
-        <div class="opening-count">${o.count} session${o.count !== 1 ? 's' : ''}</div>
+        <div style="text-align:right">
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:${scoreColor};font-weight:600">${scoreLabel}</div>
+          ${o.quizHistory?.length > 1 ? `<div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">${o.quizHistory.length} attempts</div>` : ''}
+        </div>
       </div>`;
     }).join('')}
     ${studied.length > 10 ? `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:12px">+${studied.length-10} more openings studied</div>` : ''}
