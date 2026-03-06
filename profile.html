@@ -275,11 +275,20 @@ function ratingToTitle(r) {
 function drawRatingChart(history) {
   const svg = document.getElementById('ratingChart');
   const empty = document.getElementById('chartEmpty');
-  if (!history || history.length < 2) {
+
+  // Also check profiles table for current rating to seed chart if history empty
+  if (!history || history.length === 0) {
     svg.style.display = 'none';
     empty.style.display = 'block';
+    empty.textContent = 'Complete a game (4+ moves, not abandoned) to start your rating history';
     return;
   }
+
+  // If only 1 entry, duplicate it so chart renders
+  if (history.length === 1) {
+    history = [history[0], history[0]];
+  }
+
   svg.style.display = 'block';
   empty.style.display = 'none';
 
@@ -289,8 +298,17 @@ function drawRatingChart(history) {
   const maxR = Math.max(...ratings) + 50;
   const n = history.length;
 
-  const px = i => PAD + (i / (n-1)) * (W - PAD*2);
-  const py = r => H - PAD - ((r - minR) / (maxR - minR)) * (H - PAD*2);
+  const px = i => PAD + (n === 1 ? (W/2) : (i / (n-1)) * (W - PAD*2));
+  const py = r => maxR === minR ? H/2 : H - PAD - ((r - minR) / (maxR - minR)) * (H - PAD*2);
+
+  // Grid lines
+  let gridLines = '';
+  const rStep = Math.round((maxR - minR) / 4 / 50) * 50 || 50;
+  for (let r = Math.ceil(minR/rStep)*rStep; r <= maxR; r += rStep) {
+    const y = py(r);
+    gridLines += `<line x1="${PAD}" y1="${y}" x2="${W-PAD}" y2="${y}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`;
+    gridLines += `<text x="${PAD-4}" y="${y+4}" text-anchor="end" font-family="DM Mono,monospace" font-size="9" fill="rgba(255,255,255,0.25)">${r}</text>`;
+  }
 
   // Gradient fill
   let points = history.map((h,i) => `${px(i)},${py(h.rating)}`).join(' ');
@@ -303,6 +321,7 @@ function drawRatingChart(history) {
         <stop offset="100%" stop-color="#c9a84c" stop-opacity="0"/>
       </linearGradient>
     </defs>
+    ${gridLines}
     <polygon points="${polyPoints}" fill="url(#rg)"/>
     <polyline points="${points}" fill="none" stroke="#c9a84c" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
     ${history.map((h,i) => `
@@ -372,7 +391,12 @@ async function loadProfile() {
   document.getElementById('statStreak').textContent = bestStreak;
 
   // Rating chart
-  drawRatingChart(ratingHist);
+  // If no rating_history yet but profile has a rating, seed chart with current rating
+  let chartHistory = ratingHist;
+  if ((!chartHistory || chartHistory.length === 0) && profile?.chess_rating) {
+    chartHistory = [{ rating: profile.chess_rating, won: false, date: new Date().toISOString() }];
+  }
+  drawRatingChart(chartHistory);
 
   // Recent games
   const gameHistory = [...(behavior.game_history || [])].reverse().slice(0, 10);

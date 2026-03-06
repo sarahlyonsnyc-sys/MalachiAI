@@ -1421,7 +1421,7 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
   // ── ELO UPDATE (only for completed games, not abandoned) ──
   let ratingChange = 0;
   let newRating = currentChessRating;
-  if (!abandoned && totalMoves >= 4) {
+  if (totalMoves >= 2) {
     const aiElo = DIFFICULTY_ELO[currentDifficulty] || 1000;
     ratingChange = calcEloChange(currentChessRating, aiElo, playerWon);
     newRating = Math.max(100, currentChessRating + ratingChange);
@@ -1465,7 +1465,7 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
 
   // Rating history for chart
   const ratingHistory = behaviorData.rating_history || [];
-  if (!abandoned && totalMoves >= 4) {
+  if (totalMoves >= 2) {
     ratingHistory.push({ date: gameDate, rating: newRating, change: ratingChange, won: playerWon });
   }
 
