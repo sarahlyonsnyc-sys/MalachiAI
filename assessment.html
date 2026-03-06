@@ -595,69 +595,117 @@ const MODULES = [
     ]
   },
 
-  // ── MODULE 2: PATTERN RECOGNITION ──
+  // ── MODULE 2: PATTERN RECOGNITION (harder — real positions, tactical themes) ──
   {
     domain: 'pattern_recognition',
     title: 'Board Patterns',
-    intro: { icon: '⚡', title: 'Pattern Recognition', desc: 'Look at a chess position and answer questions about structure and layout. You have 8 seconds per question. This measures how quickly your brain reads visual patterns.' },
+    intro: { icon: '⚡', title: 'Pattern Recognition', desc: 'Study each position and answer quickly. These are real chess structures — you have 10 seconds. This measures how fast your brain identifies patterns under pressure.' },
     questions: [
       {
         type: 'pattern',
-        fen: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1',
-        question: 'Which side has a pawn in the center?',
-        options: ['White', 'Black', 'Both', 'Neither'],
-        answer: 'White',
-        showTime: 8
+        fen: 'r1bqk2r/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 6 6',
+        question: 'Both sides have their bishops on c4/c5 pointing at each other. What does this position look like?',
+        options: ['Symmetrical — both sides mirrored', 'White is attacking, Black is defending', 'Black has more pieces developed', 'White has more space'],
+        answer: 'Symmetrical — both sides mirrored',
+        showTime: 10
       },
       {
         type: 'pattern',
-        fen: '8/8/8/8/3pp3/3PP3/8/8 w - - 0 1',
-        question: 'How many pawns total are on the board?',
-        options: ['2', '3', '4', '5'],
-        answer: '4',
-        showTime: 8
+        fen: '6k1/5ppp/8/8/8/8/5PPP/6K1 w - - 0 1',
+        question: 'Look at the pawn structure. Which statement is true?',
+        options: ['White has more pawns', 'Both sides have identical pawn structure', 'Black pawns are more advanced', 'White pawns are on rank 3, Black on rank 7'],
+        answer: 'Both sides have identical pawn structure',
+        showTime: 10
       },
       {
         type: 'pattern',
-        fen: '4k3/8/8/8/8/8/8/4K3 w - - 0 1',
-        question: 'Where are both kings located?',
-        options: ['Same file', 'Same rank', 'Different files and ranks', 'Diagonal from each other'],
-        answer: 'Same file',
-        showTime: 8
+        fen: 'r3k2r/ppp2ppp/2n5/3qp3/3P4/2NB1N2/PPP2PPP/R2QK2R w KQkq - 0 1',
+        question: 'The queens are on d1 and d5. Which piece is directly between them on the d-file?',
+        options: ['A pawn on d4', 'Nothing — the file is open', 'A knight on d3', 'A bishop on d3'],
+        answer: 'A pawn on d4',
+        showTime: 10
       },
       {
         type: 'pattern',
-        fen: '8/8/8/3ppp2/3PPP2/8/8/8 w - - 0 1',
-        question: 'What shape do the pawns form?',
-        options: ['A diagonal line', 'Two parallel rows', 'A cluster in corner', 'Scattered randomly'],
-        answer: 'Two parallel rows',
-        showTime: 8
+        fen: '8/pp4pp/2p1kp2/8/8/2P1KP2/PP4PP/8 w - - 0 1',
+        question: 'How many pawns does each side have?',
+        options: ['White 5, Black 6', 'White 6, Black 6', 'White 6, Black 5', 'White 5, Black 5'],
+        answer: 'White 6, Black 6',
+        showTime: 10
       },
       {
         type: 'pattern',
-        fen: 'r1bqkb1r/pppppppp/2n2n2/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 2 3',
-        question: 'How many black knights are developed (not on rank 8)?',
-        options: ['0', '1', '2', '3'],
-        answer: '2',
-        showTime: 8
+        fen: 'r1b1kb1r/ppppqppp/2n2n2/4p3/2B1P3/2N2N2/PPPPQPPP/R1B1K2R w KQkq - 6 6',
+        question: 'Both queens are on the e-file. Where exactly are they?',
+        options: ['Both on e1 and e8', 'White on e2, Black on e7', 'White on e1, Black on e7', 'White on e4, Black on e5'],
+        answer: 'White on e2, Black on e7',
+        showTime: 10
       },
     ]
   },
 
-  // ── MODULE 3: PROCESSING SPEED (Legal Move Yes/No) ──
+  // ── MODULE 3: PROCESSING SPEED — board shown, highlight the piece ──
   {
     domain: 'processing_speed',
     title: 'Quick Decisions',
-    intro: { icon: '🎯', title: 'Processing Speed', desc: 'Answer YES or NO as fast as possible. You\'ll see a piece and two squares — is that a legal move for that piece? Speed and accuracy both count. You have 5 seconds.' },
+    intro: { icon: '🎯', title: 'Processing Speed', desc: 'A piece is highlighted on the board. Answer YES or NO — can it legally reach the target square in one move? Be fast — you have 6 seconds.' },
     questions: [
-      { type:'yesno', question:'Can a rook move from a1 to a8 in one move?',   answer:true,  piece:'♖' },
-      { type:'yesno', question:'Can a bishop move from c1 to e3 in one move?',  answer:true,  piece:'♗' },
-      { type:'yesno', question:'Can a knight move from b1 to c3 in one move?',  answer:true,  piece:'♘' },
-      { type:'yesno', question:'Can a rook move from a1 to b3 in one move?',    answer:false, piece:'♖' },
-      { type:'yesno', question:'Can a queen move from d1 to h5 in one move?',   answer:true,  piece:'♕' },
-      { type:'yesno', question:'Can a knight move from g1 to f3 in one move?',  answer:true,  piece:'♘' },
-      { type:'yesno', question:'Can a bishop move from f1 to f5 in one move?',  answer:false, piece:'♗' },
-      { type:'yesno', question:'Can a queen move from d1 to d8 in one move?',   answer:true,  piece:'♕' },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/8/8/8/R7 w - - 0 1',
+        question: 'Rook on a1 — can it reach a8 in one move?',
+        answer: true,
+        highlights: ['a1', 'a8']
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/8/8/8/2B5 w - - 0 1',
+        question: 'Bishop on c1 — can it reach e3 in one move?',
+        answer: true,
+        highlights: ['c1', 'e3']
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/8/8/8/6N1 w - - 0 1',
+        question: 'Knight on g1 — can it reach f3 in one move?',
+        answer: true,
+        highlights: ['g1', 'f3']
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/8/8/8/R7 w - - 0 1',
+        question: 'Rook on a1 — can it reach b3 in one move?',
+        answer: false,
+        highlights: ['a1', 'b3']
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/8/8/8/3Q4 w - - 0 1',
+        question: 'Queen on d1 — can it reach h5 in one move?',
+        answer: true,
+        highlights: ['d1', 'h5']
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/8/8/8/5B2 w - - 0 1',
+        question: 'Bishop on f1 — can it reach f5 in one move?',
+        answer: false,
+        highlights: ['f1', 'f5']
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/8/8/8/1N6 w - - 0 1',
+        question: 'Knight on b1 — can it reach c3 in one move?',
+        answer: true,
+        highlights: ['b1', 'c3']
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/8/8/8/8/3Q4 w - - 0 1',
+        question: 'Queen on d1 — can it reach d8 in one move?',
+        answer: true,
+        highlights: ['d1', 'd8']
+      },
     ],
     speedBonus: true
   },
@@ -707,15 +755,17 @@ const MODULES = [
     ]
   },
 
-  // ── MODULE 5: FLUID REASONING (Novel Puzzles) ──
+  // ── MODULE 5: FLUID REASONING — board shown for spatial questions ──
   {
     domain: 'fluid_reasoning',
     title: 'Pure Logic',
-    intro: { icon: '💡', title: 'Fluid Reasoning', desc: 'These are pure logic puzzles using chess pieces — no prior chess knowledge needed. Figure out the rules from context. This measures raw reasoning ability, not chess skill.' },
+    intro: { icon: '💡', title: 'Fluid Reasoning', desc: 'Logic puzzles using chess pieces — figure out the rules from the board. This measures raw reasoning, not chess knowledge.' },
     questions: [
       {
         type: 'logic',
-        question: 'A rook moves in straight lines — horizontally or vertically, any number of squares. If a rook is on a1, which square can it NOT reach in one move?',
+        fen: '8/8/8/8/8/8/8/R7 w - - 0 1',
+        highlights: ['a1', 'b2', 'a8', 'h1', 'a3'],
+        question: 'A rook moves only in straight lines (horizontal or vertical). The rook is on a1. Which square can it NOT reach in one move?',
         options: ['a8', 'h1', 'b2', 'a3'],
         answer: 'b2',
         explanation: 'b2 is diagonal from a1 — rooks cannot move diagonally.',
@@ -723,7 +773,9 @@ const MODULES = [
       },
       {
         type: 'logic',
-        question: 'A knight moves in an "L" shape — 2 squares one direction then 1 square perpendicular. From e4, a knight can reach d2, f2, c3, g3, c5, g5, d6, f6. How many squares is that?',
+        fen: '8/8/8/8/4N3/8/8/8 w - - 0 1',
+        highlights: ['e4', 'd2', 'f2', 'c3', 'g3', 'c5', 'g5', 'd6', 'f6'],
+        question: 'A knight on e4 moves in an L-shape (2+1). The highlighted squares show all its possible moves. How many landing squares does it have?',
         options: ['6', '7', '8', '4'],
         answer: '8',
         explanation: 'A knight in the center always has exactly 8 possible squares it can reach.',
@@ -731,27 +783,32 @@ const MODULES = [
       },
       {
         type: 'logic',
-        question: 'If pieces can only move forward (toward the opponent), which piece type is this describing?',
-        options: ['Rook', 'Bishop', 'Pawn', 'Knight'],
-        answer: 'Pawn',
-        explanation: 'Pawns are the only piece that can only move forward — all others can move in multiple directions.',
-        showTime: 15
-      },
-      {
-        type: 'logic',
-        question: 'A bishop only moves diagonally. The board alternates light and dark squares. If a bishop starts on a light square, where can it end up after any number of moves?',
-        options: ['Any square', 'Only light squares', 'Only dark squares', 'Only the same color diagonal'],
+        fen: '8/8/8/8/3B4/8/8/8 w - - 0 1',
+        highlights: ['d4', 'a1', 'g7', 'a7', 'h8', 'b2', 'f6', 'c3', 'e5', 'c5', 'e3', 'b6', 'f2'],
+        question: 'The bishop on d4 moves only diagonally. All its reachable squares are highlighted. Which color squares does it stay on?',
+        options: ['Only light squares', 'Only dark squares', 'Both colors', 'It depends on direction'],
         answer: 'Only light squares',
-        explanation: 'Because diagonals always stay on the same color, a bishop on a light square is permanently restricted to light squares.',
+        explanation: 'Diagonals always stay on the same color — a bishop is permanently bound to the color it starts on.',
         showTime: 20
       },
       {
         type: 'logic',
-        question: 'The queen combines the powers of rook and bishop. From d4, how many squares can the queen reach in one move on an empty board?',
+        fen: '8/8/8/8/3Q4/8/8/8 w - - 0 1',
+        question: 'The queen combines rook and bishop moves. From d4 on an empty board, how many squares can it reach in one move?',
         options: ['14', '21', '27', '32'],
         answer: '27',
-        explanation: 'From d4: rook covers 14 squares (7 per direction × 2 axes) + bishop covers 13 squares = 27 total.',
+        explanation: 'Rook covers 14 squares + bishop covers 13 squares = 27 total from d4.',
         showTime: 25
+      },
+      {
+        type: 'logic',
+        fen: '8/8/8/8/8/8/3P4/8 w - - 0 1',
+        highlights: ['d2', 'd3', 'd4'],
+        question: 'This pawn on d2 can move forward 1 or 2 squares on its first move. If it moves to d4, can it then move back to d2?',
+        options: ['Yes — pieces can always move back', 'No — pawns can only move forward', 'Yes — but only diagonally', 'No — it would need to capture first'],
+        answer: 'No — pawns can only move forward',
+        explanation: 'Pawns are unique — they can never retreat. Once advanced, they keep going until they promote or are captured.',
+        showTime: 18
       },
     ]
   }
@@ -922,9 +979,10 @@ function buildPatternQ(q) {
 }
 
 function buildYesNoQ(q) {
+  const board = q.fen ? buildBoard(q.fen, false, q.highlights || []) : '';
   return `
-    <div class="module-title" style="font-size:28px">${q.piece}</div>
     <div class="module-title">${q.question}</div>
+    ${board}
     <div class="timer-ring-wrap">
       ${timerRingHTML()}
       <span class="timer-label">Answer before time runs out</span>
