@@ -1418,18 +1418,17 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
   const gameHistory = behaviorData.game_history || [];
   const gameDate = new Date().toISOString();
 
-  // ── ELO UPDATE ──
+  // ── ELO UPDATE (separate from game history saving) ──
   let ratingChange = 0;
   let newRating = currentChessRating;
   const isProvisional = ratedGamesCount < PROVISIONAL_GAMES;
+  let provisionalResults = behaviorData.provisional_results || [];
 
   if (totalMoves >= 2) {
     const aiElo = DIFFICULTY_ELO[currentDifficulty] || 1000;
 
     if (isProvisional) {
-      // Provisional period — accumulate results, place after game 5
       ratedGamesCount++;
-      const provisionalResults = behaviorData.provisional_results || [];
       provisionalResults.push({ aiElo, won: playerWon });
 
       if (ratedGamesCount >= PROVISIONAL_GAMES) {
@@ -1443,11 +1442,9 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
         currentChessRating = newRating;
         await sb.from('profiles').update({ chess_rating: newRating }).eq('id', session.user.id);
 
-        // Badge: show placed rating with fanfare
         const badge = document.getElementById('ratingBadgeVal');
         if (badge) { badge.textContent = newRating; badge.style.color = '#c9a84c'; }
 
-        // Modal message
         const msgEl = document.getElementById('modalMessage');
         if (msgEl && !msgEl.querySelector('.rating-line')) {
           const rLine = document.createElement('div');
@@ -1457,22 +1454,18 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
           msgEl.appendChild(rLine);
         }
       } else {
-        // Still provisional — save results, don't show rating yet
-        await sb.from('profiles').update({ chess_rating: null }).eq('id', session.user.id);
-        const gamesLeft = PROVISIONAL_GAMES - ratedGamesCount;
+        // Still provisional — update badge only
+        const badge = document.getElementById('ratingBadgeVal');
+        if (badge) badge.textContent = `? ${ratedGamesCount}/${PROVISIONAL_GAMES}`;
+
         const msgEl = document.getElementById('modalMessage');
         if (msgEl && !msgEl.querySelector('.rating-line')) {
           const rLine = document.createElement('div');
           rLine.className = 'rating-line';
           rLine.style.cssText = 'font-family:"DM Mono",monospace;font-size:13px;margin-top:10px;color:var(--muted)';
-          rLine.innerHTML = `Provisional: ${ratedGamesCount}/${PROVISIONAL_GAMES} games played`;
+          rLine.innerHTML = `Provisional: ${ratedGamesCount}/${PROVISIONAL_GAMES} placement games`;
           msgEl.appendChild(rLine);
         }
-        // Save provisional results
-        await sb.from('progress').update({
-          quiz_scores: { ...behaviorData, provisional_results: provisionalResults }
-        }).eq('user_id', session.user.id);
-        return; // skip rest of rating logic
       }
     } else {
       // Rated — normal Elo update
@@ -1480,7 +1473,6 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
       newRating = Math.max(100, currentChessRating + ratingChange);
       currentChessRating = newRating;
 
-      // Update rating badge live
       const badge = document.getElementById('ratingBadgeVal');
       if (badge) {
         badge.textContent = newRating;
@@ -1488,10 +1480,8 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
         setTimeout(() => badge.style.color = 'var(--gold)', 3000);
       }
 
-      // Update profiles table
       await sb.from('profiles').update({ chess_rating: newRating }).eq('id', session.user.id);
 
-      // Show rating change in game modal
       const msgEl = document.getElementById('modalMessage');
       if (msgEl) {
         const sign = ratingChange >= 0 ? '+' : '';
@@ -1501,7 +1491,8 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
           rLine.className = 'rating-line';
           rLine.style.cssText = 'font-family:"DM Mono",monospace;font-size:13px;margin-top:10px;';
           rLine.innerHTML = `Rating: <span style="color:var(--gold)">${newRating}</span> <span style="color:${ratingChange >= 0 ? '#4caf50' : '#e05068'}">(${sign}${ratingChange})</span>`;
-        msgEl.appendChild(rLine);
+          msgEl.appendChild(rLine);
+        }
       }
     }
   }
@@ -1539,6 +1530,7 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
       move_times: allMoveTimes.slice(-200),
       game_history: gameHistory.slice(-50),
       rating_history: ratingHistory.slice(-100),
+      provisional_results: provisionalResults.slice(-10),
       avg_move_time: Math.round(allMoveTimes.reduce((a,b)=>a+b,0) / allMoveTimes.length),
       completion_rate: Math.round((gameHistory.filter(g=>!g.abandoned).length / gameHistory.length) * 100),
       best_streak: bestStreak
@@ -1643,9 +1635,10 @@ const PROVISIONAL_GAMES = 5;
       document.getElementById('profileLink').style.display = 'inline';
       document.getElementById('ratingBadge').style.display = 'flex';
       currentChessRating = profile.chess_rating || null;
-      ratedGamesCount = prog?.games_played || 0; // approx — refine below
-      // Load provisional game count from progress
-      const provResults = prog?.quiz_scores?.provisional_results || [];
+      // Load progress row for provisional data
+      const { data: progRow } = await sb.from('progress').select('games_played,quiz_scores').eq('user_id', session.user.id).single();
+      ratedGamesCount = progRow?.games_played || 0;
+      const provResults = progRow?.quiz_scores?.provisional_results || [];
       if (!currentChessRating) {
         ratedGamesCount = provResults.length;
         const gamesLeft = PROVISIONAL_GAMES - ratedGamesCount;
