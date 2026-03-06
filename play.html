@@ -360,24 +360,24 @@
       ♟ <span id="ratingBadgeVal">—</span>
     </div>
     <div id="difficultyBtn" onclick="toggleDifficultyMenu()" style="cursor:pointer;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--border);padding:8px 14px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;color:var(--cream);position:relative;">
-      <span id="difficultyLabel">⚡ NOVICE</span>
+      <span id="difficultyLabel">🌟 EXPLORER</span>
       <span style="color:var(--muted)">▾</span>
       <div id="difficultyMenu" style="display:none;position:absolute;top:100%;right:0;width:260px;background:#1a1a1a;border:1px solid var(--border);z-index:100;margin-top:4px;">
-        <div class="diff-option" onclick="setDifficulty('novice')" data-level="novice">
-          <div style="color:#4caf50;font-weight:bold">⚡ NOVICE</div>
-          <div style="color:var(--muted);font-size:10px;margin-top:3px">Makes mistakes. Great for beginners learning the basics.</div>
+        <div class="diff-option" onclick="setDifficulty('explorer')" data-level="explorer">
+          <div style="color:#64b5f6;font-weight:bold">🌟 EXPLORER</div>
+          <div style="color:var(--muted);font-size:10px;margin-top:3px">Just learning the pieces. Moves randomly, never hunts your king.</div>
         </div>
-        <div class="diff-option" onclick="setDifficulty('casual')" data-level="casual">
-          <div style="color:#8bc34a;font-weight:bold">🌱 CASUAL</div>
-          <div style="color:var(--muted);font-size:10px;margin-top:3px">Plays reasonably but misses tactics sometimes.</div>
+        <div class="diff-option" onclick="setDifficulty('challenger')" data-level="challenger">
+          <div style="color:#4caf50;font-weight:bold">⚡ CHALLENGER</div>
+          <div style="color:var(--muted);font-size:10px;margin-top:3px">Grabs free pieces and makes simple threats. A real opponent.</div>
         </div>
-        <div class="diff-option" onclick="setDifficulty('club')" data-level="club">
-          <div style="color:#ffc107;font-weight:bold">♟ CLUB PLAYER</div>
-          <div style="color:var(--muted);font-size:10px;margin-top:3px">Solid play. Knows openings and basic tactics.</div>
+        <div class="diff-option" onclick="setDifficulty('rival')" data-level="rival">
+          <div style="color:#ffc107;font-weight:bold">♟ RIVAL</div>
+          <div style="color:var(--muted);font-size:10px;margin-top:3px">Plays real openings and punishes blunders. Solid chess.</div>
         </div>
-        <div class="diff-option" onclick="setDifficulty('advanced')" data-level="advanced">
-          <div style="color:#ff9800;font-weight:bold">🔥 ADVANCED</div>
-          <div style="color:var(--muted);font-size:10px;margin-top:3px">Plays strong chess. Will punish mistakes.</div>
+        <div class="diff-option" onclick="setDifficulty('competitor')" data-level="competitor">
+          <div style="color:#ff9800;font-weight:bold">🔥 COMPETITOR</div>
+          <div style="color:var(--muted);font-size:10px;margin-top:3px">Full tactical play with plans and positional pressure.</div>
         </div>
         <div class="diff-option" onclick="setDifficulty('master')" data-level="master">
           <div style="color:#f44336;font-weight:bold">👑 MASTER</div>
@@ -858,14 +858,20 @@ let gameAbandoned = false;        // did they quit mid-game?
 let possibleMoves = [];
 let lastMove = null;
 // ── DIFFICULTY SYSTEM ──
+// Each level has distinct behavioral logic beyond just depth/randomness:
+// explorer:    Pure random moves, never checks/attacks king — truly safe for beginners
+// challenger:  Captures free pieces greedily, makes simple one-move threats, no deep plans
+// rival:       Real opening book, punishes blunders, basic tactics (depth 2)
+// competitor:  Full tactical + positional play, plans ahead (depth 3)
+// master:      Near-optimal minimax, no mistakes (depth 4)
 const DIFFICULTY_LEVELS = {
-  novice:   { depth: 1, mistakeRate: 0.5,  randomness: 150, thinkMin: 200,  thinkMax: 600,  label: '⚡ NOVICE',      color: '#4caf50' },
-  casual:   { depth: 1, mistakeRate: 0.25, randomness: 80,  thinkMin: 300,  thinkMax: 800,  label: '🌱 CASUAL',      color: '#8bc34a' },
-  club:     { depth: 2, mistakeRate: 0.08, randomness: 30,  thinkMin: 400,  thinkMax: 1000, label: '♟ CLUB PLAYER',  color: '#ffc107' },
-  advanced: { depth: 3, mistakeRate: 0.02, randomness: 10,  thinkMin: 600,  thinkMax: 1400, label: '🔥 ADVANCED',    color: '#ff9800' },
-  master:   { depth: 4, mistakeRate: 0,    randomness: 2,   thinkMin: 800,  thinkMax: 2000, label: '👑 MASTER',      color: '#f44336' },
+  explorer:   { depth: 1, mistakeRate: 1.0,  randomness: 0,   thinkMin: 300,  thinkMax: 700,  label: '🌟 EXPLORER',    color: '#64b5f6', ratingScale: 0.1 },
+  challenger: { depth: 1, mistakeRate: 0.0,  randomness: 60,  thinkMin: 400,  thinkMax: 900,  label: '⚡ CHALLENGER',  color: '#4caf50', ratingScale: 0.4 },
+  rival:      { depth: 2, mistakeRate: 0.05, randomness: 25,  thinkMin: 500,  thinkMax: 1100, label: '♟ RIVAL',        color: '#ffc107', ratingScale: 0.75 },
+  competitor: { depth: 3, mistakeRate: 0.01, randomness: 8,   thinkMin: 700,  thinkMax: 1500, label: '🔥 COMPETITOR',  color: '#ff9800', ratingScale: 1.0 },
+  master:     { depth: 4, mistakeRate: 0,    randomness: 2,   thinkMin: 900,  thinkMax: 2200, label: '👑 MASTER',      color: '#f44336', ratingScale: 1.5 },
 };
-let currentDifficulty = 'novice';
+let currentDifficulty = 'explorer';
 let depth = 1;
 let moveHistory = [];
 
@@ -1225,33 +1231,73 @@ function aiMove() {
 function getBestMove(searchDepth, mistakeRate, randomness) {
   const moves = game.moves({ verbose: true });
   if (!moves.length) return null;
+  const level = currentDifficulty;
 
-  // Mistake: just play a random move
+  // ── EXPLORER: pure random, never attacks king ──
+  if (level === 'explorer') {
+    // Filter out moves that give check — explorer never hunts the king
+    const safe = moves.filter(m => {
+      game.move(m);
+      const givesCheck = game.in_check();
+      game.undo();
+      return !givesCheck;
+    });
+    const pool = safe.length > 0 ? safe : moves;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // ── CHALLENGER: greedily captures free pieces, otherwise random ──
+  if (level === 'challenger') {
+    // First priority: capture a piece if it's free (not defended)
+    const captures = moves.filter(m => m.captured);
+    const freeCaptures = captures.filter(m => {
+      game.move(m);
+      // Check if the square we moved to is attacked by opponent
+      const attacked = game.moves({ verbose: true }).some(r => r.to === m.to);
+      game.undo();
+      return !attacked;
+    });
+    if (freeCaptures.length > 0) {
+      // Pick highest value free capture
+      const vals = { p:1, n:3, b:3, r:5, q:9, k:0 };
+      freeCaptures.sort((a,b) => (vals[b.captured]||0) - (vals[a.captured]||0));
+      return freeCaptures[0];
+    }
+    // Otherwise add some noise and pick among decent moves
+    const scored = [];
+    for (const m of moves) {
+      game.move(m);
+      const val = -minimax(1, -Infinity, Infinity, false);
+      game.undo();
+      scored.push({ move: m, val });
+    }
+    scored.sort((a,b) => b.val - a.val);
+    const noisy = scored.map(s => ({ move: s.move, val: s.val + (Math.random()-0.5)*randomness }));
+    noisy.sort((a,b) => b.val - a.val);
+    return noisy[0].move;
+  }
+
+  // ── RIVAL / COMPETITOR / MASTER: minimax with scaled randomness ──
+  // Occasional mistake for rival
   if (mistakeRate > 0 && Math.random() < mistakeRate) {
     return moves[Math.floor(Math.random() * moves.length)];
   }
 
-  let best = null, bestVal = -Infinity;
   const scored = [];
-
   for (const move of moves) {
     game.move(move);
     const val = -minimax(searchDepth - 1, -Infinity, Infinity, false);
     game.undo();
     scored.push({ move, val });
-    if (val > bestVal) { bestVal = val; best = move; }
   }
 
-  // Randomness: sometimes pick from top N moves instead of always best
+  scored.sort((a, b) => b.val - a.val);
   if (randomness > 0) {
-    scored.sort((a, b) => b.val - a.val);
-    // Add noise to scores
-    const noisy = scored.map(s => ({ move: s.move, val: s.val + (Math.random() - 0.5) * randomness }));
-    noisy.sort((a, b) => b.val - a.val);
-    best = noisy[0].move;
+    const noisy = scored.map(s => ({ move: s.move, val: s.val + (Math.random()-0.5)*randomness }));
+    noisy.sort((a,b) => b.val - a.val);
+    return noisy[0].move;
   }
-
-  return best;
+  return scored[0].move;
 }
 
 function minimax(d, alpha, beta, isMax) {
@@ -1390,7 +1436,10 @@ function checkGameOver() {
     if (game.in_checkmate()) {
       if (game.turn() === 'b') {
         icon.textContent = '♔'; title.textContent = 'You Win!';
-        msg.textContent = 'Excellent play! You checkmated Malachi AI. Want to try a harder difficulty?';
+        const nextLevel = {explorer:'Challenger',challenger:'Rival',rival:'Competitor',competitor:'Master'}[currentDifficulty];
+        msg.textContent = nextLevel
+          ? \`Excellent! You beat \${DIFFICULTY_LEVELS[currentDifficulty].label}. Ready to try \${nextLevel}?\`
+          : 'Incredible — you beat Master level. You\'re a chess master!';
         playerWon = true;
       } else {
         icon.textContent = '♚'; title.textContent = 'Checkmate';
@@ -1481,7 +1530,8 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
       }
     } else {
       // Rated — normal Elo update
-      ratingChange = calcEloChange(currentChessRating, aiElo, playerWon);
+      const diffScale = DIFFICULTY_LEVELS[currentDifficulty]?.ratingScale ?? 1.0;
+      ratingChange = Math.round(calcEloChange(currentChessRating, aiElo, playerWon) * diffScale);
       newRating = Math.max(100, currentChessRating + ratingChange);
       currentChessRating = newRating;
 
@@ -1619,7 +1669,7 @@ showTip();
 // ── ELO RATING SYSTEM ──
 // AI difficulty maps to an approximate Elo equivalent
 const DIFFICULTY_ELO = {
-  novice: 600, casual: 900, club: 1200, advanced: 1500, master: 1900
+  explorer: 400, challenger: 700, rival: 1100, competitor: 1500, master: 1900
 };
 
 function calcEloChange(playerRating, opponentRating, won) {
