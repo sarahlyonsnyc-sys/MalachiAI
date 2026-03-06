@@ -400,7 +400,6 @@ async function loadProfile() {
   document.getElementById('nameEl').textContent = profile?.username || 'Unknown';
   document.getElementById('roleEl').textContent = (profile?.role || 'student').toUpperCase();
   document.getElementById('emailEl').textContent = session.user.email || '';
-  console.log('[Profile] Logged in as:', session.user.id, session.user.email);
   document.getElementById('editName').value = profile?.username || '';
 
   // Rating — handle provisional (null = unrated)
@@ -569,9 +568,6 @@ async function loadProfile() {
   loadCognitiveAssessment(session.user.id);
 
   // Puzzle & opening progress
-  console.log('[Profile] behavior keys:', Object.keys(behavior));
-  console.log('[Profile] puzzle_progress:', behavior.puzzle_progress);
-  console.log('[Profile] opening_progress:', behavior.opening_progress);
   loadPuzzleProgress(behavior);
   loadOpeningProgress(behavior);
 }
