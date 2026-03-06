@@ -963,7 +963,7 @@ updateStats();
       else        pd.failed = (pd.failed||0) + 1;
 
       // Theme tracking
-      const themes = (puzzle?.themes || '').split(' ').filter(Boolean);
+      const themes = Array.isArray(puzzle?.themes) ? puzzle.themes : (puzzle?.themes || '').split(' ').filter(Boolean);
       themes.forEach(t => {
         if (!pd.themes[t]) pd.themes[t] = { solved:0, failed:0 };
         if (solved) pd.themes[t].solved++;
