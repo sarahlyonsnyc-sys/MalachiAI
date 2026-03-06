@@ -850,7 +850,8 @@ function showQuestion(mIdx, qIdx) {
 }
 
 // ── BUILD BOARD ──
-function buildBoard(fen, hideAfter = false, highlightSqs = []) {
+function buildBoard(fen, hideAfter, highlightSqs) {
+  highlightSqs = highlightSqs || [];
   const game = typeof Chess === "function" ? new Chess(fen) : Chess(fen);
   const files = ['a','b','c','d','e','f','g','h'];
   let html = '<div class="mini-board" id="miniBoard">';
@@ -861,15 +862,19 @@ function buildBoard(fen, hideAfter = false, highlightSqs = []) {
       const sq = file + rank;
       const isLight = (ri + fi) % 2 !== 0;
       const piece = game.get(sq);
-      const glyph = piece ? GLYPHS[piece.color+piece.type] : '';
-      const hlClass = highlightSqs.includes(sq) ? ' highlight-gold' : '';
-      // Rank label on leftmost file (fi===0), file label on bottom rank (ri===7)
-      const rankLabel = fi === 0 ? `<span class="coord-rank">${rank}</span>` : '';
-      const fileLabel = ri === 7 ? `<span class="coord-file">${file}</span>` : '';
-      html += `<div class="mini-sq ${isLight?'light':'dark'}${hlClass}" id="sq-${sq}">
-        ${rankLabel}${fileLabel}
-        <span class="piece-glyph" style="pointer-events:none">${glyph}</span>
-      </div>`;
+      const glyph = piece ? (GLYPHS[piece.color+piece.type] || '') : '';
+      const hlClass = highlightSqs.indexOf(sq) >= 0 ? ' highlight-gold' : '';
+      const colorClass = isLight ? 'light' : 'dark';
+      const labelColor = isLight ? 'color:#b58863' : 'color:#f0d9b5';
+      let inner = '';
+      if (fi === 0) {
+        inner += '<span style="position:absolute;top:2px;left:3px;font-family:DM Mono,monospace;font-size:9px;font-weight:600;line-height:1;pointer-events:none;' + labelColor + '">' + rank + '</span>';
+      }
+      if (ri === 7) {
+        inner += '<span style="position:absolute;bottom:2px;right:3px;font-family:DM Mono,monospace;font-size:9px;font-weight:600;line-height:1;pointer-events:none;' + labelColor + '">' + file + '</span>';
+      }
+      inner += '<span class="piece-glyph" style="pointer-events:none">' + glyph + '</span>';
+      html += '<div class="mini-sq ' + colorClass + hlClass + '" id="sq-' + sq + '" style="position:relative">' + inner + '</div>';
     }
   }
   html += '</div>';
