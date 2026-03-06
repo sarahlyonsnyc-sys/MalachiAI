@@ -627,6 +627,7 @@ function selectOpening(eco) {
   if (playAllTimer) { clearInterval(playAllTimer); playAllTimer = null; }
   currentOpening = OPENINGS.find(o => o.eco === eco);
   if (!currentOpening) return;
+  window._saveOpeningStudied?.(currentOpening);
 
   // Highlight button
   document.querySelectorAll('.opening-btn').forEach(b => b.classList.remove('active'));
@@ -902,10 +903,35 @@ if (OPENINGS.length > 0) selectOpening(OPENINGS[0].eco);
 (function() {
   const SB_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
+  window._saveOpeningStudied = async function(opening) {
+    if (!window._openingSB || !window._openingSession) return;
+    try {
+      const { data: prog } = await window._openingSB.from('progress')
+        .select('quiz_scores').eq('user_id', window._openingSession.user.id).single();
+      const qs = prog?.quiz_scores || {};
+      const od = qs.opening_progress || { studied: {}, totalSessions: 0, lastPlayed: null };
+
+      const eco = opening?.eco || 'unknown';
+      if (!od.studied[eco]) {
+        od.studied[eco] = { name: opening.name, eco, count: 0, firstStudied: new Date().toISOString() };
+      }
+      od.studied[eco].count++;
+      od.studied[eco].lastStudied = new Date().toISOString();
+      od.totalSessions = (od.totalSessions || 0) + 1;
+      od.lastPlayed = new Date().toISOString();
+
+      await window._openingSB.from('progress').update({
+        quiz_scores: { ...qs, opening_progress: od }
+      }).eq('user_id', window._openingSession.user.id);
+    } catch(e) { console.warn('Opening save failed', e); }
+  };
+
   function tryInject() {
     if (!window.supabase) { setTimeout(tryInject, 50); return; }
     const _sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
     _sb.auth.getSession().then(({ data: { session } }) => {
+      window._openingSB = _sb;
+      window._openingSession = session;
       const container = document.querySelector('.nav-right');
       if (!container) return;
       const widget = document.createElement('div');

@@ -104,6 +104,26 @@
     .btn-retake:hover { background:rgba(201,168,76,0.08); border-color:var(--gold); }
     .cogni-empty { text-align:center; padding:32px; color:var(--muted); font-size:13px; line-height:1.7; }
     .cogni-empty a { color:var(--gold); text-decoration:none; }
+    /* Puzzle & Opening progress */
+    .prog-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+    @media(max-width:540px){ .prog-grid { grid-template-columns:1fr; } }
+    .prog-stat { background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:16px; text-align:center; }
+    .prog-stat-val { font-family:'DM Mono',monospace; font-size:28px; font-weight:700; color:var(--gold); line-height:1; }
+    .prog-stat-lbl { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
+    .prog-stat-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+    .theme-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+    .theme-pill { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.06em; padding:5px 10px; border:1px solid var(--border); display:flex; align-items:center; gap:6px; }
+    .theme-pill .tp-name { color:var(--text); text-transform:uppercase; }
+    .theme-pill .tp-acc { color:var(--gold); }
+    .theme-pill.strong { border-color:rgba(76,175,80,0.4); }
+    .theme-pill.weak { border-color:rgba(224,80,104,0.4); }
+    .opening-row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); }
+    .opening-row:last-child { border-bottom:none; }
+    .opening-name { font-size:13px; color:var(--text); }
+    .opening-eco { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); margin-top:2px; }
+    .opening-count { font-family:'DM Mono',monospace; font-size:10px; color:var(--gold); white-space:nowrap; }
+    .prog-accuracy-bar { height:6px; background:var(--border); margin-bottom:20px; border-radius:0; }
+    .prog-accuracy-fill { height:100%; background:linear-gradient(90deg,#e05068,#c9a84c,#4caf50); transition:width 1s ease; }
     .cogni-history-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); font-size:12px; }
     .cogni-history-row:last-child { border-bottom:none; }
     .cogni-history-date { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); min-width:90px; }
@@ -224,6 +244,16 @@
       <div id="cogniContent">
         <div class="cogni-empty">Loading assessment data...</div>
       </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Puzzle Progress</div>
+      <div id="puzzleProgressContent"><div class="cogni-empty" style="padding:20px">No puzzles attempted yet — <a href="puzzles.html">start training →</a></div></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Opening Study</div>
+      <div id="openingProgressContent"><div class="cogni-empty" style="padding:20px">No openings studied yet — <a href="openings.html">explore openings →</a></div></div>
     </div>
 
     <div class="section">
@@ -524,6 +554,10 @@ async function loadProfile() {
 
   // Cognitive assessment
   loadCognitiveAssessment(session.user.id);
+
+  // Puzzle & opening progress
+  loadPuzzleProgress(behavior);
+  loadOpeningProgress(behavior);
 }
 
 function setSkill(id, val) {
@@ -792,6 +826,130 @@ function drawProfileRadar(scores, prevScores) {
     ctx.beginPath(); ctx.moveTo(90,H-18); ctx.lineTo(104,H-18); ctx.stroke();
     ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.fillText('Latest', 108, H-14);
   }
+}
+
+function loadPuzzleProgress(behavior) {
+  const el = document.getElementById('puzzleProgressContent');
+  const pd = behavior?.puzzle_progress;
+  if (!pd || (pd.solved === 0 && pd.failed === 0)) return;
+
+  const total = (pd.solved||0) + (pd.failed||0);
+  const acc = total > 0 ? Math.round((pd.solved / total) * 100) : 0;
+  const recentAcc = pd.accuracy?.length > 0
+    ? Math.round((pd.accuracy.reduce((a,b)=>a+b,0) / pd.accuracy.length) * 100) : acc;
+
+  // Theme breakdown — sort by volume
+  const themes = Object.entries(pd.themes||{})
+    .map(([k,v]) => ({ name:k, solved:v.solved||0, failed:v.failed||0,
+      acc: Math.round((v.solved||0) / ((v.solved||0)+(v.failed||0)) * 100) }))
+    .sort((a,b) => (b.solved+b.failed) - (a.solved+a.failed))
+    .slice(0, 12);
+
+  const strongThemes = [...themes].sort((a,b)=>b.acc-a.acc).slice(0,3);
+  const weakThemes   = [...themes].sort((a,b)=>a.acc-b.acc).slice(0,3);
+
+  // Puzzle rating trend
+  const rh = pd.ratingHistory || [];
+  const latestRating = rh.length > 0 ? rh[rh.length-1].rating : null;
+  const earliestRating = rh.length > 5 ? rh[0].rating : null;
+  const ratingTrend = latestRating && earliestRating
+    ? (latestRating - earliestRating > 0 ? `↑ ${latestRating - earliestRating}` : `↓ ${earliestRating - latestRating}`)
+    : null;
+
+  el.innerHTML = `
+    <div class="prog-grid">
+      <div class="prog-stat">
+        <div class="prog-stat-val">${pd.solved||0}</div>
+        <div class="prog-stat-lbl">Puzzles Solved</div>
+        ${ratingTrend ? `<div class="prog-stat-sub">Rating trend ${ratingTrend}</div>` : ''}
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${acc}%</div>
+        <div class="prog-stat-lbl">Overall Accuracy</div>
+        <div class="prog-stat-sub">Last 20: ${recentAcc}%</div>
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${pd.bestStreak||0}</div>
+        <div class="prog-stat-lbl">Best Streak</div>
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${total}</div>
+        <div class="prog-stat-lbl">Total Attempted</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Recent Accuracy</div>
+    <div class="prog-accuracy-bar" style="margin-bottom:20px">
+      <div class="prog-accuracy-fill" style="width:${recentAcc}%"></div>
+    </div>
+
+    ${themes.length > 0 ? `
+    <div style="margin-bottom:8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Themes Practiced</div>
+    <div class="theme-grid">
+      ${themes.map(t => {
+        const cls = t.acc >= 70 ? 'strong' : t.acc <= 40 ? 'weak' : '';
+        const label = t.name.replace(/([A-Z])/g,' $1').trim();
+        return `<div class="theme-pill ${cls}">
+          <span class="tp-name">${label}</span>
+          <span class="tp-acc">${t.acc}%</span>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+
+    ${strongThemes.length > 0 ? `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;color:#4caf50;margin-bottom:8px;text-transform:uppercase">Strongest</div>
+        ${strongThemes.map(t=>`<div style="font-size:11px;color:var(--text);margin-bottom:4px">${t.name.replace(/([A-Z])/g,' $1').trim()} <span style="color:#4caf50">${t.acc}%</span></div>`).join('')}
+      </div>
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;color:#e05068;margin-bottom:8px;text-transform:uppercase">Needs Work</div>
+        ${weakThemes.map(t=>`<div style="font-size:11px;color:var(--text);margin-bottom:4px">${t.name.replace(/([A-Z])/g,' $1').trim()} <span style="color:#e05068">${t.acc}%</span></div>`).join('')}
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function loadOpeningProgress(behavior) {
+  const el = document.getElementById('openingProgressContent');
+  const od = behavior?.opening_progress;
+  if (!od || Object.keys(od.studied||{}).length === 0) return;
+
+  const studied = Object.values(od.studied)
+    .sort((a,b) => b.count - a.count);
+
+  const totalOpenings = studied.length;
+  const totalSessions = od.totalSessions || 0;
+  const mostStudied = studied[0];
+  const lastStudied = od.lastPlayed
+    ? formatTimeAgo(new Date(od.lastPlayed)) : null;
+
+  el.innerHTML = `
+    <div class="prog-grid" style="margin-bottom:20px">
+      <div class="prog-stat">
+        <div class="prog-stat-val">${totalOpenings}</div>
+        <div class="prog-stat-lbl">Openings Studied</div>
+        ${lastStudied ? `<div class="prog-stat-sub">Last: ${lastStudied}</div>` : ''}
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${totalSessions}</div>
+        <div class="prog-stat-lbl">Study Sessions</div>
+        ${mostStudied ? `<div class="prog-stat-sub">Most: ${mostStudied.name.split(' ').slice(0,2).join(' ')}</div>` : ''}
+      </div>
+    </div>
+    <div style="margin-bottom:8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Your Repertoire</div>
+    ${studied.slice(0,10).map(o => {
+      const last = o.lastStudied ? formatTimeAgo(new Date(o.lastStudied)) : '';
+      return `<div class="opening-row">
+        <div>
+          <div class="opening-name">${o.name}</div>
+          <div class="opening-eco">${o.eco}${last ? ' · ' + last : ''}</div>
+        </div>
+        <div class="opening-count">${o.count} session${o.count !== 1 ? 's' : ''}</div>
+      </div>`;
+    }).join('')}
+    ${studied.length > 10 ? `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:12px">+${studied.length-10} more openings studied</div>` : ''}
+  `;
 }
 
 loadProfile();
