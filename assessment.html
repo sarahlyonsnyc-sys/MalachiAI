@@ -964,7 +964,7 @@ function startRecallReveal(q) {
     if (t <= 0) {
       clearInterval(timerInterval);
       // Hide pieces
-      document.querySelectorAll('.piece-glyph').forEach(el => el.style.visibility = 'hidden');
+      document.querySelectorAll('#miniBoard svg').forEach(el => el.style.visibility = 'hidden');
       // Show question
       const rq = document.getElementById('recallQuestion');
       if (rq) rq.style.display = 'block';
