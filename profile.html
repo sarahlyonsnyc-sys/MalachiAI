@@ -108,6 +108,16 @@
     .cogni-history-row:last-child { border-bottom:none; }
     .cogni-history-date { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); min-width:90px; }
     .cogni-chip { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.06em; padding:3px 8px; border:1px solid var(--border); color:var(--gold); }
+    .cogni-delta { font-family:'DM Mono',monospace; font-size:10px; font-weight:600; min-width:36px; text-align:right; }
+    .cogni-delta.up { color:#4caf50; }
+    .cogni-delta.down { color:#e05068; }
+    .cogni-delta.same { color:var(--muted); }
+    .cogni-progress-chart { margin-top:28px; }
+    .cogni-progress-title { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+    .domain-chart-row { display:grid; grid-template-columns:110px 1fr 32px; align-items:center; gap:12px; margin-bottom:14px; }
+    .domain-chart-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:var(--gold); }
+    .domain-chart-svg-wrap { height:28px; }
+    .domain-chart-val { font-family:'DM Mono',monospace; font-size:11px; color:var(--text); text-align:right; }
     .form-group { margin-bottom:16px; }
     .form-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:6px; }
     .form-input { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--cream); font-family:'DM Mono',monospace; font-size:13px; padding:10px 14px; outline:none; transition:border-color 0.2s; }
@@ -491,19 +501,20 @@ async function loadCognitiveAssessment(userId) {
   try {
     const { data, error } = await sb.from('cognitive_assessments')
       .select('*').eq('user_id', userId)
-      .order('taken_at', { ascending: false }).limit(10);
+      .order('taken_at', { ascending: true }).limit(20);
 
     if (error || !data || data.length === 0) {
       el.innerHTML = `<div class="cogni-empty">No assessment taken yet.<br><a href="assessment.html">Take your cognitive baseline →</a></div>`;
       return;
     }
 
-    const latest = data[0];
+    const latest = data[data.length - 1];
+    const prev   = data.length > 1 ? data[data.length - 2] : null;
     const scores = latest.scores || {};
     const takenDate = new Date(latest.taken_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
     const avg = Math.round(Object.values(scores).reduce((a,b)=>a+b,0) / COGNI_DOMAINS.length);
 
-    // Next retest date
+    // Next retest
     const nextRetest = new Date(latest.taken_at);
     nextRetest.setDate(nextRetest.getDate() + 90);
     const now = new Date();
@@ -511,22 +522,30 @@ async function loadCognitiveAssessment(userId) {
     const daysLeft = Math.max(0, Math.ceil((nextRetest - now) / 86400000));
     const retakeLabel = canRetake ? 'Retake Assessment' : `Retake in ${daysLeft}d`;
 
+    const progressSection = data.length > 1 ? `
+      <div class="cogni-progress-chart" id="cogniProgressChart"></div>` : '';
+
     el.innerHTML = `
       <div class="cogni-meta">
-        <span class="cogni-date">Last taken: ${takenDate} · Avg score: ${avg}/100</span>
+        <span class="cogni-date">Last taken: ${takenDate} · Avg: ${avg}/100${data.length > 1 ? ` · ${data.length} assessments taken` : ''}</span>
         <a href="assessment.html" class="btn-retake">${retakeLabel}</a>
       </div>
       <div class="cogni-grid">
         <div class="cogni-radar-wrap"><canvas id="profileRadar" width="240" height="240"></canvas></div>
         <div id="cogniScoreList"></div>
       </div>
-      ${data.length > 1 ? `<div style="margin-top:20px"><div class="section-title" style="margin-bottom:12px">History</div><div id="cogniHistory"></div></div>` : ''}
+      ${progressSection}
     `;
 
-    // Score rows
+    // Score rows with delta vs previous
     const listEl = document.getElementById('cogniScoreList');
     COGNI_DOMAINS.forEach(d => {
       const score = scores[d.key] || 0;
+      const prevScore = prev ? (prev.scores[d.key] || 0) : null;
+      const delta = prevScore !== null ? score - prevScore : null;
+      const deltaHtml = delta !== null
+        ? `<span class="cogni-delta ${delta > 0 ? 'up' : delta < 0 ? 'down' : 'same'}">${delta > 0 ? '+' : ''}${delta}</span>`
+        : '';
       listEl.innerHTML += `
         <div class="cogni-score-row">
           <div class="cogni-domain">
@@ -535,33 +554,89 @@ async function loadCognitiveAssessment(userId) {
           </div>
           <div class="cogni-bar-wrap"><div class="cogni-bar"><div class="cogni-bar-fill" style="width:${score}%"></div></div></div>
           <div class="cogni-score-val">${score}</div>
+          ${deltaHtml}
         </div>`;
     });
 
-    // History
-    if (data.length > 1) {
-      const histEl = document.getElementById('cogniHistory');
-      data.forEach((entry, i) => {
-        const d = new Date(entry.taken_at);
-        const chips = COGNI_DOMAINS.map(dom =>
-          `<span class="cogni-chip">${dom.name.split(' ')[0]}: ${entry.scores[dom.key]||0}</span>`
-        ).join(' ');
-        histEl.innerHTML += `<div class="cogni-history-row">
-          <span class="cogni-history-date">${d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">${chips}</div>
-        </div>`;
-      });
-    }
-
     // Draw radar
-    setTimeout(() => drawProfileRadar(scores), 100);
+    setTimeout(() => {
+      drawProfileRadar(scores, prev ? prev.scores : null);
+      if (data.length > 1) drawProgressCharts(data);
+    }, 100);
 
   } catch(e) {
     el.innerHTML = `<div class="cogni-empty">No assessment taken yet.<br><a href="assessment.html">Take your cognitive baseline →</a></div>`;
   }
 }
 
-function drawProfileRadar(scores) {
+function drawProgressCharts(data) {
+  const wrap = document.getElementById('cogniProgressChart');
+  if (!wrap) return;
+
+  wrap.innerHTML = `<div class="cogni-progress-title">Progress Across Assessments</div>`;
+
+  const labels = data.map((d,i) => {
+    const dt = new Date(d.taken_at);
+    return dt.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  });
+
+  const W = 300, H = 28, PAD = 4;
+  const n = data.length;
+  const px = i => PAD + (n < 2 ? W/2 : (i / (n-1)) * (W - PAD*2));
+  const py = v => H - PAD - ((v / 100) * (H - PAD*2));
+
+  // Domain colors
+  const COLORS = ['#c9a84c','#7eb8d4','#a8c96e','#c97eb8','#d4a06a'];
+
+  COGNI_DOMAINS.forEach((d, di) => {
+    const scores = data.map(entry => entry.scores[d.key] || 0);
+    const latest = scores[scores.length - 1];
+    const earliest = scores[0];
+    const totalGain = latest - earliest;
+
+    const points = scores.map((s,i) => `${px(i)},${py(s)}`).join(' ');
+    const fillPoints = `${px(0)},${H} ` + points + ` ${px(n-1)},${H}`;
+    const color = COLORS[di];
+    const gainColor = totalGain > 0 ? '#4caf50' : totalGain < 0 ? '#e05068' : '#666';
+    const gainStr = (totalGain > 0 ? '+' : '') + totalGain;
+
+    const svgId = `psvg-${di}`;
+    wrap.innerHTML += `
+      <div class="domain-chart-row">
+        <div class="domain-chart-label">${d.name.split(' ')[0]}</div>
+        <div class="domain-chart-svg-wrap">
+          <svg id="${svgId}" viewBox="0 0 ${W} ${H}" width="100%" height="28" preserveAspectRatio="none"
+               style="overflow:visible;display:block">
+            <!-- Grid lines at 25, 50, 75 -->
+            <line x1="0" y1="${py(75)}" x2="${W}" y2="${py(75)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <line x1="0" y1="${py(50)}" x2="${W}" y2="${py(50)}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+            <line x1="0" y1="${py(25)}" x2="${W}" y2="${py(25)}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <polygon points="${fillPoints}" fill="${color}" fill-opacity="0.08"/>
+            <polyline points="${points}" fill="none" stroke="${color}" stroke-width="2"
+                      stroke-linejoin="round" stroke-linecap="round"/>
+            ${scores.map((s,i) => `<circle cx="${px(i)}" cy="${py(s)}" r="3" fill="${color}" stroke="#111" stroke-width="1.5"/>`).join('')}
+          </svg>
+        </div>
+        <div class="domain-chart-val" style="color:${gainColor};font-size:10px">${gainStr}</div>
+      </div>`;
+  });
+
+  // Date axis labels
+  if (n <= 6) {
+    const axisRow = document.createElement('div');
+    axisRow.style.cssText = 'display:grid;grid-template-columns:110px 1fr 32px;gap:12px;margin-top:4px';
+    const axisLabels = document.createElement('div');
+    axisLabels.style.cssText = 'display:flex;justify-content:space-between;padding:0 4px';
+    axisLabels.innerHTML = labels.map(l =>
+      `<span style="font-family:DM Mono,monospace;font-size:8px;color:rgba(255,255,255,0.2)">${l}</span>`
+    ).join('');
+    axisRow.innerHTML = '<div></div>';
+    axisRow.appendChild(axisLabels);
+    wrap.appendChild(axisRow);
+  }
+}
+
+function drawProfileRadar(scores, prevScores) {
   const canvas = document.getElementById('profileRadar');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -588,7 +663,22 @@ function drawProfileRadar(scores) {
     ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R); ctx.stroke();
   });
 
-  // Fill
+  // Previous scores overlay (ghost)
+  if (prevScores) {
+    ctx.beginPath();
+    COGNI_DOMAINS.forEach((d,i)=>{
+      const a=(i/n)*Math.PI*2-Math.PI/2;
+      const f=(prevScores[d.key]||0)/100;
+      const x=cx+Math.cos(a)*R*f, y=cy+Math.sin(a)*R*f;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    });
+    ctx.closePath();
+    ctx.fillStyle='rgba(255,255,255,0.04)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=1; ctx.setLineDash([3,3]); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Current scores fill
   ctx.beginPath();
   COGNI_DOMAINS.forEach((d,i)=>{
     const a=(i/n)*Math.PI*2-Math.PI/2;
@@ -616,6 +706,17 @@ function drawProfileRadar(scores) {
     const lr=R+18;
     ctx.fillText(d.name.split(' ')[0], cx+Math.cos(a)*lr, cy+Math.sin(a)*lr+3);
   });
+
+  // Legend if prev exists
+  if (prevScores) {
+    ctx.font='8px DM Mono,monospace'; ctx.textAlign='left';
+    ctx.strokeStyle='rgba(255,255,255,0.2)'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(10,H-18); ctx.lineTo(24,H-18); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='rgba(255,255,255,0.3)'; ctx.fillText('Previous', 28, H-14);
+    ctx.strokeStyle='#c9a84c'; ctx.lineWidth=2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(90,H-18); ctx.lineTo(104,H-18); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.fillText('Latest', 108, H-14);
+  }
 }
 
 loadProfile();
