@@ -1418,36 +1418,89 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
   const gameHistory = behaviorData.game_history || [];
   const gameDate = new Date().toISOString();
 
-  // ── ELO UPDATE (only for completed games, not abandoned) ──
+  // ── ELO UPDATE ──
   let ratingChange = 0;
   let newRating = currentChessRating;
+  const isProvisional = ratedGamesCount < PROVISIONAL_GAMES;
+
   if (totalMoves >= 2) {
     const aiElo = DIFFICULTY_ELO[currentDifficulty] || 1000;
-    ratingChange = calcEloChange(currentChessRating, aiElo, playerWon);
-    newRating = Math.max(100, currentChessRating + ratingChange);
-    currentChessRating = newRating;
 
-    // Update rating badge live
-    const badge = document.getElementById('ratingBadgeVal');
-    if (badge) {
-      badge.textContent = newRating;
-      badge.style.color = ratingChange >= 0 ? '#4caf50' : '#e05068';
-      setTimeout(() => badge.style.color = 'var(--gold)', 3000);
-    }
+    if (isProvisional) {
+      // Provisional period — accumulate results, place after game 5
+      ratedGamesCount++;
+      const provisionalResults = behaviorData.provisional_results || [];
+      provisionalResults.push({ aiElo, won: playerWon });
 
-    // Update profiles table
-    await sb.from('profiles').update({ chess_rating: newRating }).eq('id', session.user.id);
+      if (ratedGamesCount >= PROVISIONAL_GAMES) {
+        // Place rating based on all provisional games
+        let placedRating = 800;
+        provisionalResults.forEach(r => {
+          const change = calcEloChange(placedRating, r.aiElo, r.won);
+          placedRating = Math.max(100, placedRating + change);
+        });
+        newRating = placedRating;
+        currentChessRating = newRating;
+        await sb.from('profiles').update({ chess_rating: newRating }).eq('id', session.user.id);
 
-    // Show rating change in game modal
-    const msgEl = document.getElementById('modalMessage');
-    if (msgEl) {
-      const sign = ratingChange >= 0 ? '+' : '';
-      const existingRatingLine = msgEl.querySelector('.rating-line');
-      if (!existingRatingLine) {
-        const rLine = document.createElement('div');
-        rLine.className = 'rating-line';
-        rLine.style.cssText = 'font-family:"DM Mono",monospace;font-size:13px;margin-top:10px;';
-        rLine.innerHTML = `Rating: <span style="color:var(--gold)">${newRating}</span> <span style="color:${ratingChange >= 0 ? '#4caf50' : '#e05068'}">(${sign}${ratingChange})</span>`;
+        // Badge: show placed rating with fanfare
+        const badge = document.getElementById('ratingBadgeVal');
+        if (badge) { badge.textContent = newRating; badge.style.color = '#c9a84c'; }
+
+        // Modal message
+        const msgEl = document.getElementById('modalMessage');
+        if (msgEl && !msgEl.querySelector('.rating-line')) {
+          const rLine = document.createElement('div');
+          rLine.className = 'rating-line';
+          rLine.style.cssText = 'font-family:"DM Mono",monospace;font-size:13px;margin-top:10px;';
+          rLine.innerHTML = `🎯 Placement complete! Your rating: <span style="color:var(--gold);font-weight:600">${newRating}</span>`;
+          msgEl.appendChild(rLine);
+        }
+      } else {
+        // Still provisional — save results, don't show rating yet
+        await sb.from('profiles').update({ chess_rating: null }).eq('id', session.user.id);
+        const gamesLeft = PROVISIONAL_GAMES - ratedGamesCount;
+        const msgEl = document.getElementById('modalMessage');
+        if (msgEl && !msgEl.querySelector('.rating-line')) {
+          const rLine = document.createElement('div');
+          rLine.className = 'rating-line';
+          rLine.style.cssText = 'font-family:"DM Mono",monospace;font-size:13px;margin-top:10px;color:var(--muted)';
+          rLine.innerHTML = `Provisional: ${ratedGamesCount}/${PROVISIONAL_GAMES} games played`;
+          msgEl.appendChild(rLine);
+        }
+        // Save provisional results
+        await sb.from('progress').update({
+          quiz_scores: { ...behaviorData, provisional_results: provisionalResults }
+        }).eq('user_id', session.user.id);
+        return; // skip rest of rating logic
+      }
+    } else {
+      // Rated — normal Elo update
+      ratingChange = calcEloChange(currentChessRating, aiElo, playerWon);
+      newRating = Math.max(100, currentChessRating + ratingChange);
+      currentChessRating = newRating;
+
+      // Update rating badge live
+      const badge = document.getElementById('ratingBadgeVal');
+      if (badge) {
+        badge.textContent = newRating;
+        badge.style.color = ratingChange >= 0 ? '#4caf50' : '#e05068';
+        setTimeout(() => badge.style.color = 'var(--gold)', 3000);
+      }
+
+      // Update profiles table
+      await sb.from('profiles').update({ chess_rating: newRating }).eq('id', session.user.id);
+
+      // Show rating change in game modal
+      const msgEl = document.getElementById('modalMessage');
+      if (msgEl) {
+        const sign = ratingChange >= 0 ? '+' : '';
+        const existingRatingLine = msgEl.querySelector('.rating-line');
+        if (!existingRatingLine) {
+          const rLine = document.createElement('div');
+          rLine.className = 'rating-line';
+          rLine.style.cssText = 'font-family:"DM Mono",monospace;font-size:13px;margin-top:10px;';
+          rLine.innerHTML = `Rating: <span style="color:var(--gold)">${newRating}</span> <span style="color:${ratingChange >= 0 ? '#4caf50' : '#e05068'}">(${sign}${ratingChange})</span>`;
         msgEl.appendChild(rLine);
       }
     }
@@ -1575,7 +1628,9 @@ function calcEloChange(playerRating, opponentRating, won) {
 }
 
 let currentUserId = null;
-let currentChessRating = 800; // default starting rating — climbs as you play
+let currentChessRating = null; // null = unrated until 5 games completed
+let ratedGamesCount = 0; // track provisional period
+const PROVISIONAL_GAMES = 5;
 
 // Check login and load rating
 (async () => {
@@ -1587,8 +1642,18 @@ let currentChessRating = 800; // default starting rating — climbs as you play
       // Show profile link + rating badge
       document.getElementById('profileLink').style.display = 'inline';
       document.getElementById('ratingBadge').style.display = 'flex';
-      currentChessRating = profile.chess_rating || 800;
-      document.getElementById('ratingBadgeVal').textContent = currentChessRating;
+      currentChessRating = profile.chess_rating || null;
+      ratedGamesCount = prog?.games_played || 0; // approx — refine below
+      // Load provisional game count from progress
+      const provResults = prog?.quiz_scores?.provisional_results || [];
+      if (!currentChessRating) {
+        ratedGamesCount = provResults.length;
+        const gamesLeft = PROVISIONAL_GAMES - ratedGamesCount;
+        document.getElementById('ratingBadgeVal').textContent = gamesLeft > 0 ? `?  ${ratedGamesCount}/${PROVISIONAL_GAMES}` : '?';
+      } else {
+        ratedGamesCount = PROVISIONAL_GAMES; // already placed
+        document.getElementById('ratingBadgeVal').textContent = currentChessRating;
+      }
 
       // Add username + sign out to nav
       const nav = document.querySelector('.nav-right');

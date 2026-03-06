@@ -402,10 +402,22 @@ async function loadProfile() {
   document.getElementById('emailEl').textContent = session.user.email || '';
   document.getElementById('editName').value = profile?.username || '';
 
-  // Rating
+  // Rating — handle provisional (null = unrated)
   const rating = profile?.chess_rating || null;
-  document.getElementById('ratingEl').textContent = rating ? rating : '—';
-  document.getElementById('ratingSubEl').textContent = ratingToTitle(rating);
+  const provResults = behavior?.provisional_results || [];
+  const isProvisional = !rating;
+  if (isProvisional) {
+    const done = provResults.length;
+    const left = Math.max(0, 5 - done);
+    document.getElementById('ratingEl').textContent = 'Unrated';
+    document.getElementById('ratingEl').style.fontSize = '28px';
+    document.getElementById('ratingSubEl').textContent = left > 0
+      ? `${done}/5 placement games played`
+      : 'Placement complete next game';
+  } else {
+    document.getElementById('ratingEl').textContent = rating;
+    document.getElementById('ratingSubEl').textContent = ratingToTitle(rating);
+  }
 
   // Rating change from last game
   const history = progress?.quiz_scores?.game_history || [];
