@@ -402,6 +402,17 @@ async function loadProfile() {
   document.getElementById('emailEl').textContent = session.user.email || '';
   document.getElementById('editName').value = profile?.username || '';
 
+  // Stats — behavior must be declared FIRST before any usage
+  const gamesPlayed = progress?.games_played || 0;
+  const gamesWon = progress?.games_won || 0;
+  const winRate = gamesPlayed > 0 ? Math.round(gamesWon / gamesPlayed * 100) : 0;
+  const behavior = progress?.quiz_scores || {};
+  const bestStreak = behavior.best_streak || 0;
+  document.getElementById('statGames').textContent = gamesPlayed;
+  document.getElementById('statWins').textContent = gamesWon;
+  document.getElementById('statWinRate').textContent = winRate + '%';
+  document.getElementById('statStreak').textContent = bestStreak;
+
   // Rating — handle provisional (null = unrated)
   const rating = profile?.chess_rating || null;
   const provResults = behavior?.provisional_results || [];
@@ -432,16 +443,7 @@ async function loadProfile() {
     el.className = 'rating-change ' + (diff >= 0 ? 'up' : 'down');
   }
 
-  // Stats
-  const gamesPlayed = progress?.games_played || 0;
-  const gamesWon = progress?.games_won || 0;
-  const winRate = gamesPlayed > 0 ? Math.round(gamesWon / gamesPlayed * 100) : 0;
-  const behavior = progress?.quiz_scores || {};
-  const bestStreak = behavior.best_streak || 0;
-  document.getElementById('statGames').textContent = gamesPlayed;
-  document.getElementById('statWins').textContent = gamesWon;
-  document.getElementById('statWinRate').textContent = winRate + '%';
-  document.getElementById('statStreak').textContent = bestStreak;
+  // Stats block moved above rating section
 
   // Rating chart
   // If no rating_history yet but profile has a rating, seed chart with current rating
