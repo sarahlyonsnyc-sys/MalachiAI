@@ -1460,7 +1460,8 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
     avgMoveTime,
     totalMoves,
     duration: gameDuration,
-    difficulty: currentDifficulty
+    difficulty: currentDifficulty,
+    times: timesToUse.slice(0, 60)  // per-move times for behavioral analysis
   });
 
   // Rating history for chart
