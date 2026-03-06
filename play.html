@@ -560,16 +560,21 @@ let currentUserName = 'You';
 
 // ── Helpers ──
 function selectMode(mode) {
-  if (mode === 'ai') {
-    gameMode = 'ai';
-    document.getElementById('modeScreen').style.display = 'none';
-    document.getElementById('opponentName').textContent = 'Malachi AI';
-    document.getElementById('opponentColor').textContent = 'Black ♟';
-    document.getElementById('playerName').textContent = currentUserName || 'You';
-    newGame();
-  } else {
-    document.getElementById('modeScreen').style.display = 'none';
-    document.getElementById('lobbyScreen').style.display = 'flex';
+  try {
+    if (mode === 'ai') {
+      gameMode = 'ai';
+      document.getElementById('modeScreen').style.display = 'none';
+      document.getElementById('opponentName').textContent = 'Malachi AI';
+      document.getElementById('opponentColor').textContent = 'Black ♟';
+      document.getElementById('playerName').textContent = currentUserName || 'You';
+      newGame();
+    } else {
+      document.getElementById('modeScreen').style.display = 'none';
+      document.getElementById('lobbyScreen').style.display = 'flex';
+    }
+  } catch(e) {
+    console.error('[selectMode crash]', e);
+    alert('Error: ' + e.message);
   }
 }
 
