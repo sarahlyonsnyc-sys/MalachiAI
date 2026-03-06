@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0-beta.8/dist/cjs/chess.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
 <style>
   :root {
     --gold: #c9a84c;
@@ -803,10 +803,31 @@ function showQuestion(mIdx, qIdx) {
   }
 
   html += `<div class="feedback-bar" id="feedbackBar"></div>
-    <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next →</button>
+    <button class="btn-next" id="btnNext">Next →</button>
   </div>`;
 
   document.getElementById('moduleContent').innerHTML = html;
+
+  // Attach next button listener after render
+  const nextBtn = document.getElementById('btnNext');
+  if (nextBtn) nextBtn.addEventListener('click', nextQuestion);
+
+  // Attach option button listeners after render
+  document.querySelectorAll('.option-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const chosen = this.dataset.val;
+      const correct = this.dataset.correct;
+      const explanation = this.dataset.explanation || '';
+      answerMCQ(chosen, correct, explanation);
+    });
+  });
+
+  // Attach yesno listeners
+  const btnYes = document.getElementById('btnYes');
+  const btnNo  = document.getElementById('btnNo');
+  const correctAns = q.answer;
+  if (btnYes) btnYes.addEventListener('click', () => answerYesNo(true,  correctAns));
+  if (btnNo)  btnNo.addEventListener('click',  () => answerYesNo(false, correctAns));
 
   // Start timer
   if (q.type === 'recall') {
@@ -818,7 +839,7 @@ function showQuestion(mIdx, qIdx) {
 
 // ── BUILD BOARD ──
 function buildBoard(fen, hideAfter = false) {
-  const game = new Chess(fen);
+  const game = typeof Chess === "function" ? new Chess(fen) : Chess(fen);
   let html = '<div class="mini-board" id="miniBoard">';
   for (let rank = 7; rank >= 0; rank--) {
     for (let file = 0; file < 8; file++) {
@@ -842,7 +863,7 @@ function buildRecallQ(q) {
     ${buildBoard(q.showFen, true)}
     <div id="recallQuestion" style="display:none">
       <div class="module-title">${q.question}</div>
-      <div class="options-grid">${q.options.map(o=>`<button class="option-btn" onclick="answerMCQ('${o}','${q.answer}','${q.explanation||''}')">${o}</button>`).join('')}</div>
+      <div class="options-grid">${q.options.map(o=>`<button class="option-btn" data-val="${o}" data-correct="${q.answer}" data-explanation="${q.explanation||''}">${o}</button>`).join('')}</div>
     </div>`;
 }
 
@@ -851,7 +872,7 @@ function buildPatternQ(q) {
     <div class="module-title">${q.question}</div>
     <p class="module-instructions">Study the position — ${q.showTime} seconds.</p>
     ${buildBoard(q.fen)}
-    <div class="options-grid">${q.options.map(o=>`<button class="option-btn" onclick="answerMCQ('${o.replace(/'/g,"\\'")}','${q.answer.replace(/'/g,"\\'")}','')">${o}</button>`).join('')}</div>`;
+    <div class="options-grid">${q.options.map(o=>`<button class="option-btn" data-val="${o}" data-correct="${q.answer}" data-explanation="">${o}</button>`).join('')}</div>`;
 }
 
 function buildYesNoQ(q) {
@@ -863,8 +884,8 @@ function buildYesNoQ(q) {
       <span class="timer-label">Answer before time runs out</span>
     </div>
     <div class="yesno-row">
-      <button class="btn-yesno yes" id="btnYes" onclick="answerYesNo(true, ${q.answer})">YES</button>
-      <button class="btn-yesno no"  id="btnNo"  onclick="answerYesNo(false,${q.answer})">NO</button>
+      <button class="btn-yesno yes" id="btnYes">YES</button>
+      <button class="btn-yesno no"  id="btnNo">NO</button>
     </div>`;
 }
 
@@ -877,7 +898,7 @@ function buildMCQ(q) {
       ${timerRingHTML()}
       <span class="timer-label">Take your time — think before answering</span>
     </div>
-    <div class="options-grid">${q.options.map(o=>`<button class="option-btn" onclick="answerMCQ('${o.replace(/'/g,"\\'")}','${q.answer.replace(/'/g,"\\'")}','${(q.explanation||'').replace(/'/g,"\\'")}')">${o}</button>`).join('')}</div>`;
+    <div class="options-grid">${q.options.map(o=>`<button class="option-btn" data-val="${o}" data-correct="${q.answer}" data-explanation="${(q.explanation||'').replace(/"/g,'&quot;')}">${o}</button>`).join('')}</div>`;
 }
 
 function timerRingHTML() {
