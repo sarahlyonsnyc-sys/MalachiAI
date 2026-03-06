@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cognitive Assessment — Malachi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0-beta.8/dist/cjs/chess.js"></script>
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-dim: rgba(201,168,76,0.15);
+    --dark: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: rgba(255,255,255,0.07);
+    --muted: #666;
+    --text: #e8e8e8;
+    --sq-light: #f0d9b5;
+    --sq-dark: #b58863;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 40px;
+    background: rgba(10,10,10,0.96);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+  }
+  .nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--gold); letter-spacing: 0.08em; text-decoration: none; }
+  .nav-links { display: flex; gap: 24px; align-items: center; }
+  .nav-link { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  .nav-link:hover { color: var(--gold); }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 140px 40px 60px;
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(40px, 6vw, 72px);
+    font-weight: 300;
+    line-height: 1.1;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+  .hero h1 em { font-style: italic; color: var(--gold); }
+  .hero-sub {
+    font-size: 16px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 600px;
+    margin: 0 auto 40px;
+  }
+
+  /* ── DOMAIN OVERVIEW CARDS ── */
+  .domains-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    max-width: 1100px;
+    margin: 0 auto 60px;
+    padding: 0 40px;
+  }
+  .domain-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 20px 16px;
+    text-align: center;
+    transition: border-color 0.3s;
+  }
+  .domain-card:hover { border-color: rgba(201,168,76,0.3); }
+  .domain-icon { font-size: 28px; margin-bottom: 10px; }
+  .domain-name { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+  .domain-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* ── START BUTTON ── */
+  .start-wrap { text-align: center; padding: 0 40px 80px; }
+  .btn-start {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #000;
+    background: var(--gold);
+    border: none;
+    padding: 18px 56px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-start:hover { background: #d4a84c; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(201,168,76,0.25); }
+  .btn-start:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── ASSESSMENT SHELL ── */
+  #assessmentShell {
+    display: none;
+    position: fixed; inset: 0; z-index: 200;
+    background: var(--dark);
+    overflow-y: auto;
+  }
+
+  .assess-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0;
+    background: rgba(10,10,10,0.97);
+    backdrop-filter: blur(12px);
+    z-index: 10;
+  }
+  .assess-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--gold); }
+  .assess-progress-wrap { flex: 1; max-width: 300px; margin: 0 32px; }
+  .assess-progress-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; }
+  .assess-progress-bar { height: 2px; background: var(--surface2); position: relative; }
+  .assess-progress-fill { height: 100%; background: var(--gold); transition: width 0.5s ease; }
+  .btn-quit { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: none; border: 1px solid var(--border); padding: 8px 16px; cursor: pointer; transition: all 0.2s; }
+  .btn-quit:hover { color: #fff; border-color: rgba(255,255,255,0.2); }
+
+  .module-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 60px 40px;
+    animation: fadeUp 0.5s ease forwards;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .module-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .module-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    color: #fff;
+    margin-bottom: 12px;
+    line-height: 1.2;
+  }
+  .module-instructions {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 40px;
+    max-width: 560px;
+  }
+
+  /* ── TIMER ── */
+  .timer-ring-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .timer-ring {
+    width: 56px; height: 56px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-ring circle {
+    fill: none;
+    stroke-width: 3;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s;
+  }
+  .timer-ring .bg { stroke: var(--surface2); }
+  .timer-ring .fg { stroke: var(--gold); stroke-dasharray: 157; stroke-dashoffset: 0; }
+  .timer-num {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gold);
+  }
+  .timer-label { font-size: 13px; color: var(--muted); }
+
+  /* ── CHESS BOARD (small) ── */
+  .mini-board {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    width: min(400px, 80vw);
+    aspect-ratio: 1;
+    border: 2px solid #222;
+    margin: 0 auto 32px;
+    user-select: none;
+  }
+  .mini-sq {
+    aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    font-size: clamp(20px, 3vw, 32px);
+  }
+  .mini-sq.light { background: var(--sq-light); }
+  .mini-sq.dark  { background: var(--sq-dark); }
+  .mini-sq.highlight-gold { background: rgba(201,168,76,0.7) !important; }
+  .mini-sq.highlight-red  { background: rgba(220,50,50,0.7)  !important; }
+  .mini-sq.hidden-piece .piece-glyph { visibility: hidden; }
+  .piece-glyph { pointer-events: none; }
+
+  /* ── ANSWER OPTIONS ── */
+  .options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .option-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 16px 20px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+  .option-btn:hover { border-color: rgba(201,168,76,0.4); background: rgba(201,168,76,0.05); }
+  .option-btn.correct { border-color: #4caf50; background: rgba(76,175,80,0.1); color: #4caf50; }
+  .option-btn.wrong   { border-color: #e53935; background: rgba(229,57,53,0.1);  color: #e53935; }
+  .option-btn:disabled { cursor: not-allowed; }
+
+  /* ── YES/NO ── */
+  .yesno-row { display: flex; gap: 16px; margin-bottom: 32px; }
+  .btn-yesno {
+    flex: 1;
+    padding: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-yesno.yes:hover { border-color: #4caf50; background: rgba(76,175,80,0.1); color: #4caf50; }
+  .btn-yesno.no:hover  { border-color: #e53935; background: rgba(229,57,53,0.1);  color: #e53935; }
+  .btn-yesno.correct { border-color: #4caf50; background: rgba(76,175,80,0.1); color: #4caf50; }
+  .btn-yesno.wrong   { border-color: #e53935; background: rgba(229,57,53,0.1);  color: #e53935; }
+
+  /* ── FEEDBACK ── */
+  .feedback-bar {
+    padding: 14px 20px;
+    font-size: 14px;
+    margin-bottom: 20px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    border-left: 3px solid transparent;
+  }
+  .feedback-bar.show { opacity: 1; }
+  .feedback-bar.correct { border-color: #4caf50; background: rgba(76,175,80,0.06); color: #4caf50; }
+  .feedback-bar.wrong   { border-color: #e53935; background: rgba(229,57,53,0.06); color: #e53935; }
+
+  .btn-next {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: none;
+    border: 1px solid rgba(201,168,76,0.3);
+    padding: 14px 32px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: none;
+  }
+  .btn-next.show { display: inline-flex; align-items: center; gap: 8px; }
+  .btn-next:hover { background: var(--gold-dim); border-color: var(--gold); }
+
+  /* ── MODULE INTRO SCREEN ── */
+  .module-intro {
+    text-align: center;
+    padding: 80px 40px;
+  }
+  .module-intro-icon { font-size: 64px; margin-bottom: 24px; }
+  .module-intro h2 { font-family: 'Cormorant Garamond', serif; font-size: 42px; font-weight: 300; color: #fff; margin-bottom: 16px; }
+  .module-intro p { font-size: 16px; color: var(--muted); line-height: 1.7; max-width: 500px; margin: 0 auto 40px; }
+  .module-intro .domain-tag { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+
+  /* ── RESULTS ── */
+  #resultsShell { display: none; }
+  .results-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 100px 40px 80px;
+  }
+  .results-hero { text-align: center; margin-bottom: 60px; }
+  .results-hero h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(36px,5vw,60px); font-weight: 300; color: #fff; margin-bottom: 12px; }
+  .results-hero p { font-size: 15px; color: var(--muted); line-height: 1.7; max-width: 520px; margin: 0 auto; }
+  .results-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 20px; }
+
+  /* RADAR CHART */
+  .radar-wrap {
+    display: flex;
+    gap: 60px;
+    align-items: center;
+    margin-bottom: 60px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #radarCanvas { flex-shrink: 0; }
+
+  .score-list { flex: 1; min-width: 240px; }
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .score-row:last-child { border-bottom: none; }
+  .score-domain { flex: 1; }
+  .score-domain-name { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 4px; }
+  .score-domain-desc { font-size: 12px; color: var(--muted); }
+  .score-val { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 600; color: #fff; min-width: 60px; text-align: right; }
+  .score-bar-wrap { width: 80px; }
+  .score-bar { height: 3px; background: var(--surface2); position: relative; }
+  .score-bar-fill { height: 100%; background: var(--gold); transition: width 1s ease; }
+
+  /* INTERPRETATION */
+  .interpretation {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    padding: 28px 32px;
+    margin-bottom: 40px;
+  }
+  .interpretation h3 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--gold); margin-bottom: 12px; }
+  .interpretation p { font-size: 14px; color: #aaa; line-height: 1.8; }
+
+  /* NEXT RETEST */
+  .retest-banner {
+    text-align: center;
+    padding: 40px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .retest-banner h3 { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 300; color: #fff; margin-bottom: 8px; }
+  .retest-banner p { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+  .btn-profile {
+    font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #000; background: var(--gold); border: none; padding: 14px 32px; cursor: pointer; transition: all 0.2s; text-decoration: none; display: inline-block;
+  }
+  .btn-profile:hover { background: #d4a84c; }
+
+  /* ── PREVIOUS RESULTS ── */
+  .history-section { max-width: 860px; margin: 0 auto; padding: 0 40px 80px; }
+  .history-section h2 { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; color: #fff; margin-bottom: 24px; }
+  .history-entry {
+    display: flex; align-items: center; gap: 20px;
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .history-entry:hover { border-color: rgba(201,168,76,0.3); }
+  .history-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); min-width: 100px; }
+  .history-scores { display: flex; gap: 16px; flex: 1; flex-wrap: wrap; }
+  .history-chip { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; padding: 4px 10px; border: 1px solid var(--border); color: var(--gold); }
+
+  @media (max-width: 640px) {
+    nav { padding: 14px 20px; }
+    .domains-grid { grid-template-columns: repeat(2,1fr); padding: 0 20px; }
+    .hero { padding: 110px 20px 40px; }
+    .start-wrap { padding: 0 20px 60px; }
+    .assess-header { padding: 16px 20px; }
+    .module-container { padding: 40px 20px; }
+    .radar-wrap { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">♟ Malachi</a>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Home</a>
+    <a href="play.html" class="nav-link">Play</a>
+    <a href="profile.html" class="nav-link">Profile</a>
+  </div>
+</nav>
+
+<!-- ── LANDING ── -->
+<div id="landingShell">
+  <div class="hero">
+    <div class="hero-eyebrow">Cognitive Baseline Assessment</div>
+    <h1>Measure your mind.<br/><em>Watch it grow.</em></h1>
+    <p class="hero-sub">Five short modules — 15 minutes total — measuring the exact cognitive domains that chess develops. Retake every 90 days to track your growth over time.</p>
+  </div>
+
+  <div class="domains-grid">
+    <div class="domain-card"><div class="domain-icon">🧠</div><div class="domain-name">Working Memory</div><div class="domain-desc">Hold complex positions in mind</div></div>
+    <div class="domain-card"><div class="domain-icon">⚡</div><div class="domain-name">Pattern Recognition</div><div class="domain-desc">Instantly read board structure</div></div>
+    <div class="domain-card"><div class="domain-icon">🎯</div><div class="domain-name">Processing Speed</div><div class="domain-desc">Evaluate positions under time pressure</div></div>
+    <div class="domain-card"><div class="domain-icon">🔒</div><div class="domain-name">Inhibitory Control</div><div class="domain-desc">Resist impulse, find the best move</div></div>
+    <div class="domain-card"><div class="domain-icon">💡</div><div class="domain-name">Fluid Reasoning</div><div class="domain-desc">Solve novel problems with pure logic</div></div>
+  </div>
+
+  <div class="start-wrap">
+    <button class="btn-start" id="btnStart" onclick="startAssessment()">Begin Assessment</button>
+    <div style="margin-top:16px; font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);">~15 minutes · 5 modules · no chess knowledge required for all sections</div>
+  </div>
+
+  <!-- Previous results -->
+  <div class="history-section" id="historySection" style="display:none">
+    <h2>Your Assessment History</h2>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<!-- ── ASSESSMENT SHELL ── -->
+<div id="assessmentShell">
+  <div class="assess-header">
+    <div class="assess-title">Cognitive Assessment</div>
+    <div class="assess-progress-wrap">
+      <div class="assess-progress-label" id="progressLabel">Module 1 of 5</div>
+      <div class="assess-progress-bar"><div class="assess-progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+    <button class="btn-quit" onclick="quitAssessment()">✕ Quit</button>
+  </div>
+  <div id="moduleContent"></div>
+</div>
+
+<!-- ── RESULTS SHELL ── -->
+<div id="resultsShell">
+  <div class="results-wrap">
+    <div class="results-hero">
+      <div class="results-date" id="resultsDate"></div>
+      <h1>Your Cognitive <em style="font-style:italic;color:var(--gold)">Fingerprint</em></h1>
+      <p>These scores reflect your cognitive baseline today. Chess training directly develops each of these domains — retake in 90 days to measure your growth.</p>
+    </div>
+
+    <div class="radar-wrap">
+      <canvas id="radarCanvas" width="320" height="320"></canvas>
+      <div class="score-list" id="scoreList"></div>
+    </div>
+
+    <div class="interpretation" id="interpretationBox"></div>
+
+    <div class="retest-banner">
+      <h3>Your next assessment unlocks in 90 days</h3>
+      <p>In the meantime, every puzzle you solve and every game you play is developing these exact cognitive pathways. Your data is being saved to your profile.</p>
+      <a href="profile.html" class="btn-profile">View My Profile →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SUPABASE ──
+const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
+const { createClient } = window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, storageKey: 'malachi-auth' } });
+
+// ── PIECE GLYPHS ──
+const GLYPHS = { wp:'♙', wr:'♖', wn:'♘', wb:'♗', wq:'♕', wk:'♔', bp:'♟', br:'♜', bn:'♞', bb:'♝', bq:'♛', bk:'♚' };
+
+// ── DOMAIN METADATA ──
+const DOMAINS = [
+  { key: 'working_memory',     name: 'Working Memory',     icon: '🧠', color: '#c9a84c', desc: 'Holding complex information in mind while processing it' },
+  { key: 'pattern_recognition',name: 'Pattern Recognition', icon: '⚡', color: '#7eb8d4', desc: 'Rapidly identifying familiar structures in new situations' },
+  { key: 'processing_speed',   name: 'Processing Speed',   icon: '🎯', color: '#a8c96e', desc: 'Accurately processing information quickly under pressure' },
+  { key: 'inhibitory_control', name: 'Inhibitory Control', icon: '🔒', color: '#c97eb8', desc: 'Suppressing impulse to find better alternatives' },
+  { key: 'fluid_reasoning',    name: 'Fluid Reasoning',    icon: '💡', color: '#d4a06a', desc: 'Solving novel problems through pure logic' },
+];
+
+// ── ASSESSMENT STATE ──
+let currentModule = 0;
+let moduleScores = {};
+let currentQ = 0;
+let qCorrect = 0;
+let timerInterval = null;
+let timeLeft = 0;
+let answerGiven = false;
+
+// ── MODULE DEFINITIONS ──
+// Each module: { domain, title, intro, questions[] }
+
+const MODULES = [
+
+  // ── MODULE 1: WORKING MEMORY (Board Recall) ──
+  {
+    domain: 'working_memory',
+    title: 'Board Recall',
+    intro: { icon: '🧠', title: 'Board Recall', desc: 'You\'ll see a chess position for 5 seconds. Then pieces vanish. Answer from memory. Don\'t worry if you don\'t know chess — focus on where the pieces are, not what they\'re called.' },
+    questions: [
+      {
+        type: 'recall',
+        showFen: '8/8/8/4P3/3p4/8/8/8 w - - 0 1',
+        question: 'Where was the white pawn (♙)?',
+        options: ['e5', 'd5', 'e4', 'd4'],
+        answer: 'e5',
+        showTime: 5
+      },
+      {
+        type: 'recall',
+        showFen: '8/8/3r4/8/8/5N2/8/8 w - - 0 1',
+        question: 'Where was the black rook (♜)?',
+        options: ['d6', 'e6', 'd5', 'f3'],
+        answer: 'd6',
+        showTime: 5
+      },
+      {
+        type: 'recall',
+        showFen: '8/2p5/8/8/8/4B3/8/8 w - - 0 1',
+        question: 'Where was the white bishop (♗)?',
+        options: ['e4', 'e3', 'f4', 'c7'],
+        answer: 'e3',
+        showTime: 5
+      },
+      {
+        type: 'recall',
+        showFen: '8/8/8/2q5/8/8/3R4/8 w - - 0 1',
+        question: 'Where was the black queen (♛)?',
+        options: ['c5', 'd5', 'c4', 'd3'],
+        answer: 'c5',
+        showTime: 5
+      },
+      {
+        type: 'recall',
+        showFen: '8/8/1n6/8/8/6B1/8/8 w - - 0 1',
+        question: 'Where was the black knight (♞)?',
+        options: ['b6', 'c6', 'b5', 'g3'],
+        answer: 'b6',
+        showTime: 5
+      },
+    ]
+  },
+
+  // ── MODULE 2: PATTERN RECOGNITION ──
+  {
+    domain: 'pattern_recognition',
+    title: 'Board Patterns',
+    intro: { icon: '⚡', title: 'Pattern Recognition', desc: 'Look at a chess position and answer questions about structure and layout. You have 8 seconds per question. This measures how quickly your brain reads visual patterns.' },
+    questions: [
+      {
+        type: 'pattern',
+        fen: 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1',
+        question: 'Which side has a pawn in the center?',
+        options: ['White', 'Black', 'Both', 'Neither'],
+        answer: 'White',
+        showTime: 8
+      },
+      {
+        type: 'pattern',
+        fen: '8/8/8/8/3pp3/3PP3/8/8 w - - 0 1',
+        question: 'How many pawns total are on the board?',
+        options: ['2', '3', '4', '5'],
+        answer: '4',
+        showTime: 8
+      },
+      {
+        type: 'pattern',
+        fen: '4k3/8/8/8/8/8/8/4K3 w - - 0 1',
+        question: 'Where are both kings located?',
+        options: ['Same file', 'Same rank', 'Different files and ranks', 'Diagonal from each other'],
+        answer: 'Same file',
+        showTime: 8
+      },
+      {
+        type: 'pattern',
+        fen: '8/8/8/3ppp2/3PPP2/8/8/8 w - - 0 1',
+        question: 'What shape do the pawns form?',
+        options: ['A diagonal line', 'Two parallel rows', 'A cluster in corner', 'Scattered randomly'],
+        answer: 'Two parallel rows',
+        showTime: 8
+      },
+      {
+        type: 'pattern',
+        fen: 'r1bqkb1r/pppppppp/2n2n2/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 2 3',
+        question: 'How many black knights are developed (not on rank 8)?',
+        options: ['0', '1', '2', '3'],
+        answer: '2',
+        showTime: 8
+      },
+    ]
+  },
+
+  // ── MODULE 3: PROCESSING SPEED (Legal Move Yes/No) ──
+  {
+    domain: 'processing_speed',
+    title: 'Quick Decisions',
+    intro: { icon: '🎯', title: 'Processing Speed', desc: 'Answer YES or NO as fast as possible. You\'ll see a piece and two squares — is that a legal move for that piece? Speed and accuracy both count. You have 5 seconds.' },
+    questions: [
+      { type:'yesno', question:'Can a rook move from a1 to a8 in one move?',   answer:true,  piece:'♖' },
+      { type:'yesno', question:'Can a bishop move from c1 to e3 in one move?',  answer:true,  piece:'♗' },
+      { type:'yesno', question:'Can a knight move from b1 to c3 in one move?',  answer:true,  piece:'♘' },
+      { type:'yesno', question:'Can a rook move from a1 to b3 in one move?',    answer:false, piece:'♖' },
+      { type:'yesno', question:'Can a queen move from d1 to h5 in one move?',   answer:true,  piece:'♕' },
+      { type:'yesno', question:'Can a knight move from g1 to f3 in one move?',  answer:true,  piece:'♘' },
+      { type:'yesno', question:'Can a bishop move from f1 to f5 in one move?',  answer:false, piece:'♗' },
+      { type:'yesno', question:'Can a queen move from d1 to d8 in one move?',   answer:true,  piece:'♕' },
+    ],
+    speedBonus: true
+  },
+
+  // ── MODULE 4: INHIBITORY CONTROL ──
+  {
+    domain: 'inhibitory_control',
+    title: 'The Better Move',
+    intro: { icon: '🔒', title: 'Inhibitory Control', desc: 'In each position, one move looks obvious. Your job is to decide — is the obvious move actually the RIGHT move? This tests your ability to pause and think before acting.' },
+    questions: [
+      {
+        type: 'inhibit',
+        fen: '4k3/8/8/8/8/8/4Q3/4K3 w - - 0 1',
+        question: 'White queen is on e2. The obvious move is Qe8+ (check). Is it the BEST move?',
+        options: ['Yes — take the check', 'No — there\'s something better', 'Yes — it wins immediately', 'No — it\'s actually illegal'],
+        answer: 'Yes — it wins immediately',
+        explanation: 'Qe8 IS checkmate here — the obvious move is correct. Sometimes the first instinct is right.',
+        showTime: 12
+      },
+      {
+        type: 'inhibit',
+        fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 4 4',
+        question: 'White can capture the pawn on e5 with the knight. Should White take it?',
+        options: ['Yes — free pawn, take it', 'No — it loses a piece after Nxe5 Nxe5 Bxe5', 'Yes — it gains material', 'No — pawns aren\'t worth taking'],
+        answer: 'No — it loses a piece after Nxe5 Nxe5 Bxe5',
+        explanation: 'The "free" pawn is a trap. Taking it leads to losing your own bishop — a classic inhibitory control test.',
+        showTime: 12
+      },
+      {
+        type: 'inhibit',
+        fen: '8/8/8/4k3/8/4K3/8/8 w - - 0 1',
+        question: 'Kings are on e3 and e5 facing each other. Is it legal for White king to move to e4?',
+        options: ['Yes — advance the king', 'No — kings can\'t move next to each other', 'Yes — it\'s a good move', 'No — it\'s not White\'s turn'],
+        answer: 'No — kings can\'t move next to each other',
+        explanation: 'Kings can never occupy adjacent squares — moving to e4 would put White in check from the black king on e5.',
+        showTime: 12
+      },
+      {
+        type: 'inhibit',
+        fen: 'r3k3/8/8/8/8/8/8/R3K3 w Q - 0 1',
+        question: 'White has a rook and king. The obvious move is to advance the rook up the board. Is there a better idea?',
+        options: ['No — advance the rook', 'Yes — castle queenside first to activate the rook', 'No — the rook is already active', 'Yes — move the king instead'],
+        answer: 'Yes — castle queenside first to activate the rook',
+        explanation: 'Castling connects the rook to the center more efficiently than moving it one square at a time.',
+        showTime: 12
+      },
+    ]
+  },
+
+  // ── MODULE 5: FLUID REASONING (Novel Puzzles) ──
+  {
+    domain: 'fluid_reasoning',
+    title: 'Pure Logic',
+    intro: { icon: '💡', title: 'Fluid Reasoning', desc: 'These are pure logic puzzles using chess pieces — no prior chess knowledge needed. Figure out the rules from context. This measures raw reasoning ability, not chess skill.' },
+    questions: [
+      {
+        type: 'logic',
+        question: 'A rook moves in straight lines — horizontally or vertically, any number of squares. If a rook is on a1, which square can it NOT reach in one move?',
+        options: ['a8', 'h1', 'b2', 'a3'],
+        answer: 'b2',
+        explanation: 'b2 is diagonal from a1 — rooks cannot move diagonally.',
+        showTime: 20
+      },
+      {
+        type: 'logic',
+        question: 'A knight moves in an "L" shape — 2 squares one direction then 1 square perpendicular. From e4, a knight can reach d2, f2, c3, g3, c5, g5, d6, f6. How many squares is that?',
+        options: ['6', '7', '8', '4'],
+        answer: '8',
+        explanation: 'A knight in the center always has exactly 8 possible squares it can reach.',
+        showTime: 20
+      },
+      {
+        type: 'logic',
+        question: 'If pieces can only move forward (toward the opponent), which piece type is this describing?',
+        options: ['Rook', 'Bishop', 'Pawn', 'Knight'],
+        answer: 'Pawn',
+        explanation: 'Pawns are the only piece that can only move forward — all others can move in multiple directions.',
+        showTime: 15
+      },
+      {
+        type: 'logic',
+        question: 'A bishop only moves diagonally. The board alternates light and dark squares. If a bishop starts on a light square, where can it end up after any number of moves?',
+        options: ['Any square', 'Only light squares', 'Only dark squares', 'Only the same color diagonal'],
+        answer: 'Only light squares',
+        explanation: 'Because diagonals always stay on the same color, a bishop on a light square is permanently restricted to light squares.',
+        showTime: 20
+      },
+      {
+        type: 'logic',
+        question: 'The queen combines the powers of rook and bishop. From d4, how many squares can the queen reach in one move on an empty board?',
+        options: ['14', '21', '27', '32'],
+        answer: '27',
+        explanation: 'From d4: rook covers 14 squares (7 per direction × 2 axes) + bishop covers 13 squares = 27 total.',
+        showTime: 25
+      },
+    ]
+  }
+];
+
+// ── START ──
+function startAssessment() {
+  currentModule = 0;
+  moduleScores = {};
+  document.getElementById('landingShell').style.display = 'none';
+  document.getElementById('assessmentShell').style.display = 'block';
+  showModuleIntro(0);
+}
+
+function quitAssessment() {
+  if (!confirm('Quit the assessment? Your progress will be lost.')) return;
+  clearTimer();
+  document.getElementById('assessmentShell').style.display = 'none';
+  document.getElementById('landingShell').style.display = 'block';
+}
+
+function updateProgress() {
+  const totalQ = MODULES.reduce((s,m)=>s+m.questions.length,0);
+  const doneQ  = MODULES.slice(0,currentModule).reduce((s,m)=>s+m.questions.length,0) + currentQ;
+  document.getElementById('progressFill').style.width = (doneQ/totalQ*100)+'%';
+  document.getElementById('progressLabel').textContent = `Module ${currentModule+1} of ${MODULES.length}`;
+}
+
+// ── MODULE INTRO ──
+function showModuleIntro(idx) {
+  clearTimer();
+  const m = MODULES[idx];
+  const d = DOMAINS.find(d=>d.key===m.domain);
+  currentQ = 0; qCorrect = 0; answerGiven = false;
+  updateProgress();
+
+  document.getElementById('moduleContent').innerHTML = `
+    <div class="module-container">
+      <div class="module-intro">
+        <div class="domain-tag">${d.name}</div>
+        <div class="module-intro-icon">${m.intro.icon}</div>
+        <h2>${m.intro.title}</h2>
+        <p>${m.intro.desc}</p>
+        <button class="btn-start" onclick="showQuestion(${idx}, 0)">Start Module →</button>
+      </div>
+    </div>`;
+}
+
+// ── QUESTION DISPLAY ──
+function showQuestion(mIdx, qIdx) {
+  clearTimer();
+  answerGiven = false;
+  const m = MODULES[mIdx];
+  const q = m.questions[qIdx];
+  currentQ = qIdx;
+  updateProgress();
+
+  const d = DOMAINS.find(d=>d.key===m.domain);
+  let html = `<div class="module-container">
+    <div class="module-eyebrow">${d.name} — Question ${qIdx+1} of ${m.questions.length}</div>`;
+
+  if (q.type === 'recall') {
+    html += buildRecallQ(q);
+  } else if (q.type === 'pattern') {
+    html += buildPatternQ(q);
+  } else if (q.type === 'yesno') {
+    html += buildYesNoQ(q);
+  } else if (q.type === 'inhibit' || q.type === 'logic') {
+    html += buildMCQ(q);
+  }
+
+  html += `<div class="feedback-bar" id="feedbackBar"></div>
+    <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next →</button>
+  </div>`;
+
+  document.getElementById('moduleContent').innerHTML = html;
+
+  // Start timer
+  if (q.type === 'recall') {
+    startRecallReveal(q);
+  } else {
+    startTimer(q.showTime || (m.speedBonus ? 5 : 15), q.type === 'yesno');
+  }
+}
+
+// ── BUILD BOARD ──
+function buildBoard(fen, hideAfter = false) {
+  const game = new Chess(fen);
+  let html = '<div class="mini-board" id="miniBoard">';
+  for (let rank = 7; rank >= 0; rank--) {
+    for (let file = 0; file < 8; file++) {
+      const sq = String.fromCharCode(97+file) + (rank+1);
+      const isLight = (rank+file) % 2 !== 0;
+      const piece = game.get(sq);
+      const glyph = piece ? GLYPHS[piece.color+piece.type] : '';
+      html += `<div class="mini-sq ${isLight?'light':'dark'}" id="sq-${sq}">
+        <span class="piece-glyph" style="pointer-events:none">${glyph}</span>
+      </div>`;
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+function buildRecallQ(q) {
+  return `
+    <div class="module-title" id="qTitle">Study this position</div>
+    <p class="module-instructions">Memorize where each piece is. Board hides in <span id="countdownTxt">5</span> seconds.</p>
+    ${buildBoard(q.showFen, true)}
+    <div id="recallQuestion" style="display:none">
+      <div class="module-title">${q.question}</div>
+      <div class="options-grid">${q.options.map(o=>`<button class="option-btn" onclick="answerMCQ('${o}','${q.answer}','${q.explanation||''}')">${o}</button>`).join('')}</div>
+    </div>`;
+}
+
+function buildPatternQ(q) {
+  return `
+    <div class="module-title">${q.question}</div>
+    <p class="module-instructions">Study the position — ${q.showTime} seconds.</p>
+    ${buildBoard(q.fen)}
+    <div class="options-grid">${q.options.map(o=>`<button class="option-btn" onclick="answerMCQ('${o.replace(/'/g,"\\'")}','${q.answer.replace(/'/g,"\\'")}','')">${o}</button>`).join('')}</div>`;
+}
+
+function buildYesNoQ(q) {
+  return `
+    <div class="module-title" style="font-size:28px">${q.piece}</div>
+    <div class="module-title">${q.question}</div>
+    <div class="timer-ring-wrap">
+      ${timerRingHTML()}
+      <span class="timer-label">Answer before time runs out</span>
+    </div>
+    <div class="yesno-row">
+      <button class="btn-yesno yes" id="btnYes" onclick="answerYesNo(true, ${q.answer})">YES</button>
+      <button class="btn-yesno no"  id="btnNo"  onclick="answerYesNo(false,${q.answer})">NO</button>
+    </div>`;
+}
+
+function buildMCQ(q) {
+  const board = (q.fen ? buildBoard(q.fen) : '');
+  return `
+    <div class="module-title">${q.question}</div>
+    ${board}
+    <div class="timer-ring-wrap">
+      ${timerRingHTML()}
+      <span class="timer-label">Take your time — think before answering</span>
+    </div>
+    <div class="options-grid">${q.options.map(o=>`<button class="option-btn" onclick="answerMCQ('${o.replace(/'/g,"\\'")}','${q.answer.replace(/'/g,"\\'")}','${(q.explanation||'').replace(/'/g,"\\'")}')">${o}</button>`).join('')}</div>`;
+}
+
+function timerRingHTML() {
+  return `<div class="timer-ring"><svg width="56" height="56" viewBox="0 0 56 56">
+    <circle class="bg" cx="28" cy="28" r="25"/>
+    <circle class="fg" id="timerArc" cx="28" cy="28" r="25"/>
+  </svg><div class="timer-num" id="timerNum">—</div></div>`;
+}
+
+// ── RECALL FLOW ──
+function startRecallReveal(q) {
+  let t = q.showTime || 5;
+  const cd = document.getElementById('countdownTxt');
+  timerInterval = setInterval(() => {
+    t--;
+    if (cd) cd.textContent = t;
+    if (t <= 0) {
+      clearInterval(timerInterval);
+      // Hide pieces
+      document.querySelectorAll('.piece-glyph').forEach(el => el.style.visibility = 'hidden');
+      // Show question
+      const rq = document.getElementById('recallQuestion');
+      if (rq) rq.style.display = 'block';
+      const title = document.getElementById('qTitle');
+      if (title) title.style.display = 'none';
+      document.querySelector('.module-instructions').style.display = 'none';
+      startTimer(20, false);
+    }
+  }, 1000);
+}
+
+// ── TIMER ──
+let timerStartTime = 0;
+let timerDuration = 0;
+let timerSpeedMode = false;
+let timerResponseTime = 0;
+
+function startTimer(seconds, speedMode = false) {
+  clearTimer();
+  timeLeft = seconds;
+  timerDuration = seconds;
+  timerSpeedMode = speedMode;
+  timerStartTime = Date.now();
+  const arc = document.getElementById('timerArc');
+  const num = document.getElementById('timerNum');
+  if (!arc && !num) return;
+  const circ = 157;
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    const frac = timeLeft / timerDuration;
+    if (arc) { arc.style.strokeDashoffset = circ * (1 - frac); arc.style.stroke = frac > 0.4 ? 'var(--gold)' : frac > 0.2 ? '#d4a84c' : '#e53935'; }
+    if (num) num.textContent = timeLeft;
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      if (!answerGiven) timeoutAnswer();
+    }
+  }, 1000);
+
+  if (num) num.textContent = seconds;
+  if (arc) arc.style.strokeDashoffset = 0;
+}
+
+function clearTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function timeoutAnswer() {
+  answerGiven = true;
+  showFeedback(false, 'Time\'s up!');
+  disableButtons();
+  showNext();
+}
+
+// ── ANSWER HANDLERS ──
+function answerMCQ(chosen, correct, explanation) {
+  if (answerGiven) return;
+  answerGiven = true;
+  clearTimer();
+  timerResponseTime = Date.now() - timerStartTime;
+  const isCorrect = chosen === correct;
+  if (isCorrect) qCorrect++;
+
+  document.querySelectorAll('.option-btn').forEach(btn => {
+    btn.disabled = true;
+    if (btn.textContent === correct) btn.classList.add('correct');
+    else if (btn.textContent === chosen && !isCorrect) btn.classList.add('wrong');
+  });
+
+  showFeedback(isCorrect, isCorrect ? 'Correct.' : `The answer was: ${correct}. ${explanation}`);
+  showNext();
+}
+
+function answerYesNo(chosen, correct) {
+  if (answerGiven) return;
+  answerGiven = true;
+  clearTimer();
+  timerResponseTime = Date.now() - timerStartTime;
+  const isCorrect = chosen === correct;
+  if (isCorrect) qCorrect++;
+
+  document.getElementById('btnYes').disabled = true;
+  document.getElementById('btnNo').disabled  = true;
+  const btn = chosen ? document.getElementById('btnYes') : document.getElementById('btnNo');
+  btn.classList.add(isCorrect ? 'correct' : 'wrong');
+  if (!isCorrect) {
+    const correctBtn = correct ? document.getElementById('btnYes') : document.getElementById('btnNo');
+    correctBtn.classList.add('correct');
+  }
+
+  showFeedback(isCorrect, isCorrect ? 'Correct.' : `Actually ${correct ? 'YES' : 'NO'} — that move is ${correct ? 'legal' : 'illegal'}.`);
+  showNext();
+}
+
+function showFeedback(correct, msg) {
+  const bar = document.getElementById('feedbackBar');
+  if (!bar) return;
+  bar.textContent = msg;
+  bar.className = 'feedback-bar show ' + (correct ? 'correct' : 'wrong');
+}
+
+function disableButtons() {
+  document.querySelectorAll('.option-btn, .btn-yesno').forEach(b => b.disabled = true);
+}
+
+function showNext() {
+  const btn = document.getElementById('btnNext');
+  if (btn) btn.className = 'btn-next show';
+}
+
+// ── NAVIGATION ──
+function nextQuestion() {
+  const m = MODULES[currentModule];
+  if (currentQ + 1 < m.questions.length) {
+    showQuestion(currentModule, currentQ + 1);
+  } else {
+    // Module complete — compute score
+    const score = Math.round((qCorrect / m.questions.length) * 100);
+    moduleScores[m.domain] = score;
+    currentModule++;
+    if (currentModule < MODULES.length) {
+      showModuleIntro(currentModule);
+    } else {
+      showResults();
+    }
+  }
+}
+
+// ── RESULTS ──
+async function showResults() {
+  clearTimer();
+  document.getElementById('assessmentShell').style.display = 'none';
+  document.getElementById('resultsShell').style.display = 'block';
+  window.scrollTo(0, 0);
+
+  // Date
+  const now = new Date();
+  document.getElementById('resultsDate').textContent =
+    now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' }).toUpperCase();
+
+  // Score list
+  const scoreListEl = document.getElementById('scoreList');
+  scoreListEl.innerHTML = '';
+  DOMAINS.forEach(d => {
+    const score = moduleScores[d.key] || 0;
+    scoreListEl.innerHTML += `
+      <div class="score-row">
+        <div class="score-domain">
+          <div class="score-domain-name">${d.name}</div>
+          <div class="score-domain-desc">${d.desc}</div>
+        </div>
+        <div class="score-bar-wrap"><div class="score-bar"><div class="score-bar-fill" style="width:${score}%"></div></div></div>
+        <div class="score-val">${score}</div>
+      </div>`;
+  });
+
+  // Radar chart
+  setTimeout(() => drawRadar(), 100);
+
+  // Interpretation
+  const avg = Math.round(Object.values(moduleScores).reduce((a,b)=>a+b,0) / DOMAINS.length);
+  const strongest = DOMAINS.reduce((a,b) => (moduleScores[a.key]||0) > (moduleScores[b.key]||0) ? a : b);
+  const weakest   = DOMAINS.reduce((a,b) => (moduleScores[a.key]||0) < (moduleScores[b.key]||0) ? a : b);
+
+  document.getElementById('interpretationBox').innerHTML = `
+    <h3>Your Profile</h3>
+    <p>Your average cognitive score is <strong style="color:var(--gold)">${avg}/100</strong>. Your strongest domain is <strong style="color:var(--gold)">${strongest.name}</strong> — this is where your brain naturally excels. Your biggest growth opportunity is <strong style="color:var(--gold)">${weakest.name}</strong> — chess training directly and measurably develops this area. Retake this assessment in 90 days after consistent practice and you should see measurable gains, particularly in ${weakest.name} and Processing Speed, which respond fastest to chess training.</p>`;
+
+  // Save to Supabase
+  await saveResults();
+
+  // Show landing history
+  loadHistory();
+}
+
+function drawRadar() {
+  const canvas = document.getElementById('radarCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = 320, H = 320, cx = W/2, cy = H/2, R = 120;
+  const n = DOMAINS.length;
+  ctx.clearRect(0,0,W,H);
+
+  // Grid rings
+  [0.25,0.5,0.75,1].forEach(frac => {
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1;
+    for (let i=0;i<n;i++) {
+      const angle = (i/n)*Math.PI*2 - Math.PI/2;
+      const x = cx + Math.cos(angle)*R*frac;
+      const y = cy + Math.sin(angle)*R*frac;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.closePath(); ctx.stroke();
+  });
+
+  // Axes
+  DOMAINS.forEach((_,i) => {
+    const angle = (i/n)*Math.PI*2 - Math.PI/2;
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(cx + Math.cos(angle)*R, cy + Math.sin(angle)*R);
+    ctx.stroke();
+  });
+
+  // Fill
+  ctx.beginPath();
+  DOMAINS.forEach((d,i) => {
+    const angle = (i/n)*Math.PI*2 - Math.PI/2;
+    const frac = (moduleScores[d.key]||0) / 100;
+    const x = cx + Math.cos(angle)*R*frac;
+    const y = cy + Math.sin(angle)*R*frac;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(201,168,76,0.12)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(201,168,76,0.8)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Dots
+  DOMAINS.forEach((d,i) => {
+    const angle = (i/n)*Math.PI*2 - Math.PI/2;
+    const frac = (moduleScores[d.key]||0)/100;
+    const x = cx + Math.cos(angle)*R*frac;
+    const y = cy + Math.sin(angle)*R*frac;
+    ctx.beginPath();
+    ctx.arc(x,y,5,0,Math.PI*2);
+    ctx.fillStyle = 'var(--gold)'; ctx.fill();
+  });
+
+  // Labels
+  ctx.font = '11px DM Mono, monospace';
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.textAlign = 'center';
+  DOMAINS.forEach((d,i) => {
+    const angle = (i/n)*Math.PI*2 - Math.PI/2;
+    const labelR = R + 24;
+    const x = cx + Math.cos(angle)*labelR;
+    const y = cy + Math.sin(angle)*labelR + 4;
+    ctx.fillText(d.name.split(' ')[0], x, y);
+  });
+}
+
+// ── SAVE TO SUPABASE ──
+async function saveResults() {
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    await sb.from('cognitive_assessments').insert({
+      user_id: user.id,
+      scores: moduleScores,
+      taken_at: new Date().toISOString()
+    });
+  } catch(e) { console.log('Save skipped (table may not exist yet):', e.message); }
+}
+
+// ── LOAD HISTORY ──
+async function loadHistory() {
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    const { data } = await sb.from('cognitive_assessments')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('taken_at', { ascending: false })
+      .limit(10);
+    if (!data || data.length === 0) return;
+
+    const histSec = document.getElementById('historySection');
+    const histList = document.getElementById('historyList');
+    if (!histSec || !histList) return;
+    histSec.style.display = 'block';
+    histList.innerHTML = data.map(entry => {
+      const d = new Date(entry.taken_at);
+      const chips = DOMAINS.map(dom => `<span class="history-chip">${dom.name.split(' ')[0]}: ${entry.scores[dom.key]||0}</span>`).join('');
+      return `<div class="history-entry">
+        <div class="history-date">${d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+        <div class="history-scores">${chips}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// ── INIT ──
+window.addEventListener('load', () => {
+  loadHistory();
+});
+</script>
+</body>
+</html>
