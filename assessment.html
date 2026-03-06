@@ -769,9 +769,14 @@ function showModuleIntro(idx) {
         <div class="module-intro-icon">${m.intro.icon}</div>
         <h2>${m.intro.title}</h2>
         <p>${m.intro.desc}</p>
-        <button class="btn-start" onclick="showQuestion(${idx}, 0)">Start Module →</button>
+        <button class="btn-start" id="btnStartModule" data-midx="${idx}">Start Module →</button>
       </div>
     </div>`;
+  // Attach after render to avoid innerHTML onclick scoping issues
+  const startBtn = document.getElementById('btnStartModule');
+  if (startBtn) startBtn.addEventListener('click', function() {
+    showQuestion(parseInt(this.dataset.midx), 0);
+  });
 }
 
 // ── QUESTION DISPLAY ──
