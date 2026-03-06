@@ -232,6 +232,18 @@
   .mini-sq.highlight-red  { background: rgba(220,50,50,0.7)  !important; }
   .mini-sq.hidden-piece .piece-glyph { visibility: hidden; }
   .piece-glyph { pointer-events: none; }
+  .coord-rank {
+    position: absolute; top: 2px; left: 3px;
+    font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 600;
+    line-height: 1; pointer-events: none; user-select: none;
+  }
+  .coord-file {
+    position: absolute; bottom: 2px; right: 3px;
+    font-family: 'DM Mono', monospace; font-size: 9px; font-weight: 600;
+    line-height: 1; pointer-events: none; user-select: none;
+  }
+  .mini-sq.light .coord-rank, .mini-sq.light .coord-file { color: var(--sq-dark); }
+  .mini-sq.dark  .coord-rank, .mini-sq.dark  .coord-file { color: var(--sq-light); }
 
   /* ── ANSWER OPTIONS ── */
   .options-grid {
@@ -838,16 +850,24 @@ function showQuestion(mIdx, qIdx) {
 }
 
 // ── BUILD BOARD ──
-function buildBoard(fen, hideAfter = false) {
+function buildBoard(fen, hideAfter = false, highlightSqs = []) {
   const game = typeof Chess === "function" ? new Chess(fen) : Chess(fen);
+  const files = ['a','b','c','d','e','f','g','h'];
   let html = '<div class="mini-board" id="miniBoard">';
-  for (let rank = 7; rank >= 0; rank--) {
-    for (let file = 0; file < 8; file++) {
-      const sq = String.fromCharCode(97+file) + (rank+1);
-      const isLight = (rank+file) % 2 !== 0;
+  for (let ri = 0; ri < 8; ri++) {
+    const rank = 8 - ri;
+    for (let fi = 0; fi < 8; fi++) {
+      const file = files[fi];
+      const sq = file + rank;
+      const isLight = (ri + fi) % 2 !== 0;
       const piece = game.get(sq);
       const glyph = piece ? GLYPHS[piece.color+piece.type] : '';
-      html += `<div class="mini-sq ${isLight?'light':'dark'}" id="sq-${sq}">
+      const hlClass = highlightSqs.includes(sq) ? ' highlight-gold' : '';
+      // Rank label on leftmost file (fi===0), file label on bottom rank (ri===7)
+      const rankLabel = fi === 0 ? `<span class="coord-rank">${rank}</span>` : '';
+      const fileLabel = ri === 7 ? `<span class="coord-file">${file}</span>` : '';
+      html += `<div class="mini-sq ${isLight?'light':'dark'}${hlClass}" id="sq-${sq}">
+        ${rankLabel}${fileLabel}
         <span class="piece-glyph" style="pointer-events:none">${glyph}</span>
       </div>`;
     }
@@ -860,7 +880,7 @@ function buildRecallQ(q) {
   return `
     <div class="module-title" id="qTitle">Study this position</div>
     <p class="module-instructions">Memorize where each piece is. Board hides in <span id="countdownTxt">5</span> seconds.</p>
-    ${buildBoard(q.showFen, true)}
+    ${buildBoard(q.showFen, true, [])}
     <div id="recallQuestion" style="display:none">
       <div class="module-title">${q.question}</div>
       <div class="options-grid">${q.options.map(o=>`<button class="option-btn" data-val="${o}" data-correct="${q.answer}" data-explanation="${q.explanation||''}">${o}</button>`).join('')}</div>
@@ -871,7 +891,7 @@ function buildPatternQ(q) {
   return `
     <div class="module-title">${q.question}</div>
     <p class="module-instructions">Study the position — ${q.showTime} seconds.</p>
-    ${buildBoard(q.fen)}
+    ${buildBoard(q.fen, false, q.highlights || [])}
     <div class="options-grid">${q.options.map(o=>`<button class="option-btn" data-val="${o}" data-correct="${q.answer}" data-explanation="">${o}</button>`).join('')}</div>`;
 }
 
@@ -890,7 +910,7 @@ function buildYesNoQ(q) {
 }
 
 function buildMCQ(q) {
-  const board = (q.fen ? buildBoard(q.fen) : '');
+  const board = (q.fen ? buildBoard(q.fen, false, q.highlights || []) : '');
   return `
     <div class="module-title">${q.question}</div>
     ${board}
@@ -919,6 +939,13 @@ function startRecallReveal(q) {
       clearInterval(timerInterval);
       // Hide pieces
       document.querySelectorAll('.piece-glyph').forEach(el => el.style.visibility = 'hidden');
+      // Highlight option squares on the board so user can orient
+      if (q.options) {
+        q.options.forEach(sq => {
+          const el = document.getElementById('sq-' + sq);
+          if (el) el.classList.add('highlight-gold');
+        });
+      }
       // Show question
       const rq = document.getElementById('recallQuestion');
       if (rq) rq.style.display = 'block';
