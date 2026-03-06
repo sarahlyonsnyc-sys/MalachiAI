@@ -658,10 +658,10 @@ const MODULES = [
       {
         type: 'pattern',
         fen: 'r3k2r/ppp2ppp/2n5/3qp3/3P4/2NB1N2/PPP2PPP/R2QK2R w KQkq - 0 1',
-        question: 'The queens face each other. What piece is directly between them on the d-file?',
-        options: ['A pawn on d4', 'Nothing — d-file is open between them', 'A knight on d3', 'A bishop on d3'],
-        answer: 'A pawn on d4',
-        showTime: 10
+        question: 'Both queens are on the d-file. How many white pieces stand between them?',
+        options: ['1 — just the pawn on d4', '2 — bishop d3 and pawn d4', '3 — pawn d2, bishop d3, pawn d4', '0 — the d-file is clear'],
+        answer: '3 — pawn d2, bishop d3, pawn d4',
+        showTime: 12
       },
       {
         type: 'pattern',
@@ -717,92 +717,104 @@ const MODULES = [
   // ── MODULE 3: PROCESSING SPEED ──
   {
     domain: 'processing_speed',
-    title: 'Quick Decisions',
-    intro: { icon: '🎯', title: 'Processing Speed', desc: 'A piece is on the board with squares highlighted. Answer YES or NO — can the piece reach the target in one legal move? Speed and accuracy both count. You have 6 seconds.' },
+    title: 'Under Attack',
+    intro: { icon: '🎯', title: 'Under Attack', desc: 'A real position appears. You have 7 seconds to scan the board and answer YES or NO — is the highlighted piece under attack right now? Speed and accuracy both count. No guessing.' },
     questions: [
       {
         type: 'yesno',
-        fen: '8/8/8/8/8/8/8/R7 w - - 0 1',
-        question: 'Rook on a1 — can it reach a8 in one move?',
+        fen: '8/8/8/3r4/8/8/3R4/8 w - - 0 1',
+        question: 'Is the white rook on d2 under attack from the black rook?',
         answer: true,
-        highlights: ['a1', 'a8']
+        highlights: ['d2', 'd5'],
+        showTime: 7
       },
       {
         type: 'yesno',
-        fen: '8/8/8/8/8/8/8/2B5 w - - 0 1',
-        question: 'Bishop on c1 — can it reach e3 in one move?',
+        fen: '8/8/8/8/3b4/8/5N2/8 w - - 0 1',
+        question: 'Is the white knight on f2 under attack from the black bishop on d4?',
         answer: true,
-        highlights: ['c1', 'e3']
+        highlights: ['f2', 'd4'],
+        showTime: 7
       },
       {
         type: 'yesno',
-        fen: '8/8/8/8/8/8/8/6N1 w - - 0 1',
-        question: 'Knight on g1 — can it reach f3 in one move?',
-        answer: true,
-        highlights: ['g1', 'f3']
-      },
-      {
-        type: 'yesno',
-        fen: '8/8/8/8/8/8/8/R7 w - - 0 1',
-        question: 'Rook on a1 — can it reach b3 in one move?',
+        fen: '8/8/2p5/8/8/5N2/8/8 w - - 0 1',
+        question: 'Is the white knight on f3 under attack from the black pawn on c6?',
         answer: false,
-        highlights: ['a1', 'b3']
+        highlights: ['f3', 'c6'],
+        showTime: 7
       },
       {
         type: 'yesno',
-        fen: '8/8/8/8/8/8/8/3Q4 w - - 0 1',
-        question: 'Queen on d1 — can it reach h5 in one move?',
+        fen: '8/8/8/4q3/8/8/4P3/8 w - - 0 1',
+        question: 'Is the white pawn on e2 under attack from the black queen on e5?',
         answer: true,
-        highlights: ['d1', 'h5']
+        highlights: ['e2', 'e5'],
+        showTime: 7
       },
       {
         type: 'yesno',
-        fen: '8/8/8/8/8/8/8/5B2 w - - 0 1',
-        question: 'Bishop on f1 — can it reach f5 in one move?',
+        fen: '8/8/8/3n4/8/4P3/8/8 w - - 0 1',
+        question: 'Is the white pawn on e3 under attack from the black knight on d5?',
+        answer: true,
+        highlights: ['e3', 'd5'],
+        showTime: 7
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/5b2/8/8/2N5/8/8 w - - 0 1',
+        question: 'Is the white knight on c3 under attack from the black bishop on f6?',
         answer: false,
-        highlights: ['f1', 'f5']
+        highlights: ['c3', 'f6'],
+        showTime: 7
       },
       {
         type: 'yesno',
-        fen: '8/8/8/8/4N3/8/8/8 w - - 0 1',
-        question: 'Knight on e4 — can it reach d6 in one move?',
-        answer: true,
-        highlights: ['e4', 'd6']
-      },
-      {
-        type: 'yesno',
-        fen: '8/8/8/8/8/8/8/3Q4 w - - 0 1',
-        question: 'Queen on d1 — can it reach g4 in one move?',
-        answer: true,
-        highlights: ['d1', 'g4']
-      },
-      {
-        type: 'yesno',
-        fen: '8/8/8/8/4N3/8/8/8 w - - 0 1',
-        question: 'Knight on e4 — can it reach e6 in one move?',
+        fen: 'r3k3/8/8/8/8/8/8/4K2R w K - 0 1',
+        question: 'Is the white king on e1 under attack from the black rook on a8?',
         answer: false,
-        highlights: ['e4', 'e6']
+        highlights: ['e1', 'a8'],
+        showTime: 7
       },
       {
         type: 'yesno',
-        fen: '8/8/8/8/8/5B2/8/8 w - - 0 1',
-        question: 'Bishop on f3 — can it reach b7 in one move?',
+        fen: '8/8/8/8/2b5/8/5P2/8 w - - 0 1',
+        question: 'Is the white pawn on f2 under attack from the black bishop on c5?',
         answer: true,
-        highlights: ['f3', 'b7']
+        highlights: ['f2', 'c5'],
+        showTime: 7
       },
       {
         type: 'yesno',
-        fen: '8/8/8/8/8/8/8/3K4 w - - 0 1',
-        question: 'King on d1 — can it reach d3 in one move?',
+        fen: '8/8/8/8/4n3/8/3P4/8 w - - 0 1',
+        question: 'Is the white pawn on d2 under attack from the black knight on e4?',
         answer: false,
-        highlights: ['d1', 'd3']
+        highlights: ['d2', 'e4'],
+        showTime: 7
       },
       {
         type: 'yesno',
-        fen: '8/8/8/8/8/8/8/3K4 w - - 0 1',
-        question: 'King on d1 — can it reach e2 in one move?',
+        fen: '8/8/3q4/8/8/3B4/8/8 w - - 0 1',
+        question: 'Is the white bishop on d3 under attack from the black queen on d6?',
         answer: true,
-        highlights: ['d1', 'e2']
+        highlights: ['d3', 'd6'],
+        showTime: 7
+      },
+      {
+        type: 'yesno',
+        fen: '8/3p4/8/8/8/8/3R4/8 w - - 0 1',
+        question: 'Is the white rook on d2 under attack from the black pawn on d7?',
+        answer: false,
+        highlights: ['d2', 'd7'],
+        showTime: 7
+      },
+      {
+        type: 'yesno',
+        fen: '8/8/8/2r5/8/4N3/8/8 w - - 0 1',
+        question: 'Is the white knight on e3 under attack from the black rook on c5?',
+        answer: false,
+        highlights: ['e3', 'c5'],
+        showTime: 7
       },
     ],
     speedBonus: true
@@ -958,11 +970,11 @@ const MODULES = [
       {
         type: 'logic',
         fen: '8/8/8/3p4/4P3/8/8/8 w - - 0 1',
-        highlights: ['e4', 'd5', 'd6', 'e5', 'f5'],
-        question: 'A pawn captures diagonally forward. The white pawn is on e4, the black pawn on d5. Which of these statements is true?',
-        options: ['The white pawn can capture the black pawn', 'The white pawn can move to d5 without capturing', 'The black pawn can capture the white pawn by moving forward', 'Neither pawn can interact with the other'],
-        answer: 'The white pawn can capture the black pawn',
-        explanation: 'e4 to d5 is one square diagonally forward for White — a legal capture. Pawns move straight but capture diagonally.',
+        highlights: ['e4', 'd5'],
+        question: 'White moves UP the board. Black moves DOWN. Pawns move straight forward but capture one square diagonally. The white pawn is on e4. The black pawn is on d5 — one diagonal step ahead of it. Can the white pawn capture the black pawn?',
+        options: ['Yes — diagonal forward captures are legal for pawns', 'No — pawns can only move straight, never diagonally', 'No — they are not close enough', 'Yes — but only if it is a special move'],
+        answer: 'Yes — diagonal forward captures are legal for pawns',
+        explanation: 'White moves up the board. e4 to d5 is exactly one square diagonally forward — a legal pawn capture.',
         showTime: 22
       },
       {
