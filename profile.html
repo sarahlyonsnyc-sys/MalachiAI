@@ -86,6 +86,28 @@
     /* EDIT FORM */
     .edit-section { display:none; }
     .edit-section.open { display:block; }
+    .cogni-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
+    @media(max-width:600px){ .cogni-grid { grid-template-columns:1fr; } }
+    .cogni-radar-wrap { display:flex; justify-content:center; }
+    .cogni-score-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+    .cogni-score-row:last-child { border-bottom:none; }
+    .cogni-domain { flex:1; }
+    .cogni-domain-name { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); margin-bottom:2px; }
+    .cogni-domain-desc { font-size:11px; color:var(--muted); }
+    .cogni-score-val { font-family:'DM Mono',monospace; font-size:20px; font-weight:600; color:var(--text); min-width:44px; text-align:right; }
+    .cogni-bar-wrap { width:60px; }
+    .cogni-bar { height:3px; background:var(--border); }
+    .cogni-bar-fill { height:100%; background:var(--gold); transition:width 1s ease; }
+    .cogni-meta { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px; }
+    .cogni-date { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:0.08em; }
+    .btn-retake { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); background:none; border:1px solid rgba(201,168,76,0.3); padding:7px 16px; cursor:pointer; text-decoration:none; transition:all 0.2s; }
+    .btn-retake:hover { background:rgba(201,168,76,0.08); border-color:var(--gold); }
+    .cogni-empty { text-align:center; padding:32px; color:var(--muted); font-size:13px; line-height:1.7; }
+    .cogni-empty a { color:var(--gold); text-decoration:none; }
+    .cogni-history-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); font-size:12px; }
+    .cogni-history-row:last-child { border-bottom:none; }
+    .cogni-history-date { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); min-width:90px; }
+    .cogni-chip { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.06em; padding:3px 8px; border:1px solid var(--border); color:var(--gold); }
     .form-group { margin-bottom:16px; }
     .form-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:6px; }
     .form-input { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--cream); font-family:'DM Mono',monospace; font-size:13px; padding:10px 14px; outline:none; transition:border-color 0.2s; }
@@ -187,6 +209,13 @@
     </div>
 
     <!-- WHOLE CHILD SKILLS -->
+    <div class="section" id="cogniSection">
+      <div class="section-title">Cognitive Assessment</div>
+      <div id="cogniContent">
+        <div class="cogni-empty">Loading assessment data...</div>
+      </div>
+    </div>
+
     <div class="section">
       <div class="section-title">Whole Child Development</div>
       <div id="skillsSection">
@@ -383,6 +412,9 @@ async function loadProfile() {
   setSkill('emotion', emotion);
   setSkill('focus', focus);
   setSkill('completion', completion);
+
+  // Cognitive assessment
+  loadCognitiveAssessment(session.user.id);
 }
 
 function setSkill(id, val) {
@@ -419,6 +451,147 @@ async function saveProfile() {
   const msg = document.getElementById('saveMsg');
   msg.style.display = 'inline';
   setTimeout(() => { msg.style.display = 'none'; toggleEdit(); }, 1500);
+}
+
+
+const COGNI_DOMAINS = [
+  { key:'working_memory',     name:'Working Memory',      desc:'Holding info in mind' },
+  { key:'pattern_recognition',name:'Pattern Recognition', desc:'Reading structures fast' },
+  { key:'processing_speed',   name:'Processing Speed',    desc:'Deciding under pressure' },
+  { key:'inhibitory_control', name:'Inhibitory Control',  desc:'Resisting impulse' },
+  { key:'fluid_reasoning',    name:'Fluid Reasoning',     desc:'Novel problem solving' },
+];
+
+async function loadCognitiveAssessment(userId) {
+  const el = document.getElementById('cogniContent');
+  try {
+    const { data, error } = await sb.from('cognitive_assessments')
+      .select('*').eq('user_id', userId)
+      .order('taken_at', { ascending: false }).limit(10);
+
+    if (error || !data || data.length === 0) {
+      el.innerHTML = `<div class="cogni-empty">No assessment taken yet.<br><a href="assessment.html">Take your cognitive baseline →</a></div>`;
+      return;
+    }
+
+    const latest = data[0];
+    const scores = latest.scores || {};
+    const takenDate = new Date(latest.taken_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+    const avg = Math.round(Object.values(scores).reduce((a,b)=>a+b,0) / COGNI_DOMAINS.length);
+
+    // Next retest date
+    const nextRetest = new Date(latest.taken_at);
+    nextRetest.setDate(nextRetest.getDate() + 90);
+    const now = new Date();
+    const canRetake = now >= nextRetest;
+    const daysLeft = Math.max(0, Math.ceil((nextRetest - now) / 86400000));
+    const retakeLabel = canRetake ? 'Retake Assessment' : `Retake in ${daysLeft}d`;
+
+    el.innerHTML = `
+      <div class="cogni-meta">
+        <span class="cogni-date">Last taken: ${takenDate} · Avg score: ${avg}/100</span>
+        <a href="assessment.html" class="btn-retake">${retakeLabel}</a>
+      </div>
+      <div class="cogni-grid">
+        <div class="cogni-radar-wrap"><canvas id="profileRadar" width="240" height="240"></canvas></div>
+        <div id="cogniScoreList"></div>
+      </div>
+      ${data.length > 1 ? `<div style="margin-top:20px"><div class="section-title" style="margin-bottom:12px">History</div><div id="cogniHistory"></div></div>` : ''}
+    `;
+
+    // Score rows
+    const listEl = document.getElementById('cogniScoreList');
+    COGNI_DOMAINS.forEach(d => {
+      const score = scores[d.key] || 0;
+      listEl.innerHTML += `
+        <div class="cogni-score-row">
+          <div class="cogni-domain">
+            <div class="cogni-domain-name">${d.name}</div>
+            <div class="cogni-domain-desc">${d.desc}</div>
+          </div>
+          <div class="cogni-bar-wrap"><div class="cogni-bar"><div class="cogni-bar-fill" style="width:${score}%"></div></div></div>
+          <div class="cogni-score-val">${score}</div>
+        </div>`;
+    });
+
+    // History
+    if (data.length > 1) {
+      const histEl = document.getElementById('cogniHistory');
+      data.forEach((entry, i) => {
+        const d = new Date(entry.taken_at);
+        const chips = COGNI_DOMAINS.map(dom =>
+          `<span class="cogni-chip">${dom.name.split(' ')[0]}: ${entry.scores[dom.key]||0}</span>`
+        ).join(' ');
+        histEl.innerHTML += `<div class="cogni-history-row">
+          <span class="cogni-history-date">${d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">${chips}</div>
+        </div>`;
+      });
+    }
+
+    // Draw radar
+    setTimeout(() => drawProfileRadar(scores), 100);
+
+  } catch(e) {
+    el.innerHTML = `<div class="cogni-empty">No assessment taken yet.<br><a href="assessment.html">Take your cognitive baseline →</a></div>`;
+  }
+}
+
+function drawProfileRadar(scores) {
+  const canvas = document.getElementById('profileRadar');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W=240, H=240, cx=W/2, cy=H/2, R=88;
+  const n = COGNI_DOMAINS.length;
+  ctx.clearRect(0,0,W,H);
+
+  // Grid rings
+  [0.25,0.5,0.75,1].forEach(f => {
+    ctx.beginPath();
+    ctx.strokeStyle='rgba(255,255,255,0.06)'; ctx.lineWidth=1;
+    for(let i=0;i<n;i++){
+      const a=(i/n)*Math.PI*2-Math.PI/2;
+      const x=cx+Math.cos(a)*R*f, y=cy+Math.sin(a)*R*f;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.closePath(); ctx.stroke();
+  });
+
+  // Axes
+  COGNI_DOMAINS.forEach((_,i)=>{
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    ctx.beginPath(); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1;
+    ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R); ctx.stroke();
+  });
+
+  // Fill
+  ctx.beginPath();
+  COGNI_DOMAINS.forEach((d,i)=>{
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    const f=(scores[d.key]||0)/100;
+    const x=cx+Math.cos(a)*R*f, y=cy+Math.sin(a)*R*f;
+    i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  });
+  ctx.closePath();
+  ctx.fillStyle='rgba(201,168,76,0.15)'; ctx.fill();
+  ctx.strokeStyle='rgba(201,168,76,0.9)'; ctx.lineWidth=2; ctx.stroke();
+
+  // Dots
+  COGNI_DOMAINS.forEach((d,i)=>{
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    const f=(scores[d.key]||0)/100;
+    const x=cx+Math.cos(a)*R*f, y=cy+Math.sin(a)*R*f;
+    ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fillStyle='#c9a84c'; ctx.fill();
+  });
+
+  // Labels
+  ctx.font='9px DM Mono,monospace'; ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.textAlign='center';
+  COGNI_DOMAINS.forEach((d,i)=>{
+    const a=(i/n)*Math.PI*2-Math.PI/2;
+    const lr=R+18;
+    ctx.fillText(d.name.split(' ')[0], cx+Math.cos(a)*lr, cy+Math.sin(a)*lr+3);
+  });
 }
 
 loadProfile();
