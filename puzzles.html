@@ -951,18 +951,23 @@ updateStats();
       await new Promise(r => setTimeout(r, 150)); w += 150;
     }
     if (!window._puzzleSB || !window._puzzleSession) {
-      console.warn('Puzzle save: no session after wait'); return;
+      console.error('[Puzzle] No session — user may not be logged in'); return;
     }
+    const uid = window._puzzleSession.user.id;
+    console.log('[Puzzle] Saving for user:', uid, 'solved:', solved);
     try {
-      const { data: prog } = await window._puzzleSB.from('progress')
-        .select('quiz_scores').eq('user_id', window._puzzleSession.user.id).single();
-      const qs = prog?.quiz_scores || {};
+      const { data: prog, error: fetchErr } = await window._puzzleSB.from('progress')
+        .select('quiz_scores').eq('user_id', uid).single();
+      if (fetchErr) { console.error('[Puzzle] Fetch error:', fetchErr); return; }
+      if (!prog) { console.error('[Puzzle] No progress row for user:', uid); return; }
+      console.log('[Puzzle] Got progress row, quiz_scores keys:', Object.keys(prog.quiz_scores || {}));
+
+      const qs = prog.quiz_scores || {};
       const pd = qs.puzzle_progress || { solved:0, failed:0, bestStreak:0, accuracy:[], themes:{}, ratingHistory:[], lastPlayed:null };
 
       if (solved) pd.solved = (pd.solved||0) + 1;
       else        pd.failed = (pd.failed||0) + 1;
 
-      // Theme tracking
       const themes = Array.isArray(puzzle?.themes) ? puzzle.themes : (puzzle?.themes || '').split(' ').filter(Boolean);
       themes.forEach(t => {
         if (!pd.themes[t]) pd.themes[t] = { solved:0, failed:0 };
@@ -970,10 +975,8 @@ updateStats();
         else        pd.themes[t].failed++;
       });
 
-      // Rolling accuracy (last 20 puzzles)
       pd.accuracy = [...(pd.accuracy||[]), solved ? 1 : 0].slice(-20);
 
-      // Rating history
       if (puzzle?.rating) {
         pd.ratingHistory = [...(pd.ratingHistory||[]),
           { date: new Date().toISOString(), rating: puzzle.rating, solved, hint: hintWasUsed }
@@ -983,12 +986,14 @@ updateStats();
       pd.bestStreak = Math.max(pd.bestStreak||0, stats.bestStreak||0);
       pd.lastPlayed = new Date().toISOString();
 
-      const { error: saveErr } = await window._puzzleSB.from('progress').update({
-        quiz_scores: { ...qs, puzzle_progress: pd }
-      }).eq('user_id', window._puzzleSession.user.id);
-      if (saveErr) console.error('[Puzzle] Supabase write error:', saveErr);
-      else console.log('[Puzzle] Saved OK — solved:', pd.solved, 'failed:', pd.failed);
-    } catch(e) { console.warn('Puzzle save failed', e); }
+      const newQS = { ...qs, puzzle_progress: pd };
+      console.log('[Puzzle] Writing puzzle_progress:', pd.solved, 'solved,', pd.failed, 'failed');
+      const { error: saveErr } = await window._puzzleSB.from('progress')
+        .update({ quiz_scores: newQS })
+        .eq('user_id', uid);
+      if (saveErr) console.error('[Puzzle] Write error:', saveErr);
+      else console.log('[Puzzle] ✓ Saved successfully');
+    } catch(e) { console.error('[Puzzle] Exception:', e); }
   };
 
   function tryInject() {
