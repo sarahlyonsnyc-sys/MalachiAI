@@ -944,13 +944,6 @@ function startRecallReveal(q) {
       clearInterval(timerInterval);
       // Hide pieces
       document.querySelectorAll('.piece-glyph').forEach(el => el.style.visibility = 'hidden');
-      // Highlight option squares on the board so user can orient
-      if (q.options) {
-        q.options.forEach(sq => {
-          const el = document.getElementById('sq-' + sq);
-          if (el) el.classList.add('highlight-gold');
-        });
-      }
       // Show question
       const rq = document.getElementById('recallQuestion');
       if (rq) rq.style.display = 'block';
