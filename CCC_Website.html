@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Classical Chess Collegium</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:wght@300;400;500&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   MASTER STYLES
+   ============================================================ */
+:root {
+  --gold: #C9A84C;
+  --gold2: #E8C97A;
+  --gold-dim: rgba(201,168,76,0.12);
+  --black: #080808;
+  --dark: #0D0D0D;
+  --panel: #141414;
+  --panel2: #1C1C1C;
+  --border: #262626;
+  --cream: #F2ECD8;
+  --cream2: #FBF8F1;
+  --muted: #6E6452;
+  --white: #FFFFFF;
+  --green: #4CAF50;
+  --blue: #5B8DEE;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--cream);
+  font-family: 'Lato', sans-serif;
+  overflow-x: hidden;
+}
+
+/* NAV */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5vw;
+  background: rgba(8,8,8,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.3s;
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.nav-logo-mark {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--gold);
+}
+
+.nav-logo-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.02em;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+}
+
+.nav-links a {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--gold); }
+
+.nav-cta {
+  padding: 8px 20px;
+  background: var(--gold);
+  color: var(--black) !important;
+  font-weight: 700 !important;
+  border-radius: 2px;
+}
+
+.nav-cta:hover { background: var(--gold2); color: var(--black) !important; }
+
+/* PAGE SECTIONS */
+section { min-height: 100vh; }
+
+/* ============================================================
+   LANDING PAGE
+   ============================================================ */
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 120px 5vw 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated chess board background */
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.chess-grid {
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  transform: translateY(-50%) rotate(8deg);
+  display: grid;
+  grid-template-columns: repeat(10, 72px);
+  grid-template-rows: repeat(10, 72px);
+  opacity: 0.055;
+}
+
+.chess-grid .sq { background: var(--gold); }
+.chess-grid .sq.e { background: transparent; }
+
+.hero-glow {
+  position: absolute;
+  right: 15%;
+  top: 30%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(201,168,76,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-content { position: relative; z-index: 1; max-width: 780px; }
+
+.hero-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: fadeUp 0.8s ease both;
+}
+
+.hero-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 32px;
+  height: 1px;
+  background: var(--gold);
+}
+
+.hero-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-weight: 900;
+  line-height: 1.0;
+  color: var(--white);
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+  animation: fadeUp 0.8s 0.1s ease both;
+}
+
+.hero-headline .gold { color: var(--gold); }
+.hero-headline .italic { font-style: italic; font-weight: 400; }
+
+.hero-sub {
+  font-size: clamp(15px, 1.6vw, 18px);
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 580px;
+  margin-bottom: 40px;
+  animation: fadeUp 0.8s 0.2s ease both;
+}
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  animation: fadeUp 0.8s 0.3s ease both;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  background: var(--gold);
+  color: var(--black);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 500;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: var(--gold2);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(201,168,76,0.3);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 28px;
+  border: 1px solid var(--border);
+  color: var(--cream);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* TRUST BAR */
+.trust-bar {
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 5vw;
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+}
+
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.trust-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+
+/* WHAT WE DO */
+.what-section {
+  padding: 100px 5vw;
+  min-height: auto;
+}
+
+.section-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-eyebrow::before {
+  content: '';
+  width: 24px; height: 1px;
+  background: var(--gold);
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+
+.section-title .gold { color: var(--gold); }
+.section-title .italic { font-style: italic; font-weight: 400; }
+
+.section-lead {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.8;
+  max-width: 600px;
+  margin-bottom: 60px;
+}
+
+/* Feature cards */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.feature-card {
+  background: var(--panel);
+  padding: 36px 32px;
+  transition: background 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+
+.feature-card:hover { background: var(--panel2); }
+.feature-card:hover::before { transform: scaleX(1); }
+
+.feature-icon { font-size: 28px; margin-bottom: 16px; }
+
+.feature-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+
+.feature-desc {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* WHO WE SERVE */
+.serve-section {
+  padding: 100px 5vw;
+  min-height: auto;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.serve-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-top: 60px;
+}
+
+.serve-card {
+  border: 1px solid var(--border);
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s;
+}
+
+.serve-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+}
+
+.serve-card.schools::after { background: var(--gold); }
+.serve-card.adults::after { background: var(--blue); }
+.serve-card:hover { border-color: rgba(201,168,76,0.4); }
+
+.serve-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.serve-card.schools .serve-label { color: var(--gold); }
+.serve-card.adults .serve-label { color: var(--blue); }
+
+.serve-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 14px;
+  line-height: 1.2;
+}
+
+.serve-body {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
+.serve-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.serve-list li {
+  font-size: 13px;
+  color: var(--cream);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+.serve-list li::before {
+  content: '▸';
+  color: var(--gold);
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 10px;
+}
+
+/* PILOT CTA */
+.pilot-cta {
+  padding: 100px 5vw;
+  min-height: auto;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.pilot-cta::before {
+  content: '♟';
+  position: absolute;
+  font-size: 400px;
+  color: var(--gold);
+  opacity: 0.025;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -55%);
+  pointer-events: none;
+  font-family: serif;
+}
+
+.pilot-cta-content { position: relative; z-index: 1; }
+
+.pilot-headline {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.2rem, 4vw, 3.5rem);
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+.pilot-headline .gold { color: var(--gold); }
+
+.pilot-sub-text {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 520px;
+  margin: 0 auto 40px;
+  line-height: 1.75;
+}
+
+.pilot-stats {
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+  margin-bottom: 48px;
+  flex-wrap: wrap;
+}
+
+.pilot-stat-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 40px;
+  font-weight: 900;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.pilot-stat-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   ABOUT PAGE
+   ============================================================ */
+.about-hero {
+  padding: 140px 5vw 80px;
+  min-height: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.about-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.about-story-body {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.9;
+}
+
+.about-story-body p { margin-bottom: 20px; }
+.about-story-body p:last-child { margin-bottom: 0; }
+.about-story-body strong { color: var(--cream); font-weight: 700; }
+.about-story-body .gold { color: var(--gold); }
+
+/* Timeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.tl-item {
+  display: flex;
+  gap: 20px;
+  padding-bottom: 28px;
+  position: relative;
+}
+
+.tl-item:last-child { padding-bottom: 0; }
+
+.tl-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.tl-dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--gold);
+  border: 2px solid var(--panel);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.2);
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.tl-line {
+  width: 1px;
+  flex: 1;
+  background: var(--border);
+  margin-top: 6px;
+}
+
+.tl-item:last-child .tl-line { display: none; }
+
+.tl-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.tl-text {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.tl-text strong { color: var(--cream); }
+
+/* Mission values */
+.values-section {
+  padding: 80px 5vw;
+  min-height: auto;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-top: 48px;
+}
+
+.value-card {
+  padding: 32px 28px;
+  border: 1px solid var(--border);
+  background: var(--panel2);
+}
+
+.value-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--gold);
+  opacity: 0.25;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.value-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 10px;
+}
+
+.value-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* Platform section */
+.platform-section {
+  padding: 80px 5vw;
+  min-height: auto;
+}
+
+.platform-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-top: 48px;
+}
+
+.platform-item {
+  background: var(--panel);
+  padding: 32px 28px;
+}
+
+.platform-icon { font-size: 24px; margin-bottom: 12px; }
+
+.platform-name {
+  font-family: 'Lato', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+
+.platform-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* ============================================================
+   CONTACT PAGE
+   ============================================================ */
+.contact-hero {
+  padding: 140px 5vw 60px;
+  min-height: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.contact-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 80px;
+  padding: 80px 5vw;
+  min-height: auto;
+}
+
+.contact-info {}
+
+.contact-section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.contact-body {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 40px;
+}
+
+.contact-detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.contact-detail:first-of-type { border-top: 1px solid var(--border); }
+
+.contact-detail-icon {
+  width: 36px; height: 36px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.contact-detail-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.contact-detail-value {
+  font-size: 14px;
+  color: var(--cream);
+  font-weight: 700;
+}
+
+.contact-detail-value a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+.contact-detail-value a:hover { text-decoration: underline; }
+
+/* Pilot callout box */
+.pilot-box {
+  margin-top: 40px;
+  padding: 28px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(201,168,76,0.25);
+}
+
+.pilot-box-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+
+.pilot-box-body {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+/* FORM */
+.contact-form-wrap {}
+
+.form-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.form-subtitle {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin-bottom: 32px;
+  line-height: 1.7;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 7px;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--cream);
+  font-family: 'Lato', sans-serif;
+  font-size: 14px;
+  padding: 12px 14px;
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--gold);
+}
+
+.form-input::placeholder, .form-textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.form-select { cursor: pointer; }
+.form-select option { background: var(--panel2); }
+
+.form-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.form-submit {
+  width: 100%;
+  padding: 16px;
+  background: var(--gold);
+  color: var(--black);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.form-submit:hover {
+  background: var(--gold2);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(201,168,76,0.3);
+}
+
+.form-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 12px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  padding: 48px 5vw 32px;
+}
+
+.footer-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--border);
+}
+
+.footer-brand-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+
+.footer-brand-tag {
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+}
+
+.footer-links a {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover { color: var(--gold); }
+
+.footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.footer-copy {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+.footer-contact-line {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.footer-contact-line a { color: var(--gold); text-decoration: none; }
+
+/* ============================================================
+   PAGE NAV (the tabs at top)
+   ============================================================ */
+.page-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  position: sticky;
+  top: 68px;
+  z-index: 50;
+}
+
+.page-tab {
+  padding: 14px 28px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  margin-bottom: -1px;
+}
+
+.page-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.page-tab:hover:not(.active) { color: var(--cream); }
+
+.page-content { display: none; }
+.page-content.active { display: block; }
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  .features-grid { grid-template-columns: 1fr; }
+  .serve-grid { grid-template-columns: 1fr; }
+  .about-layout { grid-template-columns: 1fr; gap: 48px; }
+  .values-grid { grid-template-columns: 1fr; }
+  .platform-grid { grid-template-columns: 1fr; }
+  .contact-layout { grid-template-columns: 1fr; padding: 60px 5vw; }
+  .form-row { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo" onclick="showPage('home')">
+    <span class="nav-logo-mark">♟</span>
+    <div>
+      <div class="nav-logo-text">The Classical Chess Collegium</div>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#" onclick="showPage('home')">Home</a></li>
+    <li><a href="#" onclick="showPage('about')">About</a></li>
+    <li><a href="#" onclick="showPage('contact')" class="nav-cta">Start Free Pilot</a></li>
+  </ul>
+</nav>
+
+<!-- PAGE TABS (mobile/demo nav) -->
+<div class="page-tabs" style="margin-top:68px;">
+  <button class="page-tab active" onclick="showPage('home')">Home</button>
+  <button class="page-tab" onclick="showPage('about')">About</button>
+  <button class="page-tab" onclick="showPage('contact')">Contact</button>
+</div>
+
+<!-- ============================================================
+     HOME PAGE
+     ============================================================ -->
+<div id="page-home" class="page-content active">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="chess-grid" id="chessGrid"></div>
+      <div class="hero-glow"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">The Classical Chess Collegium</div>
+      <h1 class="hero-headline">
+        Chess that<br>
+        <span class="italic gold">develops</span><br>
+        the whole child.
+      </h1>
+      <p class="hero-sub">
+        A smart chess platform with cognitive assessment, behavioral tracking, and LED smart boards — built for after-school programs, charter schools, and families who believe in evidence-based development.
+      </p>
+      <div class="hero-actions">
+        <a href="#" class="btn-primary" onclick="showPage('contact')">♟ Start Free School Pilot</a>
+        <a href="#" class="btn-secondary" onclick="showPage('about')">Learn Our Story →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST BAR -->
+  <div class="trust-bar">
+    <div class="trust-item"><div class="trust-dot"></div>Free 6-Week Pilot for Schools</div>
+    <div class="trust-item"><div class="trust-dot"></div>LED Smart Boards Provided</div>
+    <div class="trust-item"><div class="trust-dot"></div>SEL-Aligned Behavioral Data</div>
+    <div class="trust-item"><div class="trust-dot"></div>No Commitment Required</div>
+    <div class="trust-item"><div class="trust-dot"></div>Board-Ready Outcome Reports</div>
+  </div>
+
+  <!-- WHAT WE DO -->
+  <div class="what-section">
+    <div class="section-eyebrow">What We Do</div>
+    <h2 class="section-title">More than chess.<br><span class="italic gold">A development system.</span></h2>
+    <p class="section-lead">We combine a smart chess platform, physical smart boards, and a cognitive assessment engine to generate measurable developmental data — automatically, from every session your students play.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">♟</div>
+        <div class="feature-name">Adaptive Chess Engine</div>
+        <div class="feature-desc">Five adaptive difficulty levels from beginner to near-master. Elo rating system, live multiplayer, tactical puzzles, and opening academy — all in one place.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <div class="feature-name">Cognitive Assessment</div>
+        <div class="feature-desc">A 48-question baseline test across 5 cognitive domains — working memory, pattern recognition, processing speed, reasoning, and inhibitory control. Repeated every 90 days.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <div class="feature-name">Behavioral Tracking</div>
+        <div class="feature-desc">Every game generates data on impulse control, resilience, emotional regulation, focus, and completion rate — automatically, with no teacher input required.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎓</div>
+        <div class="feature-name">Teacher Dashboard</div>
+        <div class="feature-desc">See every student's chess rating, puzzle accuracy, cognitive scores, and behavioral metrics in one place. Know who needs support before problems escalate.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💡</div>
+        <div class="feature-name">LED Smart Boards</div>
+        <div class="feature-desc">3D-printed, Hall sensor-equipped chess boards that light up with legal moves, last moves, and engine suggestions — and sync every physical move to the platform in real time.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👨‍👩‍👧</div>
+        <div class="feature-name">Parent Portal</div>
+        <div class="feature-desc">Families see their child's chess progress, cognitive scores, and behavioral metrics from home — keeping the whole family engaged in their child's development.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHO WE SERVE -->
+  <div class="serve-section">
+    <div class="section-eyebrow">Who We Serve</div>
+    <h2 class="section-title">Built for schools.<br><span class="italic gold">Loved by families.</span></h2>
+
+    <div class="serve-grid">
+      <div class="serve-card schools">
+        <div class="serve-label">For Schools & Programs</div>
+        <h3 class="serve-title">After-School Chess Clubs That Generate Data</h3>
+        <p class="serve-body">We run a free 6-week pilot program for charter schools and after-school programs. We provide the boards, the platform, and a behavioral outcome report you can take to your board of directors — at zero cost and zero commitment.</p>
+        <ul class="serve-list">
+          <li>Full platform setup, we handle everything</li>
+          <li>LED smart boards provided free during pilot</li>
+          <li>SEL-aligned outcome data for grant reporting</li>
+          <li>Teacher dashboard live from day one</li>
+          <li>90-day cognitive reassessment report</li>
+        </ul>
+      </div>
+      <div class="serve-card adults">
+        <div class="serve-label">For Families & Adult Players</div>
+        <h3 class="serve-title">Chess as Cognitive Fitness — at Any Age</h3>
+        <p class="serve-body">Whether you're investing in your child's development at home or pursuing chess for your own mental fitness, the Classical Chess Collegium platform gives you structured improvement, measurable cognitive tracking, and the option to play on a real board that connects to the digital world.</p>
+        <ul class="serve-list">
+          <li>Full adaptive chess platform, web and mobile</li>
+          <li>Personal cognitive baseline & progress tracking</li>
+          <li>LED Smart Board bundle for home play</li>
+          <li>Structured puzzle training & opening study</li>
+          <li>Elo rating and placement system</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- PILOT CTA -->
+  <div class="pilot-cta">
+    <div class="pilot-cta-content">
+      <h2 class="pilot-headline">Six weeks.<br>Zero cost.<br><span class="gold">Infinite possibility.</span></h2>
+      <p class="pilot-sub-text">Our free pilot program gives your school everything it needs to run a chess club — boards, platform, and a data story. The only thing we need from you is the students.</p>
+      <div class="pilot-stats">
+        <div>
+          <div class="pilot-stat-val">$0</div>
+          <div class="pilot-stat-label">Cost to Start</div>
+        </div>
+        <div>
+          <div class="pilot-stat-val">6</div>
+          <div class="pilot-stat-label">Weeks Included</div>
+        </div>
+        <div>
+          <div class="pilot-stat-val">5</div>
+          <div class="pilot-stat-label">Cognitive Domains</div>
+        </div>
+        <div>
+          <div class="pilot-stat-val">90</div>
+          <div class="pilot-stat-label">Day Data Report</div>
+        </div>
+      </div>
+      <a href="#" class="btn-primary" onclick="showPage('contact')">♟ Apply for Free Pilot</a>
+    </div>
+  </div>
+
+</div><!-- end home page -->
+
+
+<!-- ============================================================
+     ABOUT PAGE
+     ============================================================ -->
+<div id="page-about" class="page-content">
+
+  <div class="about-hero">
+    <div class="section-eyebrow">Our Story</div>
+    <h1 class="section-title" style="font-size:clamp(2.5rem,5vw,4rem); max-width:700px;">
+      Born from necessity.<br><span class="italic gold">Built with purpose.</span>
+    </h1>
+  </div>
+
+  <!-- STORY + TIMELINE -->
+  <div style="padding: 80px 5vw; border-bottom: 1px solid var(--border);">
+    <div class="about-layout">
+      <div class="about-story-body">
+        <p>Our co-founder grew up in <strong>Brooklyn, New York</strong> — an under-resourced, at-risk community where school funding gaps left critical developmental needs unmet. The school system she was part of wasn't built to serve children like her.</p>
+        <p>Then chess found her. An after-school chess program gave her something her school couldn't: <strong>structure, cognitive challenge, focused mentorship, and a reason to keep showing up.</strong> The game demanded that she think ahead, regulate her emotions under pressure, and persist through failure — skills the classroom never taught her.</p>
+        <p>Chess opened doors to <span class="gold"><strong>scholarships</strong></span>. Scholarships opened doors to <span class="gold"><strong>NYU</strong></span>. NYU opened doors to the world — despite every systemic barrier stacked against her from birth.</p>
+        <p>The Classical Chess Collegium was built so <strong>every child has access to that same transformative experience</strong> — regardless of zip code, household income, or school budget. We believe chess is not just a game. It is a cognitive development system hiding in plain sight, and we intend to make it available to every community that needs it.</p>
+      </div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+          <div>
+            <div class="tl-label">The Beginning</div>
+            <div class="tl-text"><strong>Brooklyn, New York.</strong> At-risk community. Underfunded school. Critical developmental gaps no one was filling.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+          <div>
+            <div class="tl-label">The Turning Point</div>
+            <div class="tl-text"><strong>An after-school chess program</strong> provides the structure, cognitive challenge, and mentorship the school system couldn't offer.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+          <div>
+            <div class="tl-label">The Pathway Opens</div>
+            <div class="tl-text"><strong>Chess scholarships</strong> emerge as a pathway out — one that would have been impossible without the program.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+          <div>
+            <div class="tl-label">The Goal</div>
+            <div class="tl-text"><strong>NYU.</strong> Graduated against the odds. Every systemic barrier cleared. The game changed everything.</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+          <div>
+            <div class="tl-label">Today</div>
+            <div class="tl-text">Building <strong>The Classical Chess Collegium</strong> — the platform she needed as a child, now available to every school that will have us.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VALUES -->
+  <div class="values-section">
+    <div class="section-eyebrow">What We Believe</div>
+    <h2 class="section-title">Three commitments.<br><span class="italic gold">Non-negotiable.</span></h2>
+    <div class="values-grid">
+      <div class="value-card">
+        <div class="value-num">01</div>
+        <div class="value-name">Access is Everything</div>
+        <div class="value-desc">The most powerful cognitive development tool in the world shouldn't be gatekept by geography or income. Every program we run at under-resourced schools begins free. Full stop.</div>
+      </div>
+      <div class="value-card">
+        <div class="value-num">02</div>
+        <div class="value-name">Data Earns Trust</div>
+        <div class="value-desc">We don't ask schools to believe chess works. We show them the data — cognitive scores before and after, behavioral correlations, SEL-aligned outcomes. Evidence first, always.</div>
+      </div>
+      <div class="value-card">
+        <div class="value-num">03</div>
+        <div class="value-name">The Whole Child</div>
+        <div class="value-desc">We track more than chess rating. We measure impulse control, resilience, emotional regulation, and focus — the skills that show up in the classroom, not just at the board.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLATFORM OVERVIEW -->
+  <div class="platform-section">
+    <div class="section-eyebrow">The Platform</div>
+    <h2 class="section-title">Everything in one place.<br><span class="italic gold">One profile, one history.</span></h2>
+    <div class="platform-grid">
+      <div class="platform-item">
+        <div class="platform-icon">🌐</div>
+        <div class="platform-name">Web Platform</div>
+        <div class="platform-desc">Full chess platform — adaptive computer opponents, puzzles, openings, assessments, multiplayer — accessible in any browser, no download required.</div>
+      </div>
+      <div class="platform-item">
+        <div class="platform-icon">📱</div>
+        <div class="platform-name">iOS & Android App</div>
+        <div class="platform-desc">Everything on mobile. Play computer chess anywhere, complete puzzles on the go, and connect to your smart board over WiFi. Coming soon.</div>
+      </div>
+      <div class="platform-item">
+        <div class="platform-icon">💡</div>
+        <div class="platform-name">LED Smart Board</div>
+        <div class="platform-desc">3D-printed in our own lab. Hall sensors detect every piece movement. LED squares illuminate legal moves, last moves, and check. Syncs to your profile in real time.</div>
+      </div>
+      <div class="platform-item">
+        <div class="platform-icon">📊</div>
+        <div class="platform-name">Teacher & Parent Dashboards</div>
+        <div class="platform-desc">School administrators and families get their own portal. Full visibility into development progress, behavioral metrics, and cognitive assessment results.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end about page -->
+
+
+<!-- ============================================================
+     CONTACT PAGE
+     ============================================================ -->
+<div id="page-contact" class="page-content">
+
+  <div class="contact-hero">
+    <div class="section-eyebrow">Get In Touch</div>
+    <h1 class="section-title" style="font-size:clamp(2.5rem,5vw,4rem); max-width:700px;">
+      Let's bring chess<br><span class="italic gold">to your school.</span>
+    </h1>
+  </div>
+
+  <div class="contact-layout">
+
+    <!-- LEFT: INFO -->
+    <div class="contact-info">
+      <div class="contact-section-title">We'd love to hear from you.</div>
+      <p class="contact-body">Whether you're a school administrator interested in a free pilot, a parent looking at home access, or a potential partner — reach out. We respond to every message personally.</p>
+
+      <div class="contact-detail">
+        <div class="contact-detail-icon">✉</div>
+        <div>
+          <div class="contact-detail-label">Email</div>
+          <div class="contact-detail-value"><a href="/cdn-cgi/l/email-protection#07736f62646b6674746e64666b646f62747464686b6b62606e726a47606a666e6b2964686a"><span class="__cf_email__" data-cfemail="1f6b777a7c737e6c6c767c7e737c777a6c6c7c7073737a78766a725f78727e7673317c7072">[email&#160;protected]</span></a></div>
+        </div>
+      </div>
+      <div class="contact-detail">
+        <div class="contact-detail-icon">🌐</div>
+        <div>
+          <div class="contact-detail-label">Website</div>
+          <div class="contact-detail-value"><a href="https://www.theclassicalchesscollegium.com" target="_blank">theclassicalchesscollegium.com</a></div>
+        </div>
+      </div>
+      <div class="contact-detail">
+        <div class="contact-detail-icon">📍</div>
+        <div>
+          <div class="contact-detail-label">Based In</div>
+          <div class="contact-detail-value">Taos, New Mexico</div>
+        </div>
+      </div>
+
+      <div class="pilot-box">
+        <div class="pilot-box-title">♟ Free School Pilot Program</div>
+        <div class="pilot-box-body">We run a completely free 6-week after-school chess pilot. We provide LED smart boards, full platform access, a teacher dashboard, and a behavioral outcome report — at no cost, with no commitment. Use the form to express interest and we'll be in touch within 48 hours.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: FORM -->
+    <div class="contact-form-wrap">
+      <div class="form-title">Send us a message</div>
+      <p class="form-subtitle">Fill out the form below and we'll get back to you within 48 hours. For school pilot inquiries, select "School Pilot Program" below.</p>
+
+      <form name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" onsubmit="handleSubmit(event)">
+        <input type="hidden" name="form-name" value="contact">
+        <input type="hidden" name="bot-field" style="display:none">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">First Name *</label>
+            <input class="form-input" type="text" placeholder="Jane" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name *</label>
+            <input class="form-input" type="text" placeholder="Smith" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input class="form-input" type="email" placeholder="jane@yourschool.edu" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Organization / School</label>
+            <input class="form-input" type="text" placeholder="Lincoln Charter School">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Your Role</label>
+            <input class="form-input" type="text" placeholder="Principal, Teacher, Parent...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">I'm interested in... *</label>
+          <select class="form-select" required>
+            <option value="" disabled selected>Select one</option>
+            <option>School Pilot Program (Free, 6 Weeks)</option>
+            <option>Home / Family Access</option>
+            <option>Partnership or Investment</option>
+            <option>Press / Media Inquiry</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Message</label>
+          <textarea class="form-textarea" placeholder="Tell us a bit about your school, program, or what you're looking for..."></textarea>
+        </div>
+        <button type="submit" class="form-submit">♟ Send Message</button>
+        <p class="form-note">We respond to every inquiry personally within 48 hours. Your information is never shared or sold.</p>
+      </form>
+
+      <div id="form-success" style="display:none; margin-top:20px; padding:24px; background:rgba(76,175,80,0.1); border:1px solid rgba(76,175,80,0.3); text-align:center;">
+        <div style="font-size:28px; margin-bottom:8px;">♟</div>
+        <div style="font-family:'Playfair Display',serif; font-size:18px; color:#4CAF50; margin-bottom:8px;">Message sent!</div>
+        <div style="font-size:13px; color:var(--muted);">We'll be in touch within 48 hours.</div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- end contact page -->
+
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <div class="footer-brand-name">♟ The Classical Chess Collegium</div>
+      <div class="footer-brand-tag">Cognitive Development Through the Royal Game</div>
+    </div>
+    <ul class="footer-links">
+      <li><a href="#" onclick="showPage('home')">Home</a></li>
+      <li><a href="#" onclick="showPage('about')">About</a></li>
+      <li><a href="#" onclick="showPage('contact')">Contact</a></li>
+      <li><a href="/cdn-cgi/l/email-protection#ed9985888e818c9e9e848e8c818e85889e9e8e828181888a849880ad8a808c8481c38e8280">Email Us</a></li>
+    </ul>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2026 The Classical Chess Collegium. All rights reserved.</div>
+    <div class="footer-contact-line">
+      <a href="/cdn-cgi/l/email-protection#a9ddc1cccac5c8dadac0cac8c5cac1ccdadacac6c5c5cccec0dcc4e9cec4c8c0c587cac6c4"><span class="__cf_email__" data-cfemail="295d414c4a45485a5a404a48454a414c5a5a4a4645454c4e405c44694e44484045074a4644">[email&#160;protected]</span></a>
+      &nbsp;·&nbsp;
+      <a href="https://www.theclassicalchesscollegium.com">theclassicalchesscollegium.com</a>
+    </div>
+  </div>
+</footer>
+
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// Build chess grid
+const grid = document.getElementById('chessGrid');
+if (grid) {
+  for (let r = 0; r < 10; r++) {
+    for (let c = 0; c < 10; c++) {
+      const sq = document.createElement('div');
+      sq.className = 'sq' + ((r + c) % 2 === 0 ? '' : ' e');
+      grid.appendChild(sq);
+    }
+  }
+}
+
+// Page switching
+function showPage(page) {
+  document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('acti
