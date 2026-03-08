@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Classical Chess Collegium — Brand Guidelines</title>
+<meta name="description" content="Brand guidelines for The Classical Chess Collegium. Dark. Gold. Precise. Unapologetic.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Lato:wght@300;400;700;900&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     CSS CUSTOM PROPERTIES
+     ============================================================ */
+  :root {
+    --obsidian: #0A0A0A;
+    --charcoal: #151515;
+    --ink: #111111;
+    --gold: #C9A84C;
+    --gold-dark: #A68536;
+    --parchment: #F2ECD8;
+    --smoke: #8C8478;
+    --bone: #FAFAFA;
+    --gold-10: #C9A84C1A;
+    --gold-08: #C9A84C14;
+    --border-subtle: #1a1a1a;
+  }
+
+  /* ============================================================
+     RESET & BASE
+     ============================================================ */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    background: var(--obsidian);
+    color: var(--parchment);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ============================================================
+     THE LOGO SVG (inline reusable)
+     ============================================================ */
+  .ccc-mark {
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  /* ============================================================
+     NAVIGATION
+     ============================================================ */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--obsidian);
+    border-bottom: 1px solid var(--gold-10);
+    display: flex;
+    overflow-x: auto;
+    gap: 0;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transform: translateY(-100%);
+    transition: transform 0.4s ease;
+  }
+  .nav.visible { transform: translateY(0); }
+  .nav::-webkit-scrollbar { display: none; }
+
+  .nav-btn {
+    padding: 14px 18px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: #555;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .nav-btn:hover { color: var(--smoke); }
+  .nav-btn.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  /* ============================================================
+     SECTIONS
+     ============================================================ */
+  .section {
+    display: none;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .section.active {
+    display: block;
+  }
+  .section.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Cover has its own padding */
+  #cover { padding: 0; }
+
+  .section-inner { padding: 80px 0; }
+
+  /* ============================================================
+     COMMON TYPOGRAPHY
+     ============================================================ */
+  .label {
+    font-size: 11px;
+    letter-spacing: 6px;
+    color: var(--gold);
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    margin-bottom: 16px;
+  }
+  .label-sm {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  .label-muted {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--smoke);
+    font-family: 'Lato', sans-serif;
+    margin-bottom: 24px;
+  }
+  .headline {
+    font-size: 42px;
+    font-weight: 600;
+    line-height: 1.15;
+    margin-bottom: 40px;
+    letter-spacing: -0.5px;
+  }
+  .body-text {
+    font-size: 15px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    color: var(--smoke);
+    line-height: 1.7;
+    max-width: 550px;
+  }
+  .mono {
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ============================================================
+     CARDS & PANELS
+     ============================================================ */
+  .card {
+    background: var(--charcoal);
+    border: 1px solid var(--border-subtle);
+  }
+  .card-gold-top {
+    border-top: 2px solid var(--gold);
+  }
+  .callout {
+    background: var(--charcoal);
+    padding: 32px;
+    border-left: 3px solid var(--gold);
+  }
+  .gold-bar { width: 60px; height: 2px; background: var(--gold); }
+
+  /* ============================================================
+     COVER
+     ============================================================ */
+  .cover-wrap {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover-grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(#C9A84C08 1px, transparent 1px),
+      linear-gradient(90deg, #C9A84C08 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.5;
+  }
+  .cover-bar-top, .cover-bar-bottom {
+    position: absolute;
+    left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+  }
+  .cover-bar-top { top: 0; }
+  .cover-bar-bottom { bottom: 0; }
+
+  .cover-content {
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: coverReveal 1s ease 0.3s forwards;
+  }
+  @keyframes coverReveal {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .cover-subtitle {
+    font-size: 11px;
+    letter-spacing: 8px;
+    color: var(--gold);
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    margin-bottom: 16px;
+  }
+  .cover-title {
+    font-size: clamp(36px, 6vw, 56px);
+    font-weight: 600;
+    color: var(--parchment);
+    line-height: 1.1;
+    margin-bottom: 20px;
+    letter-spacing: -1px;
+  }
+  .cover-meta {
+    font-size: 14px;
+    font-style: italic;
+    color: var(--smoke);
+    font-weight: 300;
+    margin-bottom: 60px;
+  }
+
+  .enter-btn {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    padding: 14px 40px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    transition: all 0.3s;
+  }
+  .enter-btn:hover {
+    background: var(--gold);
+    color: var(--obsidian);
+  }
+
+  /* ============================================================
+     GRID HELPERS
+     ============================================================ */
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid-2-sm { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  @media (max-width: 700px) {
+    .grid-3, .grid-2, .grid-2-sm { grid-template-columns: 1fr; }
+  }
+
+  /* ============================================================
+     STAGGERED FADE-IN FOR CHILDREN
+     ============================================================ */
+  .stagger-item {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .section.revealed .stagger-item {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .section.revealed .stagger-item:nth-child(1) { transition-delay: 0.05s; }
+  .section.revealed .stagger-item:nth-child(2) { transition-delay: 0.1s; }
+  .section.revealed .stagger-item:nth-child(3) { transition-delay: 0.15s; }
+  .section.revealed .stagger-item:nth-child(4) { transition-delay: 0.2s; }
+  .section.revealed .stagger-item:nth-child(5) { transition-delay: 0.25s; }
+  .section.revealed .stagger-item:nth-child(6) { transition-delay: 0.3s; }
+  .section.revealed .stagger-item:nth-child(7) { transition-delay: 0.35s; }
+  .section.revealed .stagger-item:nth-child(8) { transition-delay: 0.4s; }
+  .section.revealed .stagger-item:nth-child(9) { transition-delay: 0.45s; }
+  .section.revealed .stagger-item:nth-child(10) { transition-delay: 0.5s; }
+
+  /* ============================================================
+     RULE ROWS
+     ============================================================ */
+  .rule-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 16px 20px;
+    background: var(--charcoal);
+    border-left: 2px solid var(--gold);
+    margin-bottom: 12px;
+  }
+  .rule-num {
+    font-size: 14px;
+    font-family: 'DM Mono', monospace;
+    color: var(--gold);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .rule-text {
+    font-size: 14px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    color: var(--parchment);
+    line-height: 1.5;
+  }
+
+  /* ============================================================
+     COLOR SWATCH
+     ============================================================ */
+  .swatch-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 20px;
+    background: var(--charcoal);
+    border: 1px solid var(--border-subtle);
+  }
+  .swatch-block {
+    width: 64px;
+    height: 64px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .swatch-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--parchment);
+    margin-bottom: 2px;
+  }
+  .swatch-hex {
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+  .swatch-role {
+    font-size: 11px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    color: var(--smoke);
+    line-height: 1.4;
+  }
+
+  /* ============================================================
+     RATIO BAR
+     ============================================================ */
+  .ratio-bar {
+    display: flex;
+    gap: 4px;
+    height: 32px;
+    margin-bottom: 16px;
+  }
+
+  /* ============================================================
+     LOGO BACKGROUNDS
+     ============================================================ */
+  .logo-bg-card {
+    padding: 32px 20px;
+    text-align: center;
+    border: 1px solid #333;
+  }
+
+  /* ============================================================
+     VOICE CARD
+     ============================================================ */
+  .voice-card {
+    background: var(--charcoal);
+    padding: 28px;
+    border: 1px solid var(--border-subtle);
+  }
+  .voice-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--parchment);
+    margin-bottom: 16px;
+  }
+  .voice-yes {
+    font-size: 13px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    color: var(--gold);
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+  .voice-no {
+    font-size: 12px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 300;
+    color: #555;
+    text-decoration: line-through;
+  }
+
+  /* ============================================================
+     APPLICATION MOCKUPS
+     ============================================================ */
+  .biz-card-mock {
+    background: var(--obsidian);
+    padding: 24px;
+    border-top: 2px solid var(--gold);
+    aspect-ratio: 3.5 / 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .email-sig-mock {
+    background: #fff;
+    padding: 20px;
+    color: #333;
+  }
+  .social-mock {
+    background: var(--obsidian);
+    aspect-ratio: 1 / 1;
+    max-width: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px;
+    border: 1px solid var(--gold-10);
+  }
+
+  /* ============================================================
+     IMAGERY CARDS
+     ============================================================ */
+  .imagery-card {
+    background: var(--charcoal);
+    padding: 32px;
+    border-top: 2px solid var(--gold);
+    border: 1px solid var(--border-subtle);
+  }
+
+  /* ============================================================
+     SCROLLBAR
+     ============================================================ */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--obsidian); }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold-dark); }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     NAVIGATION
+     ============================================================ -->
+<nav class="nav" id="mainNav">
+  <button class="nav-btn" data-section="cover">Cover</button>
+  <button class="nav-btn" data-section="essence">Brand Essence</button>
+  <button class="nav-btn" data-section="logo">Logo System</button>
+  <button class="nav-btn" data-section="color">Color</button>
+  <button class="nav-btn" data-section="type">Typography</button>
+  <button class="nav-btn" data-section="voice">Voice &amp; Tone</button>
+  <button class="nav-btn" data-section="imagery">Imagery</button>
+  <button class="nav-btn" data-section="applications">Applications</button>
+  <button class="nav-btn" data-section="donts">Don'ts</button>
+</nav>
+
+<!-- ============================================================
+     COVER
+     ============================================================ -->
+<div class="section active" id="cover">
+  <div class="cover-wrap">
+    <div class="cover-grid-bg"></div>
+    <div class="cover-bar-top"></div>
+    <div class="cover-bar-bottom"></div>
+    <div class="cover-content">
+      <div style="margin-bottom:32px;display:flex;justify-content:center;">
+        <svg class="ccc-mark" width="80" height="80" viewBox="0 0 80 80" fill="none">
+          <rect x="0" y="0" width="35.2" height="35.2" rx="1.6" fill="#C9A84C"/>
+          <rect x="44.8" y="0" width="35.2" height="35.2" rx="1.6" fill="#0A0A0A" stroke="#C9A84C" stroke-width="2.8"/>
+          <rect x="0" y="44.8" width="35.2" height="35.2" rx="1.6" fill="#0A0A0A" stroke="#C9A84C" stroke-width="2.8"/>
+          <rect x="44.8" y="44.8" width="35.2" height="35.2" rx="1.6" fill="#C9A84C"/>
+        </svg>
+      </div>
+      <div class="cover-subtitle">THE CLASSICAL</div>
+      <div class="cover-title">Chess Collegium</div>
+      <div style="width:80px;height:2px;background:var(--gold);margin:0 auto 24px;"></div>
+      <div class="cover-meta">Brand Guidelines · 2026</div>
+      <button class="enter-btn" onclick="goTo('essence')">Enter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     01 — BRAND ESSENCE
+     ============================================================ -->
+<div class="section" id="essence">
+  <div class="section-inner">
+    <div class="label">01 — BRAND ESSENCE</div>
+    <h1 class="headline">Chess is intellectual<br>combat dressed in silk.</h1>
+    <div class="gold-bar" style="margin-bottom:40px;"></div>
+    <p class="body-text" style="font-size:17px;max-width:600px;margin-bottom:48px;line-height:1.8;">
+      The Classical Chess Collegium is not a kids' chess app. It is not a cute learning tool. It is a cognitive development platform that treats chess with the reverence it deserves — as a 1,500-year-old discipline that builds minds. Our brand reflects that gravity. Dark. Gold. Precise. Unapologetic.
+    </p>
+
+    <div class="grid-3" style="margin-bottom:60px;">
+      <div class="card card-gold-top stagger-item" style="padding:32px 24px;">
+        <div style="font-size:24px;font-weight:600;margin-bottom:12px;color:var(--parchment);">Luxurious</div>
+        <div style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">Not expensive. Elevated. Every touchpoint feels considered and refined.</div>
+      </div>
+      <div class="card card-gold-top stagger-item" style="padding:32px 24px;">
+        <div style="font-size:24px;font-weight:600;margin-bottom:12px;color:var(--parchment);">Intellectual</div>
+        <div style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">We respect the intelligence of our audience. We never dumb it down.</div>
+      </div>
+      <div class="card card-gold-top stagger-item" style="padding:32px 24px;">
+        <div style="font-size:24px;font-weight:600;margin-bottom:12px;color:var(--parchment);">Confident</div>
+        <div style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">We don't explain ourselves. We present and let the work speak.</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="label-sm">BRAND POSITION</div>
+      <div style="font-size:22px;font-weight:500;line-height:1.5;color:var(--parchment);">
+        We are the Equinox of scholastic chess — where cognitive performance meets design discipline. Not the cheapest. Not the most colorful. The most <em style="color:var(--gold);">serious</em>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     02 — LOGO SYSTEM
+     ============================================================ -->
+<div class="section" id="logo">
+  <div class="section-inner">
+    <div class="label">02 — LOGO SYSTEM</div>
+    <h1 class="headline">The Mark</h1>
+
+    <!-- Primary lockup -->
+    <div class="card" style="padding:60px;text-align:center;margin-bottom:32px;">
+      <div style="display:flex;justify-content:center;margin-bottom:24px;">
+        <svg class="ccc-mark" width="80" height="80" viewBox="0 0 80 80" fill="none">
+          <rect x="0" y="0" width="35.2" height="35.2" rx="1.6" fill="#C9A84C"/>
+          <rect x="44.8" y="0" width="35.2" height="35.2" rx="1.6" fill="#0A0A0A" stroke="#C9A84C" stroke-width="2.8"/>
+          <rect x="0" y="44.8" width="35.2" height="35.2" rx="1.6" fill="#0A0A0A" stroke="#C9A84C" stroke-width="2.8"/>
+          <rect x="44.8" y="44.8" width="35.2" height="35.2" rx="1.6" fill="#C9A84C"/>
+        </svg>
+      </div>
+      <div style="font-size:11px;letter-spacing:8px;color:var(--gold);font-family:'Lato',sans-serif;font-weight:300;margin-bottom:8px;">THE CLASSICAL</div>
+      <div style="font-size:32px;font-weight:600;color:var(--parchment);letter-spacing:1px;">CHESS COLLEGIUM</div>
+      <div style="width:40px;height:2px;background:var(--gold);margin:16px auto 0;"></div>
+    </div>
+
+    <!-- Anatomy -->
+    <div class="card" style="padding:40px;margin-bottom:32px;">
+      <div class="label-sm">ANATOMY OF THE MARK</div>
+      <div style="display:flex;align-items:center;gap:48px;flex-wrap:wrap;">
+        <div style="flex-shrink:0;display:flex;justify-content:center;">
+          <svg class="ccc-mark" width="120" height="120" viewBox="0 0 120 120" fill="none">
+            <rect x="0" y="0" width="52.8" height="52.8" rx="2.4" fill="#C9A84C"/>
+            <rect x="67.2" y="0" width="52.8" height="52.8" rx="2.4" fill="#0A0A0A" stroke="#C9A84C" stroke-width="4.2"/>
+            <rect x="0" y="67.2" width="52.8" height="52.8" rx="2.4" fill="#0A0A0A" stroke="#C9A84C" stroke-width="4.2"/>
+            <rect x="67.2" y="67.2" width="52.8" height="52.8" rx="2.4" fill="#C9A84C"/>
+          </svg>
+        </div>
+        <div style="flex:1;min-width:280px;">
+          <p style="font-size:14px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.7;margin-bottom:12px;">
+            A 2×2 grid of squares — two filled, two outlined — arranged on a diagonal. The filled squares (top-left, bottom-right) represent <span style="color:var(--gold);">presence</span>. The outlined squares represent <span style="color:var(--gold);">potential</span>. Together they echo the 64-square geometry of the chessboard distilled to its purest expression.
+          </p>
+          <p style="font-size:14px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.7;">
+            The diagonal rhythm mirrors the bishop's path. The grid mirrors the board. The restraint mirrors the brand. Four squares. That's all we need.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Square mark + Wordmark -->
+    <div class="grid-2" style="margin-bottom:40px;">
+      <div class="card" style="padding:40px;text-align:center;">
+        <div class="label-muted">SQUARE MARK</div>
+        <div style="width:100px;height:100px;margin:0 auto 16px;background:var(--obsidian);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;">
+          <svg class="ccc-mark" width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <rect x="0" y="0" width="24.64" height="24.64" rx="1.12" fill="#C9A84C"/>
+            <rect x="31.36" y="0" width="24.64" height="24.64" rx="1.12" fill="#0A0A0A" stroke="#C9A84C" stroke-width="1.96"/>
+            <rect x="0" y="31.36" width="24.64" height="24.64" rx="1.12" fill="#0A0A0A" stroke="#C9A84C" stroke-width="1.96"/>
+            <rect x="31.36" y="31.36" width="24.64" height="24.64" rx="1.12" fill="#C9A84C"/>
+          </svg>
+        </div>
+        <div style="font-size:12px;font-family:'Lato',sans-serif;color:var(--smoke);font-weight:300;">App icon · Favicon · Social avatar</div>
+      </div>
+      <div class="card" style="padding:40px;text-align:center;">
+        <div class="label-muted">WORDMARK</div>
+        <div style="margin:16px 0;">
+          <div style="font-size:9px;letter-spacing:6px;color:var(--gold);font-family:'Lato',sans-serif;font-weight:300;margin-bottom:4px;">THE CLASSICAL</div>
+          <div style="font-size:20px;font-weight:600;color:var(--parchment);letter-spacing:2px;">CHESS COLLEGIUM</div>
+        </div>
+        <div style="font-size:12px;font-family:'Lato',sans-serif;color:var(--smoke);font-weight:300;margin-top:16px;">Email signatures · Documents · Small formats</div>
+      </div>
+    </div>
+
+    <!-- Clear space -->
+    <div class="card" style="padding:32px;margin-bottom:32px;">
+      <div class="label-sm">CLEAR SPACE</div>
+      <p style="font-size:14px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">
+        Minimum clear space around the mark equals the width of one grid square on all sides. The logo breathes. It does not compete with other elements. When in doubt, give it more space, not less.
+      </p>
+    </div>
+
+    <!-- Logo on backgrounds -->
+    <div class="grid-3">
+      <!-- On Black -->
+      <div class="logo-bg-card" style="background:var(--obsidian);">
+        <div style="display:flex;justify-content:center;margin-bottom:12px;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="0" y="0" width="17.6" height="17.6" rx="0.8" fill="#C9A84C"/>
+            <rect x="22.4" y="0" width="17.6" height="17.6" rx="0.8" fill="#0A0A0A" stroke="#C9A84C" stroke-width="1.4"/>
+            <rect x="0" y="22.4" width="17.6" height="17.6" rx="0.8" fill="#0A0A0A" stroke="#C9A84C" stroke-width="1.4"/>
+            <rect x="22.4" y="22.4" width="17.6" height="17.6" rx="0.8" fill="#C9A84C"/>
+          </svg>
+        </div>
+        <div style="font-size:8px;letter-spacing:4px;color:var(--gold);font-family:'Lato',sans-serif;font-weight:300;">THE CLASSICAL</div>
+        <div style="font-size:12px;font-weight:600;color:var(--parchment);letter-spacing:1px;">CHESS COLLEGIUM</div>
+        <div style="font-size:10px;font-family:'Lato',sans-serif;color:var(--gold);margin-top:12px;font-weight:300;">On Black</div>
+      </div>
+      <!-- On Cream -->
+      <div class="logo-bg-card" style="background:var(--parchment);">
+        <div style="display:flex;justify-content:center;margin-bottom:12px;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="0" y="0" width="17.6" height="17.6" rx="0.8" fill="#0A0A0A"/>
+            <rect x="22.4" y="0" width="17.6" height="17.6" rx="0.8" fill="#F2ECD8" stroke="#0A0A0A" stroke-width="1.4"/>
+            <rect x="0" y="22.4" width="17.6" height="17.6" rx="0.8" fill="#F2ECD8" stroke="#0A0A0A" stroke-width="1.4"/>
+            <rect x="22.4" y="22.4" width="17.6" height="17.6" rx="0.8" fill="#0A0A0A"/>
+          </svg>
+        </div>
+        <div style="font-size:8px;letter-spacing:4px;color:var(--obsidian);font-family:'Lato',sans-serif;font-weight:300;">THE CLASSICAL</div>
+        <div style="font-size:12px;font-weight:600;color:var(--obsidian);letter-spacing:1px;">CHESS COLLEGIUM</div>
+        <div style="font-size:10px;font-family:'Lato',sans-serif;color:var(--obsidian);margin-top:12px;font-weight:300;">On Cream</div>
+      </div>
+      <!-- On Gold -->
+      <div class="logo-bg-card" style="background:var(--gold);">
+        <div style="display:flex;justify-content:center;margin-bottom:12px;">
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <rect x="0" y="0" width="17.6" height="17.6" rx="0.8" fill="#0A0A0A"/>
+            <rect x="22.4" y="0" width="17.6" height="17.6" rx="0.8" fill="#C9A84C" stroke="#0A0A0A" stroke-width="1.4"/>
+            <rect x="0" y="22.4" width="17.6" height="17.6" rx="0.8" fill="#C9A84C" stroke="#0A0A0A" stroke-width="1.4"/>
+            <rect x="22.4" y="22.4" width="17.6" height="17.6" rx="0.8" fill="#0A0A0A"/>
+          </svg>
+        </div>
+        <div style="font-size:8px;letter-spacing:4px;color:var(--obsidian);font-family:'Lato',sans-serif;font-weight:300;">THE CLASSICAL</div>
+        <div style="font-size:12px;font-weight:600;color:var(--obsidian);letter-spacing:1px;">CHESS COLLEGIUM</div>
+        <div style="font-size:10px;font-family:'Lato',sans-serif;color:var(--obsidian);margin-top:12px;font-weight:300;">On Gold</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     03 — COLOR SYSTEM
+     ============================================================ -->
+<div class="section" id="color">
+  <div class="section-inner">
+    <div class="label">03 — COLOR SYSTEM</div>
+    <h1 class="headline">Black and gold.<br>Nothing else needed.</h1>
+    <p class="body-text" style="margin-bottom:48px;">
+      Our palette is deliberately narrow. Restraint is the point. Gold only works because we use it sparingly — it's the accent, never the background. The darkness makes the gold feel earned.
+    </p>
+
+    <div class="grid-2-sm" style="margin-bottom:48px;" id="swatchGrid">
+      <!-- Swatches injected by JS -->
+    </div>
+
+    <div class="callout">
+      <div class="label-sm">COLOR RATIO</div>
+      <div class="ratio-bar">
+        <div style="flex:65;background:var(--obsidian);border:1px solid #333;"></div>
+        <div style="flex:20;background:var(--charcoal);border:1px solid #333;"></div>
+        <div style="flex:10;background:var(--gold);"></div>
+        <div style="flex:5;background:var(--parchment);"></div>
+      </div>
+      <div style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">
+        65% Obsidian · 20% Charcoal · 10% Royal Gold · 5% Parchment. Gold is the reward for restraint.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     04 — TYPOGRAPHY
+     ============================================================ -->
+<div class="section" id="type">
+  <div class="section-inner">
+    <div class="label">04 — TYPOGRAPHY</div>
+    <h1 class="headline">Three fonts.<br>Clear hierarchy.</h1>
+
+    <!-- Playfair / Cormorant -->
+    <div class="card card-gold-top" style="padding:40px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;">
+        <div class="label-sm" style="margin-bottom:0;">DISPLAY · HEADINGS</div>
+        <div class="mono" style="font-size:12px;color:var(--smoke);">Playfair Display</div>
+      </div>
+      <div style="font-size:48px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;color:var(--parchment);line-height:1.1;margin-bottom:16px;">
+        Cognitive Development<br>Through the Royal Game
+      </div>
+      <div style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">
+        Use for all headlines, slide titles, hero text, and brand statements. Playfair Display is our voice — classical, authoritative, beautiful. Never set below 18px. Never set in all caps (use Lato for that).
+      </div>
+    </div>
+
+    <!-- Lato -->
+    <div class="card card-gold-top" style="padding:40px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;">
+        <div class="label-sm" style="margin-bottom:0;">BODY · UI · LABELS</div>
+        <div class="mono" style="font-size:12px;color:var(--smoke);">Lato</div>
+      </div>
+      <div style="font-family:'Lato',sans-serif;margin-bottom:16px;">
+        <div style="font-size:14px;font-weight:300;color:var(--parchment);line-height:1.8;margin-bottom:8px;">
+          The Classical Chess Collegium combines AI-powered chess technology, physical smart boards, cognitive assessment, and behavioral tracking to deliver measurable developmental outcomes.
+        </div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:4px;color:var(--gold);">ALL CAPS FOR SECTION LABELS AND NAVIGATION</div>
+      </div>
+      <div style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">
+        Body text at 300 weight for elegance. 400 for readability. 700 for emphasis and labels. Use letter-spacing on uppercase only.
+      </div>
+    </div>
+
+    <!-- DM Mono -->
+    <div class="card card-gold-top" style="padding:40px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;">
+        <div class="label-sm" style="margin-bottom:0;">ACCENT · DATA · CODE</div>
+        <div class="mono" style="font-size:12px;color:var(--smoke);">DM Mono</div>
+      </div>
+      <div class="mono" style="margin-bottom:16px;">
+        <div style="font-size:14px;color:var(--gold);margin-bottom:4px;">Elo Rating: 1247 · Accuracy: 78.4% · Session: 00:34:12</div>
+        <div style="font-size:14px;color:var(--smoke);">#C9A84C · $299/yr · v2.4.1</div>
+      </div>
+      <div style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">
+        For data, statistics, hex codes, technical labels, and anywhere that precision matters. The monospace font says "we measure things."
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     05 — VOICE & TONE
+     ============================================================ -->
+<div class="section" id="voice">
+  <div class="section-inner">
+    <div class="label">05 — VOICE &amp; TONE</div>
+    <h1 class="headline">Speak like you<br>belong at the table.</h1>
+
+    <div class="grid-2" style="margin-bottom:48px;">
+      <div class="voice-card stagger-item">
+        <div class="voice-title">Confident, not arrogant</div>
+        <div class="voice-yes">"We built the cognitive layer that chess has been missing."</div>
+        <div class="voice-no">"We're the best chess platform ever created!!!"</div>
+      </div>
+      <div class="voice-card stagger-item">
+        <div class="voice-title">Precise, not cold</div>
+        <div class="voice-yes">"90-day longitudinal data across 5 cognitive domains."</div>
+        <div class="voice-no">"Lots of great data about how your kid is doing."</div>
+      </div>
+      <div class="voice-card stagger-item">
+        <div class="voice-title">Ambitious, not desperate</div>
+        <div class="voice-yes">"What PlayVS did for esports, we do for chess."</div>
+        <div class="voice-no">"Please try our app, it's really good we promise."</div>
+      </div>
+      <div class="voice-card stagger-item">
+        <div class="voice-title">Human, not corporate</div>
+        <div class="voice-yes">"Chess changed Sarah's life. We're building the platform she needed as a kid."</div>
+        <div class="voice-no">"Our solution leverages synergies in the EdTech space."</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="label-sm">THE RULE</div>
+      <div style="font-size:20px;font-weight:500;line-height:1.5;color:var(--parchment);">
+        Write like a chess grandmaster speaks — measured, deliberate, and never more words than the position requires.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     06 — IMAGERY DIRECTION
+     ============================================================ -->
+<div class="section" id="imagery">
+  <div class="section-inner">
+    <div class="label">06 — IMAGERY DIRECTION</div>
+    <h1 class="headline">Photography &amp;<br>visual language.</h1>
+
+    <div class="grid-2" style="margin-bottom:48px;">
+      <div class="imagery-card stagger-item">
+        <div style="font-size:18px;font-weight:600;color:var(--parchment);margin-bottom:12px;">Macro Chess</div>
+        <div style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">Tight crops on pieces. Shallow depth of field. Dramatic side lighting. The texture of wood, the weight of marble, the gleam of brass. Chess pieces as objects of beauty.</div>
+      </div>
+      <div class="imagery-card stagger-item">
+        <div style="font-size:18px;font-weight:600;color:var(--parchment);margin-bottom:12px;">Hands &amp; Boards</div>
+        <div style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">A child's hand moving a piece. A mentor observing. Focus on the moment of decision. Never staged smiles — capture concentration, intensity, the face of thinking.</div>
+      </div>
+      <div class="imagery-card stagger-item">
+        <div style="font-size:18px;font-weight:600;color:var(--parchment);margin-bottom:12px;">Dark &amp; Moody</div>
+        <div style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">Low-key lighting. Deep shadows. Single light source preferred. Think editorial photography, not stock photos. If it could be in Kinfolk magazine, it belongs here.</div>
+      </div>
+      <div class="imagery-card stagger-item">
+        <div style="font-size:18px;font-weight:600;color:var(--parchment);margin-bottom:12px;">Architecture of the Board</div>
+        <div style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">Overhead shots of board geometry. The 64 squares as a landscape. Patterns and lines. The board is architecture, not decoration.</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="label-sm">NEVER</div>
+      <div style="font-size:14px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">
+        Clip art. Cartoon chess pieces. Stock photos of kids high-fiving. Rainbow gradients. Flat illustrations. Anything that makes chess look like a daycare activity.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     07 — APPLICATIONS
+     ============================================================ -->
+<div class="section" id="applications">
+  <div class="section-inner">
+    <div class="label">07 — APPLICATIONS</div>
+    <h1 class="headline">How it lives<br>in the world.</h1>
+
+    <div class="grid-2" style="margin-bottom:32px;">
+      <!-- Business Card -->
+      <div class="card" style="padding:24px;">
+        <div class="label-muted">BUSINESS CARD</div>
+        <div class="biz-card-mock">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <rect x="0" y="0" width="8.8" height="8.8" rx="0.4" fill="#C9A84C"/>
+              <rect x="11.2" y="0" width="8.8" height="8.8" rx="0.4" fill="#0A0A0A" stroke="#C9A84C" stroke-width="0.7"/>
+              <rect x="0" y="11.2" width="8.8" height="8.8" rx="0.4" fill="#0A0A0A" stroke="#C9A84C" stroke-width="0.7"/>
+              <rect x="11.2" y="11.2" width="8.8" height="8.8" rx="0.4" fill="#C9A84C"/>
+            </svg>
+            <div>
+              <div style="font-size:8px;letter-spacing:4px;color:var(--gold);font-family:'Lato',sans-serif;font-weight:300;">THE CLASSICAL</div>
+              <div style="font-size:14px;font-weight:600;color:var(--parchment);">CHESS COLLEGIUM</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--parchment);">Sarah Lyons</div>
+            <div style="font-size:9px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);">Co-Founder · 440-591-3840</div>
+            <div class="mono" style="font-size:9px;color:var(--gold);">theclassicalchesscollegium.com</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Email Signature -->
+      <div class="card" style="padding:24px;">
+        <div class="label-muted">EMAIL SIGNATURE</div>
+        <div class="email-sig-mock">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <rect x="0" y="0" width="7.04" height="7.04" rx="0.32" fill="#0A0A0A"/>
+              <rect x="8.96" y="0" width="7.04" height="7.04" rx="0.32" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="0.56"/>
+              <rect x="0" y="8.96" width="7.04" height="7.04" rx="0.32" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="0.56"/>
+              <rect x="8.96" y="8.96" width="7.04" height="7.04" rx="0.32" fill="#0A0A0A"/>
+            </svg>
+            <div style="width:24px;height:1px;background:var(--gold);"></div>
+          </div>
+          <div style="font-size:13px;font-family:Georgia,serif;font-weight:700;color:#0A0A0A;">Sarah Lyons</div>
+          <div style="font-size:11px;font-family:'Lato',sans-serif;color:var(--smoke);font-weight:300;">Co-Founder · The Classical Chess Collegium</div>
+          <div class="mono" style="font-size:10px;color:var(--gold);margin-top:4px;">440-591-3840 · theclassicalchesscollegium.com</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social Media -->
+    <div class="card" style="padding:32px;margin-bottom:24px;">
+      <div class="label-muted">SOCIAL MEDIA TEMPLATE</div>
+      <div class="social-mock">
+        <div style="margin-bottom:16px;display:flex;justify-content:center;">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <rect x="0" y="0" width="21.12" height="21.12" rx="0.96" fill="#C9A84C"/>
+            <rect x="26.88" y="0" width="21.12" height="21.12" rx="0.96" fill="#0A0A0A" stroke="#C9A84C" stroke-width="1.68"/>
+            <rect x="0" y="26.88" width="21.12" height="21.12" rx="0.96" fill="#0A0A0A" stroke="#C9A84C" stroke-width="1.68"/>
+            <rect x="26.88" y="26.88" width="21.12" height="21.12" rx="0.96" fill="#C9A84C"/>
+          </svg>
+        </div>
+        <div style="font-size:18px;font-weight:600;color:var(--parchment);line-height:1.3;margin-bottom:8px;">Chess builds<br>better minds.</div>
+        <div style="width:30px;height:1px;background:var(--gold);margin:8px auto;"></div>
+        <div style="font-size:8px;letter-spacing:3px;color:var(--smoke);font-family:'Lato',sans-serif;">THECLASSICALCHESSCOLLEGIUM.COM</div>
+      </div>
+    </div>
+
+    <!-- Presentation slides -->
+    <div class="card" style="padding:32px;">
+      <div class="label-muted">PRESENTATION SLIDES</div>
+      <p style="font-size:13px;font-family:'Lato',sans-serif;font-weight:300;color:var(--smoke);line-height:1.6;">
+        Always dark background (#0A0A0A). Gold thin bars top and bottom. Headlines in Playfair Display (or Georgia). Body in Lato 300. Data in DM Mono. Cards in Charcoal (#151515) with gold accent tops. Never use white backgrounds. Never use bullet points where a visual could work instead.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     08 — THE SACRED RULES
+     ============================================================ -->
+<div class="section" id="donts">
+  <div class="section-inner">
+    <div class="label">08 — THE SACRED RULES</div>
+    <h1 class="headline">What we never do.</h1>
+
+    <div id="rulesContainer">
+      <!-- Rules injected by JS -->
+    </div>
+
+    <div style="text-align:center;margin-top:60px;padding:40px;">
+      <div style="display:flex;justify-content:center;margin-bottom:20px;">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <rect x="0" y="0" width="24.64" height="24.64" rx="1.12" fill="#C9A84C"/>
+          <rect x="31.36" y="0" width="24.64" height="24.64" rx="1.12" fill="#0A0A0A" stroke="#C9A84C" stroke-width="1.96"/>
+          <rect x="0" y="31.36" width="24.64" height="24.64" rx="1.12" fill="#0A0A0A" stroke="#C9A84C" stroke-width="1.96"/>
+          <rect x="31.36" y="31.36" width="24.64" height="24.64" rx="1.12" fill="#C9A84C"/>
+        </svg>
+      </div>
+      <div style="font-size:20px;font-weight:500;font-style:italic;color:var(--smoke);">
+        The brand is the board.<br>Every element is a piece.<br>Every piece has purpose.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+(function() {
+  // ---- DATA ----
+  const swatches = [
+    { hex: "#0A0A0A", name: "Obsidian", role: "Primary background. The void the gold lives in.", dark: true },
+    { hex: "#C9A84C", name: "Royal Gold", role: "Primary accent. Titles, borders, icons, interactive states.", dark: false },
+    { hex: "#F2ECD8", name: "Parchment", role: "Primary text on dark. Body copy. Headlines.", dark: false },
+    { hex: "#8C8478", name: "Smoke", role: "Secondary text. Captions. Metadata. Muted elements.", dark: false },
+    { hex: "#151515", name: "Charcoal", role: "Card backgrounds. Elevated surfaces. Secondary panels.", dark: true },
+    { hex: "#111111", name: "Ink", role: "Subtle differentiation. Hover states. Input fields.", dark: true },
+    { hex: "#FAFAFA", name: "Bone", role: "Light-mode text. Reversed layouts. Rare.", dark: false },
+    { hex: "#A68536", name: "Antique Gold", role: "Pressed states. Secondary gold. Depth.", dark: false },
+  ];
+
+  const rules = [
+    "Never use a light or white background as the primary surface. We live in darkness.",
+    "Never stretch, rotate, recolor, or modify the mark. It is sacred geometry.",
+    "Never use more than 3 colors on a single surface. Restraint is the brand.",
+    "Never use clip art, cartoon chess pieces, or stock photos of smiling children.",
+    "Never write in ALL CAPS in Playfair Display. Caps are for Lato labels only.",
+    "Never use rainbow, gradient, or neon accents. Gold is the only accent.",
+    "Never use Comic Sans, Papyrus, or any decorative typeface. Ever.",
+    "Never crowd elements. If it feels tight, remove something.",
+    "Never use the word 'fun' in marketing copy. Use 'engaging,' 'compelling,' or 'riveting.'",
+    "Never explain what chess is. Our audience already knows. We tell them what we do with it.",
+  ];
+
+  // ---- RENDER SWATCHES ----
+  const swatchGrid = document.getElementById('swatchGrid');
+  swatches.forEach((c, i) => {
+    const el = document.createElement('div');
+    el.className = 'swatch-row stagger-item';
+    el.innerHTML = `
+      <div class="swatch-block" style="background:${c.hex};${c.dark ? 'border:1px solid #333;' : ''}"></div>
+      <div>
+        <div class="swatch-name">${c.name}</div>
+        <div class="swatch-hex">${c.hex}</div>
+        <div class="swatch-role">${c.role}</div>
+      </div>
+    `;
+    swatchGrid.appendChild(el);
+  });
+
+  // ---- RENDER RULES ----
+  const rulesContainer = document.getElementById('rulesContainer');
+  rules.forEach((rule, i) => {
+    const el = document.createElement('div');
+    el.className = 'rule-row stagger-item';
+    el.innerHTML = `
+      <span class="rule-num">${String(i + 1).padStart(2, '0')}</span>
+      <span class="rule-text">${rule}</span>
+    `;
+    rulesContainer.appendChild(el);
+  });
+
+  // ---- NAVIGATION ----
+  const nav = document.getElementById('mainNav');
+  const navBtns = nav.querySelectorAll('.nav-btn');
+  const sections = document.querySelectorAll('.section');
+  let currentSection = 'cover';
+
+  function goTo(id) {
+    // Hide current
+    sections.forEach(s => {
+      s.classList.remove('active', 'revealed');
+    });
+    navBtns.forEach(b => b.classList.remove('active'));
+
+    // Show target
+    const target = document.getElementById(id);
+    target.classList.add('active');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        target.classList.add('revealed');
+      });
+    });
+
+    // Nav visibility
+    if (id === 'cover') {
+      nav.classList.remove('visible');
+    } else {
+      nav.classList.add('visible');
+    }
+
+    // Active button
+    const activeBtn = nav.querySelector(`[data-section="${id}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    currentSection = id;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Expose globally for onclick
+  window.goTo = goTo;
+
+  // Nav click handlers
+  navBtns.forEach(btn => {
+    btn.addEventListener('click', () => goTo(btn.dataset.section));
+  });
+
+  // Initial reveal for cover
+  requestAnimationFrame(() => {
+    document.getElementById('cover').classList.add('revealed');
+  });
+})();
+</script>
+
+</body>
+</html>
