@@ -1,30 +1,25 @@
 #!/usr/bin/env python3
 """
-CCC Tournament Scraper
-======================
-Scrapes US Chess upcoming tournaments + Plan Ahead Calendar,
-uses Claude API to parse messy HTML into structured JSON,
-pushes to Supabase tournament_imports, then auto-approves new events.
+CCC Tournament Scraper v2
+=========================
+Scrapes US Chess upcoming tournaments STATE BY STATE for comprehensive coverage,
+plus the Plan Ahead Calendar for major events.
+Uses Claude API to parse HTML into structured JSON.
+Pushes to Supabase tournament_imports, then auto-approves.
 
-Can be run locally or via GitHub Actions.
-
-Environment variables needed:
+Environment variables:
   SUPABASE_URL
-  SUPABASE_SERVICE_KEY  (service_role, not anon)
+  SUPABASE_SERVICE_KEY
   ANTHROPIC_API_KEY
 """
 
-import os
-import json
-import hashlib
+import os, json, hashlib, time
 from datetime import datetime, date
-
 import requests
 from bs4 import BeautifulSoup
 import anthropic
 from supabase import create_client
 
-# ── CONFIG ──
 SUPABASE_URL = os.environ['SUPABASE_URL']
 SUPABASE_KEY = os.environ['SUPABASE_SERVICE_KEY']
 ANTHROPIC_KEY = os.environ['ANTHROPIC_API_KEY']
@@ -32,316 +27,205 @@ ANTHROPIC_KEY = os.environ['ANTHROPIC_API_KEY']
 sb = create_client(SUPABASE_URL, SUPABASE_KEY)
 claude = anthropic.Anthropic(api_key=ANTHROPIC_KEY)
 
-SOURCES = [
-    {
-        'name': 'US Chess Upcoming Tournaments',
-        'url': 'https://new.uschess.org/upcoming-tournaments',
-        'source_key': 'uschess',
-    },
-    {
-        'name': 'US Chess Plan Ahead Calendar',
-        'url': 'https://new.uschess.org/plan-ahead-calendar',
-        'source_key': 'uschess_plan',
-    },
+ALL_STATES = [
+    'OH','FL','TX','CA','NY','PA','IL','MI','NC','VA','NJ','MO','IN','MD','GA','MA',
+    'AL','AK','AZ','AR','CO','CT','DE','DC','HI','ID','IA','KS','KY','LA','ME',
+    'MN','MS','MT','NE','NV','NH','NM','ND','OK','OR','RI','SC','SD','TN','UT',
+    'VT','WA','WV','WI','WY'
 ]
 
-US_STATES = {
-    'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR','California':'CA',
-    'Colorado':'CO','Connecticut':'CT','Delaware':'DE','Florida':'FL','Georgia':'GA',
-    'Hawaii':'HI','Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA',
-    'Kansas':'KS','Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
-    'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS','Missouri':'MO',
-    'Montana':'MT','Nebraska':'NE','Nevada':'NV','New Hampshire':'NH','New Jersey':'NJ',
-    'New Mexico':'NM','New York':'NY','North Carolina':'NC','North Dakota':'ND','Ohio':'OH',
-    'Oklahoma':'OK','Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI','South Carolina':'SC',
-    'South Dakota':'SD','Tennessee':'TN','Texas':'TX','Utah':'UT','Vermont':'VT',
-    'Virginia':'VA','Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY',
-    # Common abbreviations
-    'AL':'AL','AK':'AK','AZ':'AZ','AR':'AR','CA':'CA','CO':'CO','CT':'CT','DE':'DE',
-    'FL':'FL','GA':'GA','HI':'HI','ID':'ID','IL':'IL','IN':'IN','IA':'IA','KS':'KS',
-    'KY':'KY','LA':'LA','ME':'ME','MD':'MD','MA':'MA','MI':'MI','MN':'MN','MS':'MS',
-    'MO':'MO','MT':'MT','NE':'NE','NV':'NV','NH':'NH','NJ':'NJ','NM':'NM','NY':'NY',
-    'NC':'NC','ND':'ND','OH':'OH','OK':'OK','OR':'OR','PA':'PA','RI':'RI','SC':'SC',
-    'SD':'SD','TN':'TN','TX':'TX','UT':'UT','VT':'VT','VA':'VA','WA':'WA','WV':'WV',
-    'WI':'WI','WY':'WY',
-}
+HEADERS = {'User-Agent': 'Mozilla/5.0 CCC-Tournament-Bot/2.0'}
 
+def fetch_state(st):
+    url = (f"https://new.uschess.org/upcoming-tournaments"
+           f"?combine=&field_event_address_administrative_area={st}"
+           f"&field_online_event_value=2&field_fide_rated_value=0")
+    r = requests.get(url, headers=HEADERS, timeout=30)
+    r.raise_for_status()
+    return r.text
 
-def fetch_page(url: str) -> str:
-    """Fetch a web page with a browser-like user agent."""
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) CCC-Tournament-Bot/1.0'
-    }
-    resp = requests.get(url, headers=headers, timeout=30)
-    resp.raise_for_status()
-    return resp.text
+def fetch_plan_ahead():
+    r = requests.get("https://new.uschess.org/plan-ahead-calendar", headers=HEADERS, timeout=30)
+    r.raise_for_status()
+    return r.text
 
-
-def extract_text_content(html: str) -> str:
-    """Strip HTML to get raw text content for Claude to parse."""
+def extract_text(html):
     soup = BeautifulSoup(html, 'html.parser')
-    
-    # Remove script/style tags
-    for tag in soup(['script', 'style', 'nav', 'footer', 'header']):
-        tag.decompose()
-    
-    # Get the main content area
-    main = soup.find('main') or soup.find('article') or soup.find(class_='content') or soup
-    text = main.get_text(separator='\n', strip=True)
-    
-    # Limit to ~8000 chars to fit in Claude context efficiently
-    if len(text) > 12000:
-        text = text[:12000] + '\n[TRUNCATED]'
-    
-    return text
+    for t in soup(['script','style','nav','footer','header','form']): t.decompose()
+    main = soup.find('main') or soup.find(class_='view-content') or soup
+    entries = main.find_all(['article','div'], class_=lambda c: c and ('views-row' in str(c) or 'node--type' in str(c)))
+    if entries:
+        text = '\n\n---\n\n'.join(e.get_text(separator='\n', strip=True) for e in entries)
+    else:
+        text = main.get_text(separator='\n', strip=True)
+    return text[:15000] if len(text) > 15000 else text
 
+def parse_claude(raw, state, source):
+    if len(raw.strip()) < 100: return []
+    prompt = f"""Parse chess tournament listings from {source} (state: {state}).
+Return JSON array. Each object:
+- "name": string
+- "city": string or null
+- "state": "{state}"
+- "date_start": "YYYY-MM-DD" (assume 2026 if year missing)
+- "date_end": "YYYY-MM-DD" or null
+- "format": "Classical"|"Rapid"|"Blitz"|"Scholastic" (K-12/scholastic/students = Scholastic)
+- "organizer": string or null
+- "time_control": string or null
+- "entry_fee": string or null
+- "notes": max 200 chars or null
+Skip past events (before today {date.today().isoformat()}).
+Skip online-only events.
+If recurring weekly, use next upcoming date.
+Return ONLY JSON array.
 
-def parse_with_claude(raw_text: str, source_name: str) -> list[dict]:
-    """Use Claude to parse raw tournament text into structured JSON."""
-    
-    prompt = f"""You are parsing chess tournament listings scraped from {source_name}.
-
-Extract every individual tournament from this text and return a JSON array.
-Each tournament should have these fields:
-- "name": tournament name (string)
-- "city": city name (string or null)
-- "state": 2-letter US state code like "OH", "FL", "TX" (string or null)  
-- "date_start": start date in YYYY-MM-DD format (string)
-- "date_end": end date in YYYY-MM-DD format if multi-day, null if single day
-- "format": one of "Classical", "Rapid", "Blitz", "Scholastic", "Open" (best guess)
-- "organizer": organizing body if mentioned (string or null)
-- "time_control": time control if mentioned, like "G/90;d5" (string or null)
-- "entry_fee": entry fee if mentioned (string or null)
-- "registration_url": registration URL if present (string or null)
-- "notes": any other notable info (string or null)
-
-Rules:
-- If a tournament says "K-12", "K-6", "K-8", "scholastic", "students", set format to "Scholastic"
-- If it mentions "rapid" or time controls under 30 min, set format to "Rapid"  
-- If it mentions "blitz" or time controls under 10 min, set format to "Blitz"
-- Otherwise default format to "Classical"
-- For state codes, convert full state names to 2-letter codes (Ohio → OH, Florida → FL)
-- Only include future tournaments (2026 and beyond)
-- Skip any entries that aren't actual tournaments (ads, articles, etc.)
-
-Return ONLY the JSON array. No markdown, no explanation, no backticks.
-
-Raw text:
-{raw_text}"""
-
-    response = claude.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=4000,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    
-    text = response.content[0].text.strip()
-    
-    # Clean up any markdown fencing Claude might add despite instructions
-    if text.startswith('```'):
-        text = text.split('\n', 1)[1] if '\n' in text else text[3:]
-    if text.endswith('```'):
-        text = text[:-3]
-    text = text.strip()
-    
+Text:
+{raw}"""
     try:
-        tournaments = json.loads(text)
-        if not isinstance(tournaments, list):
-            tournaments = [tournaments]
-        return tournaments
-    except json.JSONDecodeError as e:
-        print(f"  ⚠ Claude returned invalid JSON: {e}")
-        print(f"  Raw response: {text[:500]}")
+        r = claude.messages.create(model="claude-sonnet-4-20250514", max_tokens=4000, messages=[{"role":"user","content":prompt}])
+        t = r.content[0].text.strip()
+        if t.startswith('```'): t = t.split('\n',1)[1] if '\n' in t else t[3:]
+        if t.endswith('```'): t = t[:-3]
+        d = json.loads(t.strip())
+        return d if isinstance(d, list) else [d]
+    except Exception as e:
+        print(f"    Parse error: {e}")
         return []
 
+def get_existing():
+    keys = set()
+    try:
+        for row in (sb.table('tournaments').select('name,date_start,state').execute().data or []):
+            k = f"{(row.get('name') or '').lower()}|{row.get('date_start') or ''}|{row.get('state') or ''}"
+            keys.add(hashlib.md5(k.encode()).hexdigest())
+    except: pass
+    try:
+        for row in (sb.table('tournament_imports').select('parsed_name,parsed_date_start,parsed_state').execute().data or []):
+            k = f"{(row.get('parsed_name') or '').lower()}|{row.get('parsed_date_start') or ''}|{row.get('parsed_state') or ''}"
+            keys.add(hashlib.md5(k.encode()).hexdigest())
+    except: pass
+    return keys
 
-def dedup_key(t: dict) -> str:
-    """Generate a deduplication hash for a tournament."""
-    raw = f"{t.get('name','').lower().strip()}|{t.get('date_start','')}|{t.get('state','')}"
-    return hashlib.md5(raw.encode()).hexdigest()
-
-
-def push_to_staging(tournaments: list[dict], source_key: str, source_url: str):
-    """Push parsed tournaments to tournament_imports staging table."""
-    
-    # Get existing imports to avoid duplicates
-    existing = sb.table('tournament_imports').select('parsed_name,parsed_date_start,parsed_state').execute()
-    existing_keys = set()
-    for e in (existing.data or []):
-        key = f"{(e.get('parsed_name') or '').lower().strip()}|{e.get('parsed_date_start') or ''}|{e.get('parsed_state') or ''}"
-        existing_keys.add(hashlib.md5(key.encode()).hexdigest())
-    
-    # Also get existing live tournaments
-    live = sb.table('tournaments').select('name,date_start,state').execute()
-    for e in (live.data or []):
-        key = f"{(e.get('name') or '').lower().strip()}|{e.get('date_start') or ''}|{e.get('state') or ''}"
-        existing_keys.add(hashlib.md5(key.encode()).hexdigest())
-    
-    new_count = 0
-    skip_count = 0
-    
+def push_staging(tournaments, src, url, existing):
+    n = 0
     for t in tournaments:
-        dk = dedup_key(t)
-        if dk in existing_keys:
-            skip_count += 1
-            continue
-        
-        # Validate date
+        name = (t.get('name') or '').strip()
+        ds = t.get('date_start','')
+        st = t.get('state','')
+        if not name or not ds: continue
         try:
-            d = datetime.strptime(t.get('date_start', ''), '%Y-%m-%d').date()
-            if d < date.today():
-                skip_count += 1
-                continue
-        except (ValueError, TypeError):
-            skip_count += 1
-            continue
-        
-        # Normalize state code
-        state = t.get('state', '')
-        if state and len(state) > 2:
-            state = US_STATES.get(state, US_STATES.get(state.title(), state[:2].upper()))
-        
+            if datetime.strptime(ds, '%Y-%m-%d').date() < date.today(): continue
+        except: continue
+        dk = hashlib.md5(f"{name.lower()}|{ds}|{st}".encode()).hexdigest()
+        if dk in existing: continue
         row = {
-            'raw_name': t.get('name'),
-            'raw_location': f"{t.get('city', '')}, {state}",
-            'raw_date': t.get('date_start'),
-            'parsed_name': t.get('name'),
-            'parsed_city': t.get('city'),
-            'parsed_state': state if state and len(state) == 2 else None,
-            'parsed_date_start': t.get('date_start'),
-            'parsed_date_end': t.get('date_end'),
-            'parsed_format': t.get('format', 'Classical'),
-            'parsed_organizer': t.get('organizer'),
-            'source': source_key,
-            'source_url': source_url,
-            'raw_details': json.dumps({k: v for k, v in t.items() if k not in ('name','city','state','date_start','date_end','format','organizer')}),
-            'status': 'pending',
+            'raw_name':name, 'raw_location':f"{t.get('city','')}, {st}", 'raw_date':ds,
+            'parsed_name':name, 'parsed_city':t.get('city'), 'parsed_state':st if len(st)==2 else None,
+            'parsed_date_start':ds, 'parsed_date_end':t.get('date_end'),
+            'parsed_format':t.get('format','Classical'), 'parsed_organizer':t.get('organizer'),
+            'source':src, 'source_url':url,
+            'raw_details':json.dumps({k:v for k,v in t.items() if k not in ('name','city','state','date_start','date_end','format','organizer') and v}),
+            'status':'pending'
         }
-        
         try:
             sb.table('tournament_imports').insert(row).execute()
-            new_count += 1
-            existing_keys.add(dk)
-        except Exception as e:
-            print(f"  ⚠ Insert failed for {t.get('name')}: {e}")
-    
-    print(f"  → {new_count} new imports, {skip_count} skipped (dupe/past)")
-    return new_count
+            existing.add(dk); n += 1
+        except: pass
+    return n
 
-
-def auto_approve_imports():
-    """
-    Promote all pending imports to live tournaments table.
-    In a more cautious setup, you'd review first. 
-    This runs automatically since Claude already cleaned the data.
-    """
-    pending = sb.table('tournament_imports').select('*').eq('status', 'pending').execute()
-    
-    if not pending.data:
-        print("No pending imports to approve.")
-        return 0
-    
+def auto_approve():
+    try:
+        pending = sb.table('tournament_imports').select('*').eq('status','pending').execute()
+        if not pending.data: return 0
+    except: return 0
     approved = 0
     for imp in pending.data:
-        tournament = {
-            'name': imp['parsed_name'],
-            'city': imp['parsed_city'],
-            'state': imp['parsed_state'],
-            'date_start': imp['parsed_date_start'],
-            'date_end': imp['parsed_date_end'],
-            'format': imp['parsed_format'] or 'Classical',
-            'organizer': imp['parsed_organizer'],
-            'source': imp['source'],
-            'source_url': imp['source_url'],
-            'status': 'upcoming',
-        }
-        
-        # Parse extra details
+        ex = sb.table('tournaments').select('id').eq('name',imp['parsed_name']).eq('date_start',imp['parsed_date_start']).execute()
+        if ex.data and len(ex.data) > 0:
+            sb.table('tournament_imports').update({'status':'duplicate','reviewed_at':datetime.utcnow().isoformat()}).eq('id',imp['id']).execute()
+            continue
+        t = {'name':imp['parsed_name'],'city':imp['parsed_city'],'state':imp['parsed_state'],
+             'date_start':imp['parsed_date_start'],'date_end':imp['parsed_date_end'],
+             'format':imp['parsed_format'] or 'Classical','organizer':imp['parsed_organizer'],
+             'source':imp['source'],'source_url':imp['source_url'],'status':'upcoming'}
         try:
             details = json.loads(imp.get('raw_details') or '{}')
-            if details.get('time_control'):
-                tournament['time_control'] = details['time_control']
-            if details.get('entry_fee'):
-                tournament['entry_fee'] = details['entry_fee']
-            if details.get('registration_url'):
-                tournament['registration_url'] = details['registration_url']
-            if details.get('notes'):
-                tournament['notes'] = details['notes']
-        except (json.JSONDecodeError, TypeError):
-            pass
-        
+            for f in ['time_control','entry_fee','registration_url','notes']:
+                if details.get(f): t[f] = details[f]
+        except: pass
         try:
-            result = sb.table('tournaments').insert(tournament).execute()
-            # Mark import as approved
-            sb.table('tournament_imports').update({
-                'status': 'approved',
-                'reviewed_at': datetime.utcnow().isoformat(),
-            }).eq('id', imp['id']).execute()
+            sb.table('tournaments').insert(t).execute()
+            sb.table('tournament_imports').update({'status':'approved','reviewed_at':datetime.utcnow().isoformat()}).eq('id',imp['id']).execute()
             approved += 1
-        except Exception as e:
-            print(f"  ⚠ Approve failed for {imp['parsed_name']}: {e}")
-            # Mark as duplicate if it's a unique constraint violation
-            if 'duplicate' in str(e).lower() or 'unique' in str(e).lower():
-                sb.table('tournament_imports').update({'status': 'duplicate'}).eq('id', imp['id']).execute()
-    
-    print(f"  ✓ Auto-approved {approved} tournaments into live table")
+        except:
+            sb.table('tournament_imports').update({'status':'error'}).eq('id',imp['id']).execute()
     return approved
 
-
-def cleanup_past_tournaments():
-    """Remove tournaments that have already passed."""
-    today = date.today().isoformat()
-    result = sb.table('tournaments').delete().lt('date_start', today).execute()
-    removed = len(result.data) if result.data else 0
-    if removed > 0:
-        print(f"  🧹 Cleaned up {removed} past tournaments")
-
-
 def main():
-    print("=" * 60)
-    print(f"CCC Tournament Scraper — {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    print("=" * 60)
-    
-    total_new = 0
-    
-    for source in SOURCES:
-        print(f"\n📡 Fetching: {source['name']}")
-        print(f"   URL: {source['url']}")
-        
-        try:
-            html = fetch_page(source['url'])
-            print(f"   Got {len(html)} bytes")
-            
-            text = extract_text_content(html)
-            print(f"   Extracted {len(text)} chars of text content")
-            
-            print(f"   🤖 Sending to Claude for parsing...")
-            tournaments = parse_with_claude(text, source['name'])
-            print(f"   Claude found {len(tournaments)} tournaments")
-            
-            if tournaments:
-                new = push_to_staging(tournaments, source['source_key'], source['url'])
-                total_new += new
-                
-        except Exception as e:
-            print(f"   ❌ Error: {e}")
-            continue
-    
-    # Auto-approve all pending imports
-    if total_new > 0:
-        print(f"\n✅ Auto-approving {total_new} new imports...")
-        auto_approve_imports()
-    else:
-        print("\nNo new tournaments found this run.")
-    
-    # Cleanup past events
-    print("\n🧹 Cleaning up past events...")
-    cleanup_past_tournaments()
-    
-    print(f"\n{'=' * 60}")
-    print(f"Done! {total_new} new tournaments added.")
-    print(f"{'=' * 60}")
+    print("="*60)
+    print(f"CCC Tournament Scraper v2 — {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    print(f"Scanning {len(ALL_STATES)} states + Plan Ahead Calendar")
+    print("="*60)
 
+    existing = get_existing()
+    print(f"📊 {len(existing)} existing records\n")
+
+    total_found = 0; total_new = 0; active_states = 0
+
+    for i, st in enumerate(ALL_STATES):
+        print(f"[{i+1}/{len(ALL_STATES)}] 📡 {st}", end=" ")
+        try:
+            html = fetch_state(st)
+            text = extract_text(html)
+            if len(text.strip()) < 200:
+                print("— no events"); continue
+            tournaments = parse_claude(text, st, f"US Chess - {st}")
+            total_found += len(tournaments)
+            if tournaments:
+                active_states += 1
+                new = push_staging(tournaments, 'uschess', f'https://new.uschess.org/upcoming-tournaments?state={st}', existing)
+                total_new += new
+                print(f"— {len(tournaments)} found, {new} new")
+            else:
+                print("— 0 parsed")
+            time.sleep(1)
+        except Exception as e:
+            print(f"— error: {e}"); continue
+
+    # Plan Ahead Calendar
+    print(f"\n📡 Plan Ahead Calendar", end=" ")
+    try:
+        html = fetch_plan_ahead()
+        text = extract_text(html)
+        if len(text.strip()) > 200:
+            t = parse_claude(text, 'US', "US Chess Plan Ahead")
+            total_found += len(t)
+            new = push_staging(t, 'uschess_plan', 'https://new.uschess.org/plan-ahead-calendar', existing)
+            total_new += new
+            print(f"— {len(t)} found, {new} new")
+    except Exception as e:
+        print(f"— error: {e}")
+
+    print(f"\n{'='*60}")
+    print(f"📊 Total: {total_found} found across {active_states} states, {total_new} new")
+
+    if total_new > 0:
+        print(f"✅ Auto-approving...")
+        a = auto_approve()
+        print(f"✅ {a} tournaments now live!")
+
+    # Cleanup past
+    try:
+        r = sb.table('tournaments').delete().lt('date_start', date.today().isoformat()).execute()
+        if r.data: print(f"🧹 Removed {len(r.data)} past events")
+    except: pass
+
+    try:
+        c = sb.table('tournaments').select('id', count='exact').execute()
+        print(f"\n📊 Total live tournaments: {c.count}")
+    except: pass
+
+    print(f"{'='*60}\nDone!")
 
 if __name__ == '__main__':
     main()
