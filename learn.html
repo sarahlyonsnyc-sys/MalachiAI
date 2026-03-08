@@ -271,6 +271,7 @@
       .puzzle-board-wrap { flex-direction:column; }
     }
   </style>
+  <link rel="stylesheet" href="nav.css">
 </head>
 <body>
 
@@ -288,23 +289,13 @@
 </div>
 
 <!-- NAV -->
-<nav>
-  <a href="index.html" class="logo">
-    <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
-    <div class="logo-text">The Classical Chess <span>Collegium</span></div>
-  </a>
-  <div class="nav-links">
-    <a href="index.html" class="nav-link">Home</a>
-    <a href="learn.html" class="nav-link active">Learn</a>
-    <a href="puzzles.html" class="nav-link">Puzzles</a>
-    <a href="openings.html" class="nav-link">Openings</a>
-    <a href="play.html" class="nav-link">Play</a>
-    <a href="dashboard.html" class="nav-link" id="dashboardLink" style="display:none">Dashboard</a>
-  </div>
-  <div class="xp-bar-nav">
-    <div class="xp-label" id="xpLabel">0 XP</div>
-    <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
-    <div class="level-badge" id="levelBadge">LVL 1</div>
+<nav id="cccNav">
+  <div class="ccc-nav-right-extra">
+    <div class="xp-bar-nav">
+      <div class="xp-label" id="xpLabel">0 XP</div>
+      <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+      <div class="level-badge" id="levelBadge">LVL 1</div>
+    </div>
   </div>
 </nav>
 
@@ -2429,5 +2420,6 @@ async function saveProgress() {
 
 init();
 </script>
+<script src="nav.js"></script>
 </body>
 </html>

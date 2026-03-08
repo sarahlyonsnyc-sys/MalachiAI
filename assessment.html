@@ -422,17 +422,11 @@
     .radar-wrap { flex-direction: column; }
   }
 </style>
+<link rel="stylesheet" href="nav.css">
 </head>
 <body>
 
-<nav>
-  <a href="index.html" class="nav-logo">♟ The Classical Chess Collegium</a>
-  <div class="nav-links">
-    <a href="index.html" class="nav-link">Home</a>
-    <a href="play.html" class="nav-link">Play</a>
-    <a href="profile.html" class="nav-link">Profile</a>
-  </div>
-</nav>
+<nav id="cccNav"></nav>
 
 <!-- ── LANDING ── -->
 <div id="landingShell">
@@ -1494,5 +1488,6 @@ window.addEventListener('load', () => {
   loadHistory();
 });
 </script>
+<script src="nav.js"></script>
 </body>
 </html>

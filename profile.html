@@ -152,19 +152,13 @@
     .empty-msg { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); text-align:center; padding:24px; }
     .loading { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.15em; color:var(--muted); text-align:center; padding:60px; text-transform:uppercase; }
   </style>
+  <link rel="stylesheet" href="nav.css">
 </head>
 <body>
 <div class="chess-bg"></div>
-<nav>
-  <a href="index.html" class="logo">
-    <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
-    <div class="logo-text">The Classical Chess <span>Collegium</span></div>
-  </a>
-  <div class="nav-right">
-    <a href="learn.html" class="nav-link">Learn</a>
-    <a href="play.html" class="nav-link">Play</a>
-    <a href="puzzles.html" class="nav-link">Puzzles</a>
-    <button class="nav-link" id="signOutBtn" style="display:none">Sign Out</button>
+<nav id="cccNav">
+  <div class="ccc-nav-right-extra">
+    <button class="nav-link" id="signOutBtn" style="display:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#6b6b6b;background:none;border:1px solid transparent;padding:8px 14px;cursor:pointer;">Sign Out</button>
   </div>
 </nav>
 
@@ -994,5 +988,6 @@ function loadOpeningProgress(behavior) {
 
 loadProfile();
 </script>
+<script src="nav.js"></script>
 </body>
 </html>

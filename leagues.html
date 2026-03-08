@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classical Chess Collegium — Leagues & Standings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="nav.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--black:#0a0a0a;--panel:#151515;--border:#2a2a2a;--gold:#c9a84c;--gold2:#e8c97a;--cream:#F2ECD8;--muted:#6b6b6b;--green:#4caf50;--red:#e05068}
+    body{background:var(--black);color:var(--cream);font-family:'Lato',sans-serif;min-height:100vh}
+    .chess-bg{position:fixed;inset:0;z-index:0;opacity:0.02;background-image:repeating-conic-gradient(var(--gold) 0% 25%,transparent 0% 50%);background-size:48px 48px;pointer-events:none}
+
+    .page{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:48px 24px}
+    .page-eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+    .page-eyebrow::before{content:'';width:24px;height:1px;background:var(--gold)}
+    .page-eyebrow span{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold)}
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,5vw,48px);font-weight:700;line-height:1.1;margin-bottom:12px}
+    .page-title em{color:var(--gold);font-style:italic}
+    .page-sub{font-size:15px;color:var(--muted);font-weight:300;line-height:1.7;max-width:600px;margin-bottom:40px}
+
+    /* SEASON BANNER */
+    .season-banner{background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--gold);padding:28px 32px;display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px}
+    .season-info .season-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+    .season-info .season-name{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--cream)}
+    .season-stats{display:flex;gap:32px}
+    .season-stat{text-align:center}
+    .season-stat .sv{font-family:'DM Mono',monospace;font-size:24px;font-weight:700;color:var(--gold)}
+    .season-stat .sl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+
+    /* LEAGUE CARDS */
+    .leagues-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:40px}
+    @media(max-width:700px){.leagues-grid{grid-template-columns:1fr}}
+    .league-card{background:var(--panel);border:1px solid var(--border);padding:28px;transition:border-color 0.2s}
+    .league-card:hover{border-color:var(--gold)}
+    .league-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .league-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--cream)}
+    .league-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:4px 10px;border:1px solid rgba(201,168,76,0.3);color:var(--gold)}
+
+    /* STANDINGS TABLE */
+    .standings-row{display:grid;grid-template-columns:28px 1fr 50px 50px 50px 50px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+    .standings-row.header{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);padding-bottom:10px;border-bottom:1px solid var(--border)}
+    .standings-pos{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:center}
+    .standings-row:nth-child(2) .standings-pos{color:var(--gold);font-weight:700}
+    .standings-team{font-size:13px;color:var(--cream)}
+    .standings-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:center}
+    .standings-val.w{color:var(--green)}
+    .standings-val.l{color:var(--red)}
+    .standings-val.pts{color:var(--gold);font-weight:500}
+  </style>
+</head>
+<body>
+<div class="chess-bg"></div>
+<nav id="cccNav"></nav>
+
+<div class="page">
+  <div class="page-eyebrow"><span>Club — Leagues</span></div>
+  <h1 class="page-title">Leagues &amp; <em>Standings.</em></h1>
+  <p class="page-sub">Track team standings across scholastic chess leagues. Seasons run September through May with playoffs in June.</p>
+
+  <div class="season-banner">
+    <div class="season-info">
+      <div class="season-label">Current Season</div>
+      <div class="season-name">Spring 2026 — Week 8 of 12</div>
+    </div>
+    <div class="season-stats">
+      <div class="season-stat"><div class="sv">24</div><div class="sl">Teams</div></div>
+      <div class="season-stat"><div class="sv">186</div><div class="sl">Matches Played</div></div>
+      <div class="season-stat"><div class="sv">4</div><div class="sl">Weeks Left</div></div>
+    </div>
+  </div>
+
+  <div class="leagues-grid" id="leaguesGrid"></div>
+</div>
+
+<script>
+const LEAGUES = [
+  { name:"Northeast Ohio Elementary", division:"K-5", teams:[
+    {name:"Lincoln Lions",w:7,l:1,d:0,pts:21},
+    {name:"Roosevelt Rooks",w:6,l:2,d:0,pts:18},
+    {name:"Hawthorne Knights",w:5,l:2,d:1,pts:16},
+    {name:"St. Mary's Bishops",w:4,l:3,d:1,pts:13},
+    {name:"Westlake Pawns",w:3,l:5,d:0,pts:9},
+    {name:"Central Castles",w:1,l:7,d:0,pts:3},
+  ]},
+  { name:"Northeast Ohio Middle School", division:"6-8", teams:[
+    {name:"Hawthorne Academy",w:7,l:0,d:1,pts:22},
+    {name:"Westlake Prep",w:6,l:1,d:1,pts:19},
+    {name:"CCC After-School A",w:5,l:3,d:0,pts:15},
+    {name:"Roosevelt Middle",w:4,l:3,d:1,pts:13},
+    {name:"Central Middle",w:2,l:5,d:1,pts:7},
+    {name:"CCC After-School B",w:0,l:8,d:0,pts:0},
+  ]},
+  { name:"Greater Cleveland Open", division:"All Ages", teams:[
+    {name:"Cleveland Chess Club",w:8,l:0,d:0,pts:24},
+    {name:"CCC Varsity",w:6,l:2,d:0,pts:18},
+    {name:"Lakewood Knights",w:5,l:3,d:0,pts:15},
+    {name:"Akron Chess Society",w:3,l:4,d:1,pts:10},
+    {name:"Kent State Club",w:2,l:6,d:0,pts:6},
+  ]},
+  { name:"Ohio State League — South", division:"K-12", teams:[
+    {name:"Columbus Academy",w:7,l:1,d:0,pts:21},
+    {name:"Cincinnati Chess",w:6,l:2,d:0,pts:18},
+    {name:"Dayton Knights",w:4,l:3,d:1,pts:13},
+    {name:"Athens County",w:3,l:5,d:0,pts:9},
+    {name:"Springfield Pawns",w:1,l:7,d:0,pts:3},
+  ]},
+];
+
+const grid = document.getElementById('leaguesGrid');
+LEAGUES.forEach(league => {
+  const card = document.createElement('div');
+  card.className = 'league-card';
+  card.innerHTML = `
+    <div class="league-header">
+      <div class="league-name">${league.name}</div>
+      <div class="league-badge">${league.division}</div>
+    </div>
+    <div class="standings-row header">
+      <div>#</div><div>Team</div><div>W</div><div>L</div><div>D</div><div>PTS</div>
+    </div>
+    ${league.teams.map((t,i) => `
+      <div class="standings-row">
+        <div class="standings-pos">${i+1}</div>
+        <div class="standings-team">${t.name}</div>
+        <div class="standings-val w">${t.w}</div>
+        <div class="standings-val l">${t.l}</div>
+        <div class="standings-val">${t.d}</div>
+        <div class="standings-val pts">${t.pts}</div>
+      </div>
+    `).join('')}
+  `;
+  grid.appendChild(card);
+});
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

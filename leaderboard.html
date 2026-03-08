@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classical Chess Collegium — Top Players</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="nav.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--black:#0a0a0a;--panel:#151515;--border:#2a2a2a;--gold:#c9a84c;--gold2:#e8c97a;--cream:#F2ECD8;--muted:#6b6b6b;--green:#4caf50}
+    body{background:var(--black);color:var(--cream);font-family:'Lato',sans-serif;min-height:100vh}
+    .chess-bg{position:fixed;inset:0;z-index:0;opacity:0.02;background-image:repeating-conic-gradient(var(--gold) 0% 25%,transparent 0% 50%);background-size:48px 48px;pointer-events:none}
+
+    .page{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:48px 24px}
+    .page-eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+    .page-eyebrow::before{content:'';width:24px;height:1px;background:var(--gold)}
+    .page-eyebrow span{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold)}
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,5vw,48px);font-weight:700;line-height:1.1;margin-bottom:12px}
+    .page-title em{color:var(--gold);font-style:italic}
+    .page-sub{font-size:15px;color:var(--muted);font-weight:300;line-height:1.7;max-width:560px;margin-bottom:40px}
+
+    .tabs{display:flex;gap:0;border:1px solid var(--border);margin-bottom:32px;overflow-x:auto}
+    .tab{flex:1;background:transparent;border:none;border-right:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:12px 16px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+    .tab:last-child{border-right:none}
+    .tab:hover{color:var(--cream)}
+    .tab.active{background:var(--gold);color:var(--black);font-weight:500}
+
+    /* LEADERBOARD TABLE */
+    .lb-table{width:100%;border-collapse:collapse}
+    .lb-row{display:grid;grid-template-columns:48px 1fr 100px 80px 80px;align-items:center;gap:0;padding:14px 20px;border-bottom:1px solid var(--border);transition:background 0.15s}
+    .lb-row:hover{background:rgba(201,168,76,0.03)}
+    .lb-row.header{background:var(--panel);border-bottom:2px solid var(--gold);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);padding:10px 20px}
+    .lb-rank{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--muted);text-align:center}
+    .lb-row:nth-child(2) .lb-rank{color:var(--gold);font-size:28px}
+    .lb-row:nth-child(3) .lb-rank,.lb-row:nth-child(4) .lb-rank{color:var(--cream)}
+    .lb-player{display:flex;align-items:center;gap:12px}
+    .lb-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),#8b6914);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:#000;flex-shrink:0}
+    .lb-name{font-size:14px;font-weight:400;color:var(--cream)}
+    .lb-school{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px}
+    .lb-rating{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;color:var(--gold);text-align:center}
+    .lb-games,.lb-winrate{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:center}
+    .lb-winrate .high{color:var(--green)}
+
+    @media(max-width:600px){
+      .lb-row{grid-template-columns:36px 1fr 70px;padding:10px 12px}
+      .lb-games,.lb-winrate,.lb-row.header .lb-games,.lb-row.header .lb-winrate{display:none}
+    }
+  </style>
+</head>
+<body>
+<div class="chess-bg"></div>
+<nav id="cccNav"></nav>
+
+<div class="page">
+  <div class="page-eyebrow"><span>Club — Leaderboard</span></div>
+  <h1 class="page-title">Top <em>Players.</em></h1>
+  <p class="page-sub">The highest-rated students on the Collegium platform. Rankings update after every rated game.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showBoard('overall',this)">Overall</button>
+    <button class="tab" onclick="showBoard('k5',this)">K-5</button>
+    <button class="tab" onclick="showBoard('middle',this)">6-8</button>
+    <button class="tab" onclick="showBoard('high',this)">9-12</button>
+    <button class="tab" onclick="showBoard('weekly',this)">This Week</button>
+  </div>
+
+  <div id="leaderboard"></div>
+</div>
+
+<script>
+const PLAYERS = [
+  {name:"Marcus T.",school:"Lincoln Elementary",grade:"5th",rating:1487,games:142,wins:98},
+  {name:"Sofia R.",school:"Hawthorne Middle",grade:"7th",rating:1423,games:201,wins:134},
+  {name:"James K.",school:"Roosevelt Academy",grade:"4th",rating:1389,games:96,wins:71},
+  {name:"Aanya P.",school:"Westlake Prep",grade:"6th",rating:1356,games:178,wins:110},
+  {name:"Ethan W.",school:"St. Mary's",grade:"8th",rating:1334,games:88,wins:59},
+  {name:"Olivia C.",school:"Lincoln Elementary",grade:"3rd",rating:1298,games:124,wins:79},
+  {name:"Noah B.",school:"CCC After-School",grade:"5th",rating:1267,games:156,wins:91},
+  {name:"Zara M.",school:"Hawthorne Middle",grade:"7th",rating:1245,games:67,wins:42},
+  {name:"Liam D.",school:"Roosevelt Academy",grade:"4th",rating:1223,games:103,wins:62},
+  {name:"Chloe F.",school:"Westlake Prep",grade:"9th",rating:1198,games:89,wins:51},
+  {name:"David L.",school:"Central High",grade:"10th",rating:1176,games:134,wins:74},
+  {name:"Emma S.",school:"CCC After-School",grade:"6th",rating:1154,games:78,wins:45},
+];
+
+function renderBoard(players) {
+  const el = document.getElementById('leaderboard');
+  el.innerHTML = `
+    <div class="lb-row header">
+      <div>#</div><div>Player</div><div>Rating</div><div class="lb-games">Games</div><div class="lb-winrate">Win %</div>
+    </div>
+    ${players.map((p,i) => {
+      const initials = p.name.split(' ').map(n=>n[0]).join('');
+      const wr = Math.round(p.wins/p.games*100);
+      return `<div class="lb-row">
+        <div class="lb-rank">${i+1}</div>
+        <div class="lb-player">
+          <div class="lb-avatar">${initials}</div>
+          <div><div class="lb-name">${p.name}</div><div class="lb-school">${p.school} · ${p.grade}</div></div>
+        </div>
+        <div class="lb-rating">${p.rating}</div>
+        <div class="lb-games">${p.games}</div>
+        <div class="lb-winrate"><span class="${wr >= 60 ? 'high' : ''}">${wr}%</span></div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function showBoard(cat, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  // Filter by grade range for demo
+  let list = PLAYERS;
+  if (cat==='k5') list = PLAYERS.filter(p=>['K','1st','2nd','3rd','4th','5th'].some(g=>p.grade.includes(g)));
+  else if (cat==='middle') list = PLAYERS.filter(p=>['6th','7th','8th'].some(g=>p.grade.includes(g)));
+  else if (cat==='high') list = PLAYERS.filter(p=>['9th','10th','11th','12th'].some(g=>p.grade.includes(g)));
+  else if (cat==='weekly') list = [...PLAYERS].sort(()=>Math.random()-0.5).slice(0,8);
+  renderBoard(list);
+}
+
+renderBoard(PLAYERS);
+</script>
+<script src="nav.js"></script>
+</body>
+</html>

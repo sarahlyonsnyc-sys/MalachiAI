@@ -136,6 +136,9 @@
       transition: background 0.2s, transform 0.2s;
     }
     .nav-cta:hover { background: var(--gold2); transform: translateY(-1px); }
+    /* Landing page nav override */
+    .ccc-nav { position: fixed; background: transparent; border-bottom-color: transparent; }
+    .ccc-nav.scrolled { background: rgba(10,10,10,0.92); border-bottom-color: var(--border); }
 
     /* ── HERO ── */
     .hero {
@@ -625,6 +628,7 @@
     .profile-signin { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:#c9a84c; text-decoration:none; border:1px solid rgba(201,168,76,0.3); padding:6px 14px; transition:all 0.2s; }
     .profile-signin:hover { background:rgba(201,168,76,0.08); }
   </style>
+  <link rel="stylesheet" href="nav.css">
 </head>
 <body>
 
@@ -633,21 +637,10 @@
 <div class="cursor-ring" id="cursor-ring"></div>
 
 <!-- NAV -->
-<nav id="nav">
-  <a href="#" class="logo">
-    <div class="logo-icon">
-      <span></span><span></span><span></span><span></span>
-    </div>
-    <div class="logo-text">The Classical Chess <span>Collegium</span></div>
-  </a>
-  <ul class="nav-links">
-    <li><a href="#pillars">Platform</a></li>
-    <li><a href="#how">How It Works</a></li>
-    <li><a href="learn.html">Learn</a></li>
-    <li><a href="play.html">Play</a></li>
-    <li><a href="dashboard.html" class="nav-link-dashboard" id="dashboardLink" style="display:none">Dashboard</a></li>
-  </ul>
-  <a href="learn.html"><button class="nav-cta">Start Learning</button></a>
+<nav id="cccNav">
+  <div class="ccc-nav-right-extra">
+    <a href="learn.html"><button class="nav-cta">Start Learning</button></a>
+  </div>
 </nav>
 
 <!-- HERO -->
@@ -866,7 +859,7 @@
 
   // Nav scroll
   window.addEventListener('scroll', () => {
-    document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 40);
+    document.getElementById('cccNav').classList.toggle('scrolled', window.scrollY > 40);
   });
 
   // Scroll reveal
@@ -960,5 +953,6 @@
   }
 })();
 </script>
+<script src="nav.js"></script>
 </body>
 </html>

@@ -1,0 +1,157 @@
+/* ============================================================
+   CCC SHARED NAV — nav.css
+   Drop into any page. Works with nav.js for dropdown behavior.
+   ============================================================ */
+
+/* ── NAV BAR ── */
+.ccc-nav {
+  position: sticky; top: 0; z-index: 1000;
+  /* Override for landing page - see index.html */
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px;
+  height: 56px;
+  background: rgba(10,10,10,0.97);
+  border-bottom: 1px solid #2a2a2a;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font-family: 'Lato', 'Outfit', sans-serif;
+}
+
+/* ── LOGO ── */
+.ccc-nav .logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; flex-shrink: 0;
+}
+.ccc-nav .logo-icon {
+  width: 26px; height: 26px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+}
+.ccc-nav .logo-icon span {
+  background: #c9a84c; display: block; border-radius: 1px;
+}
+.ccc-nav .logo-icon span:nth-child(2),
+.ccc-nav .logo-icon span:nth-child(3) {
+  background: transparent; border: 1px solid #c9a84c;
+}
+.ccc-nav .logo-text {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 18px; font-weight: 700; color: #F2ECD8;
+  white-space: nowrap;
+}
+.ccc-nav .logo-text b { color: #c9a84c; font-weight: 700; }
+
+/* ── NAV ITEMS (center) ── */
+.ccc-nav-items {
+  display: flex; align-items: center; gap: 0;
+  list-style: none; margin: 0; padding: 0;
+  height: 100%;
+}
+
+/* ── SINGLE NAV ITEM ── */
+.ccc-nav-item {
+  position: relative; height: 100%;
+  display: flex; align-items: center;
+}
+.ccc-nav-item > a,
+.ccc-nav-item > button {
+  display: flex; align-items: center; gap: 5px;
+  height: 100%;
+  padding: 0 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b6b6b;
+  text-decoration: none;
+  background: none; border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+.ccc-nav-item > a:hover,
+.ccc-nav-item > button:hover,
+.ccc-nav-item.active > a,
+.ccc-nav-item.active > button {
+  color: #c9a84c;
+}
+.ccc-nav-item > button .chevron {
+  font-size: 7px;
+  transition: transform 0.2s;
+  color: #555;
+}
+.ccc-nav-item.open > button .chevron {
+  transform: rotate(180deg);
+  color: #c9a84c;
+}
+
+/* ── DROPDOWN PANEL ── */
+.ccc-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  background: #131313;
+  border: 1px solid #2a2a2a;
+  border-top: 2px solid #c9a84c;
+  padding: 8px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 0.2s, transform 0.2s, visibility 0.2s;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+.ccc-nav-item.open .ccc-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.ccc-dropdown a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8C8478;
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+.ccc-dropdown a:hover {
+  color: #F2ECD8;
+  background: rgba(201,168,76,0.06);
+}
+.ccc-dropdown a .dd-icon {
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.ccc-dropdown .dd-divider {
+  height: 1px;
+  background: #2a2a2a;
+  margin: 6px 0;
+}
+
+/* ── RIGHT SIDE (profile widget placeholder) ── */
+.ccc-nav-right {
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+}
+
+/* ── DASHBOARD (teacher only) ── */
+.ccc-nav-item.teacher-only { display: none; }
+.ccc-nav-item.teacher-only.show { display: flex; }
+
+/* ── MOBILE ── */
+@media (max-width: 900px) {
+  .ccc-nav { padding: 0 16px; }
+  .ccc-nav .logo-text { display: none; }
+  .ccc-nav-item > a,
+  .ccc-nav-item > button { padding: 0 10px; font-size: 10px; }
+  .ccc-dropdown { min-width: 180px; }
+}
+@media (max-width: 600px) {
+  .ccc-nav-items { gap: 0; }
+  .ccc-nav-item > a,
+  .ccc-nav-item > button { padding: 0 7px; font-size: 9px; letter-spacing: 0.04em; }
+}

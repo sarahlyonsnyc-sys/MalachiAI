@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Classical Chess Collegium — Strategy & Tips</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="nav.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--black:#0a0a0a;--panel:#151515;--border:#2a2a2a;--gold:#c9a84c;--cream:#F2ECD8;--muted:#6b6b6b}
+    body{background:var(--black);color:var(--cream);font-family:'Lato',sans-serif;min-height:100vh}
+    .chess-bg{position:fixed;inset:0;z-index:0;opacity:0.02;background-image:repeating-conic-gradient(var(--gold) 0% 25%,transparent 0% 50%);background-size:48px 48px;pointer-events:none}
+
+    .page{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:48px 24px}
+    .page-eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+    .page-eyebrow::before{content:'';width:24px;height:1px;background:var(--gold)}
+    .page-eyebrow span{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold)}
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,5vw,48px);font-weight:700;line-height:1.1;margin-bottom:12px}
+    .page-title em{color:var(--gold);font-style:italic}
+    .page-sub{font-size:15px;color:var(--muted);font-weight:300;line-height:1.7;max-width:560px;margin-bottom:48px}
+
+    /* ARTICLE GRID */
+    .articles{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    @media(max-width:700px){.articles{grid-template-columns:1fr}}
+    .article-card{background:var(--panel);border:1px solid var(--border);border-top:2px solid var(--gold);padding:32px;transition:transform 0.2s,border-color 0.2s;cursor:pointer}
+    .article-card:hover{border-color:var(--gold);transform:translateY(-4px)}
+    .article-level{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border:1px solid var(--border);color:var(--muted);display:inline-block;margin-bottom:14px}
+    .article-level.beginner{border-color:rgba(76,175,80,0.4);color:#4caf50}
+    .article-level.intermediate{border-color:rgba(201,168,76,0.4);color:var(--gold)}
+    .article-level.advanced{border-color:rgba(224,80,104,0.4);color:#e05068}
+    .article-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--cream);margin-bottom:8px;line-height:1.25}
+    .article-excerpt{font-size:13px;color:var(--muted);font-weight:300;line-height:1.6;margin-bottom:14px}
+    .article-meta{font-family:'DM Mono',monospace;font-size:9px;color:#555;letter-spacing:0.06em}
+    .article-meta span{color:var(--gold)}
+
+    .section-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  </style>
+</head>
+<body>
+<div class="chess-bg"></div>
+<nav id="cccNav"></nav>
+
+<div class="page">
+  <div class="page-eyebrow"><span>Club — Strategy</span></div>
+  <h1 class="page-title">Strategy &amp; <em>Tips.</em></h1>
+  <p class="page-sub">Curated guides and analysis to sharpen your thinking. From opening principles to endgame mastery.</p>
+
+  <div class="section-label">Opening Principles</div>
+  <div class="articles" style="margin-bottom:48px">
+    <div class="article-card">
+      <div class="article-level beginner">Beginner</div>
+      <div class="article-title">The Three Golden Rules of the Opening</div>
+      <div class="article-excerpt">Control the center, develop your pieces, and castle early. Master these three principles before anything else — they'll carry you to 1200.</div>
+      <div class="article-meta">5 min read · <span>Opening Theory</span></div>
+    </div>
+    <div class="article-card">
+      <div class="article-level intermediate">Intermediate</div>
+      <div class="article-title">Understanding Pawn Structure</div>
+      <div class="article-excerpt">Pawns are the soul of chess. Learn how isolated, doubled, and passed pawns shape your entire middlegame strategy.</div>
+      <div class="article-meta">8 min read · <span>Positional Play</span></div>
+    </div>
+  </div>
+
+  <div class="section-label">Tactical Patterns</div>
+  <div class="articles" style="margin-bottom:48px">
+    <div class="article-card">
+      <div class="article-level beginner">Beginner</div>
+      <div class="article-title">The 7 Essential Tactical Motifs</div>
+      <div class="article-excerpt">Forks, pins, skewers, discovered attacks, double checks, deflections, and decoys. Recognize these patterns and you'll win more games immediately.</div>
+      <div class="article-meta">10 min read · <span>Tactics</span></div>
+    </div>
+    <div class="article-card">
+      <div class="article-level advanced">Advanced</div>
+      <div class="article-title">Sacrificial Combinations: When to Give Up Material</div>
+      <div class="article-excerpt">The art of the sacrifice isn't about impulse — it's about calculation. Learn the signals that indicate a sacrifice will lead to checkmate or decisive advantage.</div>
+      <div class="article-meta">12 min read · <span>Calculation</span></div>
+    </div>
+  </div>
+
+  <div class="section-label">Endgame Essentials</div>
+  <div class="articles" style="margin-bottom:48px">
+    <div class="article-card">
+      <div class="article-level beginner">Beginner</div>
+      <div class="article-title">King & Pawn vs. King: The Foundation</div>
+      <div class="article-excerpt">If you can't win this endgame, nothing else matters. Learn the opposition, key squares, and the rule of the square.</div>
+      <div class="article-meta">6 min read · <span>Endgames</span></div>
+    </div>
+    <div class="article-card">
+      <div class="article-level intermediate">Intermediate</div>
+      <div class="article-title">Rook Endgames: Lucena & Philidor Positions</div>
+      <div class="article-excerpt">Two positions every serious player must know cold. These patterns appear in roughly 8% of all tournament games.</div>
+      <div class="article-meta">9 min read · <span>Endgames</span></div>
+    </div>
+  </div>
+
+  <div class="section-label">Cognitive Development</div>
+  <div class="articles">
+    <div class="article-card">
+      <div class="article-level beginner">All Levels</div>
+      <div class="article-title">How Chess Builds Executive Function</div>
+      <div class="article-excerpt">Working memory, inhibitory control, cognitive flexibility — the three pillars of executive function, and how every chess game exercises them.</div>
+      <div class="article-meta">7 min read · <span>Cognitive Science</span></div>
+    </div>
+    <div class="article-card">
+      <div class="article-level intermediate">All Levels</div>
+      <div class="article-title">The Science of Deliberate Practice in Chess</div>
+      <div class="article-excerpt">Ericsson's research on expertise applies directly to chess improvement. Quality of practice matters more than quantity — here's what the data says.</div>
+      <div class="article-meta">8 min read · <span>Performance</span></div>
+    </div>
+  </div>
+</div>
+
+<script src="nav.js"></script>
+</body>
+</html>
