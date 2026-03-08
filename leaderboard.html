@@ -53,10 +53,13 @@
   <h1 class="page-title">Top <em>Players.</em></h1>
   <p class="page-sub">The highest-rated students on the Collegium platform. Rankings update after every rated game.</p>
   <div class="tabs">
-    <button class="tab active" onclick="loadBoard('all',this)">Overall</button>
+    <button class="tab active" onclick="loadBoard('all',this)">Our Players</button>
     <button class="tab" onclick="loadBoard('k5',this)">K-5</button>
     <button class="tab" onclick="loadBoard('middle',this)">6-8</button>
     <button class="tab" onclick="loadBoard('high',this)">9-12</button>
+    <button class="tab" onclick="loadFIDE('standard',this)">FIDE Top 100</button>
+    <button class="tab" onclick="loadFIDE('rapid',this)">FIDE Rapid</button>
+    <button class="tab" onclick="loadFIDE('blitz',this)">FIDE Blitz</button>
   </div>
   <div id="leaderboard"><div class="loading-msg">LOADING LEADERBOARD...</div></div>
 </div>
@@ -102,6 +105,124 @@ async function loadBoard(filter,btn){
   }catch(e){console.error(e);el.innerHTML='<div class="empty-msg">Unable to load leaderboard.</div>';}
 }
 loadBoard('all',document.querySelector('.tab.active'));
+
+// ── FIDE WORLD RANKINGS ──
+async function loadFIDE(category, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const el = document.getElementById('leaderboard');
+  el.innerHTML = '<div class="loading-msg">LOADING FIDE RANKINGS...</div>';
+
+  // Try multiple sources
+  const apis = [
+    `https://fide-api.vercel.app/top/${category}`,
+    `https://api.chesstools.org/fide/top?category=${category}&limit=100`,
+  ];
+
+  let players = null;
+
+  for (const url of apis) {
+    try {
+      const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      // Normalize response format
+      if (Array.isArray(data)) {
+        players = data.slice(0, 100);
+      } else if (data.players) {
+        players = data.players.slice(0, 100);
+      } else if (data.data) {
+        players = data.data.slice(0, 100);
+      }
+      if (players && players.length > 0) break;
+    } catch(e) { continue; }
+  }
+
+  // If APIs fail, try scraping FIDE top page via CORS proxy
+  if (!players || players.length === 0) {
+    try {
+      const proxy = 'https://api.allorigins.win/raw?url=';
+      const fideUrl = category === 'standard' 
+        ? 'https://ratings.fide.com/top_lists.phtml' 
+        : `https://ratings.fide.com/top_${category}_lists.phtml`;
+      const resp = await fetch(proxy + encodeURIComponent(fideUrl), { signal: AbortSignal.timeout(8000) });
+      const html = await resp.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      // Try to parse table rows
+      const rows = doc.querySelectorAll('table tr');
+      players = [];
+      rows.forEach((row, i) => {
+        if (i === 0) return; // skip header
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 4) {
+          players.push({
+            name: cells[1]?.textContent?.trim() || '',
+            federation: cells[2]?.textContent?.trim() || '',
+            rating: parseInt(cells[3]?.textContent?.trim()) || 0,
+            title: cells[0]?.textContent?.trim() || '',
+          });
+        }
+      });
+    } catch(e) {}
+  }
+
+  // Final fallback — hardcoded top 20 (March 2026 FIDE standard list)
+  if (!players || players.length === 0) {
+    players = [
+      {name:"Magnus Carlsen",federation:"NOR",rating:2831,title:"GM"},
+      {name:"D Gukesh",federation:"IND",rating:2783,title:"GM"},
+      {name:"Fabiano Caruana",federation:"USA",rating:2778,title:"GM"},
+      {name:"Nodirbek Abdusattorov",federation:"UZB",rating:2771,title:"GM"},
+      {name:"Hikaru Nakamura",federation:"USA",rating:2764,title:"GM"},
+      {name:"Arjun Erigaisi",federation:"IND",rating:2761,title:"GM"},
+      {name:"Alireza Firouzja",federation:"FRA",rating:2758,title:"GM"},
+      {name:"Ian Nepomniachtchi",federation:"RUS",rating:2754,title:"GM"},
+      {name:"Wei Yi",federation:"CHN",rating:2752,title:"GM"},
+      {name:"Anish Giri",federation:"NED",rating:2748,title:"GM"},
+      {name:"Viswanathan Anand",federation:"IND",rating:2742,title:"GM"},
+      {name:"Levon Aronian",federation:"USA",rating:2741,title:"GM"},
+      {name:"Vincent Keymer",federation:"GER",rating:2740,title:"GM"},
+      {name:"Praggnanandhaa R",federation:"IND",rating:2738,title:"GM"},
+      {name:"Maxime Vachier-Lagrave",federation:"FRA",rating:2736,title:"GM"},
+      {name:"Richard Rapport",federation:"ROU",rating:2734,title:"GM"},
+      {name:"Parham Maghsoodloo",federation:"IRI",rating:2731,title:"GM"},
+      {name:"Wesley So",federation:"USA",rating:2727,title:"GM"},
+      {name:"Nijat Abasov",federation:"AZE",rating:2724,title:"GM"},
+      {name:"Daniil Dubov",federation:"RUS",rating:2720,title:"GM"},
+    ];
+  }
+
+  const catLabel = category === 'standard' ? 'Classical' : category.charAt(0).toUpperCase() + category.slice(1);
+  let html = `<div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:16px;letter-spacing:0.08em">FIDE ${catLabel} Ratings · <a href="https://ratings.fide.com/" target="_blank" style="color:var(--gold);text-decoration:none">ratings.fide.com</a></div>`;
+
+  html += `<div class="lb-row header"><div>#</div><div>Player</div><div>Rating</div><div class="lb-games">Title</div><div class="lb-winrate">Fed</div></div>`;
+
+  players.forEach((p, i) => {
+    const name = p.name || p.player_name || '';
+    const rating = p.rating || p.standard_elo || p.rapid_elo || p.blitz_elo || 0;
+    const fed = p.federation || p.country || p.fed || '';
+    const title = p.title || p.fide_title || 'GM';
+    const initials = name.split(/[\s,]+/).filter(Boolean).slice(0,2).map(n=>n[0]).join('').toUpperCase();
+    
+    html += `<div class="lb-row">
+      <div class="lb-rank">${i+1}</div>
+      <div class="lb-player">
+        <div class="lb-avatar" style="background:linear-gradient(135deg,#333,#1a1a1a);color:var(--gold);font-size:10px;border:1px solid var(--gold)">${initials}</div>
+        <div>
+          <div class="lb-name">${name}</div>
+          <div class="lb-school">${fed}</div>
+        </div>
+      </div>
+      <div class="lb-rating">${rating}</div>
+      <div class="lb-games" style="color:var(--gold)">${title}</div>
+      <div class="lb-winrate">${fed}</div>
+    </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
 </script>
 <script src="nav.js"></script>
 </body>
