@@ -1,0 +1,44 @@
+# ============================================================
+# .github/workflows/scrape-tournaments.yml
+# 
+# Runs weekly (Sunday 6am EST), scrapes US Chess tournaments,
+# uses Claude API to parse into structured data, pushes to 
+# Supabase tournament_imports table, then auto-approves.
+#
+# SETUP:
+# 1. Add these secrets to your GitHub repo (Settings → Secrets):
+#    - SUPABASE_URL        (your project URL)
+#    - SUPABASE_SERVICE_KEY (service_role key from Supabase → Settings → API)
+#    - ANTHROPIC_API_KEY   (from console.anthropic.com)
+#
+# 2. Put this file at: .github/workflows/scrape-tournaments.yml
+# 3. Put scrape_tournaments.py in the repo root
+# ============================================================
+
+name: Scrape Chess Tournaments
+
+on:
+  schedule:
+    - cron: '0 11 * * 0'  # Every Sunday at 11:00 UTC (6am EST)
+  workflow_dispatch:       # Manual trigger button in GitHub Actions
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 anthropic supabase
+      
+      - name: Run tournament scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scrape_tournaments.py
