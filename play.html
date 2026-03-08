@@ -145,7 +145,7 @@
     .piece svg { width:80%; height:80%; display:block; }
     .square:hover .piece { transform:scale(1.06); }
 
-    /* AI thinking overlay */
+    /* Engine thinking overlay */
     .thinking-overlay {
       position:absolute; inset:0;
       background:rgba(10,10,10,0.5);
@@ -164,7 +164,7 @@
     @keyframes dot-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
     .thinking-text { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.15em; color:var(--gold); }
 
-    /* RIGHT PANEL - move history + AI tips */
+    /* RIGHT PANEL - move history + coaching tips */
     .panel-right { background:var(--panel); border-left:1px solid var(--border); padding:28px 20px; display:flex; flex-direction:column; gap:24px; overflow:hidden; }
 
     .status-banner { padding:14px 16px; border-left:3px solid var(--gold); background:rgba(201,168,76,0.06); font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.05em; color:var(--cream); line-height:1.5; min-height:48px; }
@@ -354,7 +354,7 @@
   <div class="nav-right">
     <a href="index.html" class="nav-back">Home</a>
     <a href="learn.html" class="nav-back">Learn</a>
-    <a href="dashboard.html" class="nav-back">Dashboard</a>
+    <a href="dashboard.html" class="nav-back" id="dashboardLink" style="display:none">Dashboard</a>
     <a href="profile.html" class="nav-back" id="profileLink" style="display:none">My Profile</a>
     <div id="ratingBadge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;color:var(--gold);background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);padding:6px 12px;">
       ♟ <span id="ratingBadgeVal">—</span>
@@ -396,9 +396,9 @@
   <div class="mode-cards">
     <div class="mode-card" onclick="selectMode('ai')">
       <span class="mode-card-icon">🤖</span>
-      <div class="mode-card-title">vs Collegium AI</div>
-      <div class="mode-card-desc">Challenge our multilevel AI — from friendly Novice to near-perfect Master. Great for training and learning.</div>
-      <div class="mode-card-btn">Play vs AI →</div>
+      <div class="mode-card-title">vs The Collegium</div>
+      <div class="mode-card-desc">Challenge our adaptive engine — from friendly Novice to near-perfect Master. Great for training and learning.</div>
+      <div class="mode-card-btn">Play vs Engine →</div>
     </div>
     <div class="mode-card" onclick="selectMode('online')">
       <span class="mode-card-icon">🌐</span>
@@ -454,7 +454,7 @@
     <div>
       <div class="panel-title">Players</div>
       <div class="player-card" id="aiCard">
-        <div class="player-name" id="opponentName">Collegium AI</div>
+        <div class="player-name" id="opponentName">The Collegium</div>
         <div class="player-color" id="opponentColor">Black ♟</div>
         <div class="captured" id="capturedByAI"></div>
         <div class="material-score" id="aiScore"></div>
@@ -492,7 +492,7 @@
           <div class="thinking-overlay" id="thinkingOverlay">
             <div class="thinking-box">
               <div class="thinking-dots"><span></span><span></span><span></span></div>
-              <div class="thinking-text">Collegium AI is thinking...</div>
+              <div class="thinking-text">The Collegium is thinking...</div>
             </div>
           </div>
         </div>
@@ -564,7 +564,7 @@ function selectMode(mode) {
     if (mode === 'ai') {
       gameMode = 'ai';
       document.getElementById('modeScreen').style.display = 'none';
-      document.getElementById('opponentName').textContent = 'Collegium AI';
+      document.getElementById('opponentName').textContent = 'The Collegium';
       document.getElementById('opponentColor').textContent = 'Black ♟';
       document.getElementById('playerName').textContent = currentUserName || 'You';
       newGame();
@@ -807,7 +807,7 @@ function leaveOnlineGame() {
   document.getElementById('createIcon').textContent = '♟';
   document.getElementById('joinCodeInput').value = '';
   switchLobbyTab('create');
-  document.querySelector('.thinking-text').textContent = 'Collegium AI is thinking...';
+  document.querySelector('.thinking-text').textContent = 'The Collegium is thinking...';
 }
 
 // ── CHESS ENGINE ──
@@ -1192,18 +1192,18 @@ function makePlayerMove(from, to) {
     sendOnlineMove(uci);
     updateOnlineTurnUI();
   } else {
-    // vs AI — trigger AI response
+    // vs engine — trigger AI response
     if (!game.game_over()) setTimeout(aiMove, 400);
   }
 }
 
 function aiMove() {
-  if (gameMode === 'online') return; // no AI in online mode
+  if (gameMode === 'online') return; // no engine in online mode
   const cfg = DIFFICULTY_LEVELS[currentDifficulty];
   document.getElementById('thinkingOverlay').classList.add('active');
   document.getElementById('aiCard').classList.add('active');
   document.getElementById('playerCard').classList.remove('active');
-  document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Collegium AI thinking...';
+  document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'The Collegium is thinking...';
 
   const thinkTime = cfg.thinkMin + Math.random() * (cfg.thinkMax - cfg.thinkMin);
 
@@ -1418,7 +1418,7 @@ function updatePanels() {
     banner.textContent = 'Your move. Think carefully before you commit.';
     banner.className = 'status-banner';
   } else {
-    banner.textContent = 'The Collegium AI is calculating the best response...';
+    banner.textContent = 'The engine is calculating the best response...';
     banner.className = 'status-banner';
   }
 }
@@ -1443,7 +1443,7 @@ function checkGameOver() {
         playerWon = true;
       } else {
         icon.textContent = '♚'; title.textContent = 'Checkmate';
-        msg.textContent = "The Collegium AI wins this round. Study the game and try again — every loss is a lesson.";
+        msg.textContent = "The Collegium wins this round. Study the game and try again — every loss is a lesson.";
       }
     } else if (game.in_draw()) {
       icon.textContent = '🤝'; title.textContent = 'Draw!';
@@ -1646,7 +1646,7 @@ function newGame() {
 }
 
 function undoMove() {
-  // undo both player and AI move
+  // undo both player and engine move
   game.undo(); game.undo();
   // remove last row from history table
   const tbody = document.getElementById('movesTable').querySelector('tbody');
@@ -1667,7 +1667,7 @@ renderBoard();
 showTip();
 
 // ── ELO RATING SYSTEM ──
-// AI difficulty maps to an approximate Elo equivalent
+// Engine difficulty maps to an approximate Elo equivalent
 const DIFFICULTY_ELO = {
   explorer: 400, challenger: 700, rival: 1100, competitor: 1500, master: 1900
 };
@@ -1764,7 +1764,7 @@ const PROVISIONAL_GAMES = 5;
     widget.className = 'profile-nav';
 
     if (session) {
-      const { data: profile } = await _sb.from('profiles').select('username,chess_rating').eq('id', session.user.id).single();
+      const { data: profile } = await _sb.from('profiles').select('username,chess_rating,role').eq('id', session.user.id).single();
       const initials = (profile?.username || '?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
       const rating = profile?.chess_rating;
 
@@ -1773,6 +1773,11 @@ const PROVISIONAL_GAMES = 5;
         pill.className = 'profile-rating-pill';
         pill.textContent = '♟ ' + rating;
         widget.appendChild(pill);
+      }
+
+      if (profile?.role === 'teacher' || profile?.role === 'parent') {
+        const dl = document.getElementById('dashboardLink');
+        if (dl) dl.style.display = 'inline-block';
       }
 
       const avatar = document.createElement('a');

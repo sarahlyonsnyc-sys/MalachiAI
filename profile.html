@@ -473,7 +473,7 @@ async function loadProfile() {
         <div class="game-row">
           <div class="game-dot ${g.abandoned ? 'draw' : g.won ? 'win' : 'loss'}"></div>
           <div class="game-info">
-            vs AI · ${g.totalMoves || '?'} moves · avg ${g.avgMoveTime || '?'}s/move
+            vs Engine · ${g.totalMoves || '?'} moves · avg ${g.avgMoveTime || '?'}s/move
             ${g.abandoned ? ' · <span style="color:var(--muted)">Abandoned</span>' : ''}
           </div>
           <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${timeAgo}</div>

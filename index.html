@@ -645,7 +645,7 @@
     <li><a href="#how">How It Works</a></li>
     <li><a href="learn.html">Learn</a></li>
     <li><a href="play.html">Play</a></li>
-    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="dashboard.html" class="nav-link-dashboard" id="dashboardLink" style="display:none">Dashboard</a></li>
   </ul>
   <a href="learn.html"><button class="nav-cta">Start Learning</button></a>
 </nav>
@@ -653,10 +653,10 @@
 <!-- HERO -->
 <section class="hero">
   <div class="hero-content">
-    <div class="hero-eyebrow">Chess × AI × Education</div>
+    <div class="hero-eyebrow">Chess × Cognition × Development</div>
     <h1>Think Deeper.<br><em>Move Smarter.</em></h1>
     <p class="hero-sub">
-      The Classical Chess Collegium transforms chess into a complete learning platform — combining AI coaching, structured curriculum, and real-time progress tracking to develop the next generation of critical thinkers.
+      The Classical Chess Collegium transforms chess into a complete learning platform — combining adaptive coaching, structured curriculum, and real-time progress tracking to develop the next generation of critical thinkers.
     </p>
     <div class="hero-actions">
       <a href="learn.html"><button class="btn-primary">Start Learning →</button></a>
@@ -680,8 +680,8 @@
     <div class="stat-label">Learn · Play · Grow</div>
   </div>
   <div class="stat reveal">
-    <div class="stat-number">AI</div>
-    <div class="stat-label">Personalized coaching every game</div>
+    <div class="stat-number">1:1</div>
+    <div class="stat-label">Personalized coaching, every game</div>
   </div>
 </div>
 
@@ -702,13 +702,13 @@
       <div class="pillar-num">02</div>
       <div class="pillar-icon">♜</div>
       <h3>Play</h3>
-      <p>Practice against AI opponents or other students. Every game is tracked, analyzed, and turned into a personalized learning opportunity.</p>
+      <p>Practice against adaptive opponents or other students. Every game is tracked, analyzed, and turned into a personalized learning opportunity.</p>
     </div>
     <div class="pillar reveal">
       <div class="pillar-num">03</div>
       <div class="pillar-icon">♛</div>
-      <h3>AI Coaching</h3>
-      <p>After every game, The Collegium AI analyzes patterns, spots recurring mistakes, and assigns targeted exercises — like having a grandmaster in your corner.</p>
+      <h3>Smart Coaching</h3>
+      <p>After every game, the platform analyzes patterns, spots recurring mistakes, and assigns targeted exercises — like having a grandmaster in your corner.</p>
     </div>
     <div class="pillar reveal">
       <div class="pillar-num">04</div>
@@ -730,7 +730,7 @@
       <div class="step-arrow">→</div>
       <div class="step-num">STEP 01</div>
       <h3>Student Joins</h3>
-      <p>Create a profile, complete a quick skill assessment, and the Collegium AI builds a personalized learning path on day one.</p>
+      <p>Create a profile, complete a quick skill assessment, and the platform builds a personalized learning path on day one.</p>
     </div>
     <div class="step reveal">
       <div class="step-arrow">→</div>
@@ -741,8 +741,8 @@
     <div class="step reveal">
       <div class="step-arrow">→</div>
       <div class="step-num">STEP 03</div>
-      <h3>AI Analyzes</h3>
-      <p>Every game is reviewed. The Collegium AI identifies patterns, strengths, and gaps — then assigns the right next lesson automatically.</p>
+      <h3>Platform Analyzes</h3>
+      <p>Every game is reviewed. The platform identifies patterns, strengths, and gaps — then assigns the right next lesson automatically.</p>
     </div>
     <div class="step reveal">
       <div class="step-num">STEP 04</div>
@@ -764,8 +764,8 @@
       <h3>The Player</h3>
       <ul>
         <li>Interactive lessons at their pace</li>
-        <li>Play vs. AI or classmates</li>
-        <li>Personal AI coach after every game</li>
+        <li>Play vs. engine or classmates</li>
+        <li>Personalized coaching after every game</li>
         <li>Achievements and chess rating</li>
         <li>Fun, focused, distraction-free</li>
       </ul>
@@ -827,7 +827,7 @@
     </div>
     <div>
       <div class="philosophy-quote">
-        "Every game is a classroom. Every move is a lesson. <em>The Collegium just helps you see it."</em>
+        "Every game is a classroom. Every move is a lesson. <em>The Collegium helps you see it."</em>
       </div>
     </div>
   </div>
@@ -919,7 +919,7 @@
     widget.className = 'profile-nav';
 
     if (session) {
-      const { data: profile } = await _sb.from('profiles').select('username,chess_rating').eq('id', session.user.id).single();
+      const { data: profile } = await _sb.from('profiles').select('username,chess_rating,role').eq('id', session.user.id).single();
       const initials = (profile?.username || '?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
       const rating = profile?.chess_rating;
 
@@ -928,6 +928,11 @@
         pill.className = 'profile-rating-pill';
         pill.textContent = '♟ ' + rating;
         widget.appendChild(pill);
+      }
+
+      if (profile?.role === "teacher" || profile?.role === "parent") {
+        const dl = document.getElementById("dashboardLink");
+        if (dl) dl.style.display = "inline-block";
       }
 
       const avatar = document.createElement('a');

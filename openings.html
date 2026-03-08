@@ -143,7 +143,7 @@
     <a href="learn.html" class="nav-link">Learn</a>
     <a href="puzzles.html" class="nav-link">Puzzles</a>
     <a href="play.html" class="nav-link">Play</a>
-    <a href="dashboard.html" class="nav-link">Dashboard</a>
+    <a href="dashboard.html" class="nav-link" id="dashboardLink" style="display:none">Dashboard</a>
   </div>
 </nav>
 
@@ -1228,12 +1228,16 @@ if (OPENINGS.length > 0) selectOpening(OPENINGS[0].eco);
       const widget = document.createElement('div');
       widget.className = 'profile-nav';
       if (session) {
-        _sb.from('profiles').select('username,chess_rating').eq('id', session.user.id).single().then(({ data: profile }) => {
+        _sb.from('profiles').select('username,chess_rating,role').eq('id', session.user.id).single().then(({ data: profile }) => {
           const initials = (profile?.username||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
           const rating = profile?.chess_rating;
           if (rating) {
             const pill = document.createElement('div'); pill.className='profile-rating-pill';
             pill.textContent='♟ '+rating; widget.appendChild(pill);
+          }
+          if (profile?.role === 'teacher' || profile?.role === 'parent') {
+            const dl = document.getElementById('dashboardLink');
+            if (dl) dl.style.display = 'inline-block';
           }
           const avatar = document.createElement('a'); avatar.href='profile.html';
           avatar.className='profile-avatar-btn'; avatar.title='My Profile';
