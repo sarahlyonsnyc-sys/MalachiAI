@@ -282,7 +282,7 @@
     <button class="nav-tab active" onclick="showPage('overview')">Overview</button>
     <button class="nav-tab" onclick="showPage('students')">Students</button>
     <button class="nav-tab" onclick="showPage('classes')">Classes</button>
-    <button class="nav-tab" onclick="showPage('wholechild')">Whole Child</button>
+    <button class="nav-tab" onclick="showPage('wholechild')">Behavioral Insights</button>
   </div>
   <div class="nav-right">
     <a href="index.html" class="nav-site-link">Home</a>
@@ -316,7 +316,7 @@
       <button class="sidebar-btn active" onclick="showPage('overview')"><span class="sidebar-icon">⊞</span> Overview</button>
       <button class="sidebar-btn" onclick="showPage('students')"><span class="sidebar-icon">♟</span> All Students</button>
       <button class="sidebar-btn" onclick="showPage('classes')"><span class="sidebar-icon">♜</span> Classes</button>
-      <button class="sidebar-btn" onclick="showPage('wholechild')"><span class="sidebar-icon">♛</span> Whole Child</button>
+      <button class="sidebar-btn" onclick="showPage('wholechild')"><span class="sidebar-icon">♛</span> Behavioral Insights</button>
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">
@@ -383,7 +383,7 @@
         <div class="stat-card">
           <div class="stat-icon">🧠</div>
           <div class="stat-num purple">74</div>
-          <div class="stat-label">Avg Whole Child Score</div>
+          <div class="stat-label">Avg Behavioral Score</div>
           <div class="stat-delta">↑ 5pts this month</div>
         </div>
       </div>
@@ -470,7 +470,7 @@
                 <th>Quiz Avg</th>
                 <th>Time This Week</th>
                 <th>W/L Record</th>
-                <th>Whole Child</th>
+                <th>Behavioral</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -497,7 +497,7 @@
             <div id="detailLessons" style="display:flex;flex-direction:column;gap:10px"></div>
           </div>
           <div class="card">
-            <div class="card-header"><div class="card-title">Whole Child Metrics</div></div>
+            <div class="card-header"><div class="card-title">Behavioral Insights</div></div>
             <div class="whole-child-grid" id="detailWholeChild"></div>
           </div>
         </div>
@@ -527,7 +527,7 @@
     <div class="page" id="page-wholechild">
       <div class="page-header">
         <div>
-          <div class="page-title">Whole Child Development</div>
+          <div class="page-title">Behavioral Insights</div>
           <div class="page-subtitle">Holistic cognitive & emotional growth metrics — inspired by Waldorf education philosophy</div>
         </div>
       </div>
@@ -535,13 +535,13 @@
       <!-- PHILOSOPHY BANNER -->
       <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);padding:24px 28px;margin-bottom:32px;border-left:3px solid var(--gold)">
         <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Our Philosophy</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--white);line-height:1.4">Chess is not measured by rating alone. Every game develops <em>attention</em>, <em>resilience</em>, <em>creative thinking</em>, and <em>emotional regulation</em> — the skills modern education overlooks. These metrics track the whole child.</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--white);line-height:1.4">Chess is not measured by rating alone. Every game develops <em>attention</em>, <em>resilience</em>, <em>creative thinking</em>, and <em>emotional regulation</em> — the skills modern education overlooks. These metrics track what matters beyond the board.</div>
       </div>
 
       <!-- CLASS AVERAGE WHOLE CHILD -->
       <div class="card full-col" style="margin-bottom:32px">
         <div class="card-header">
-          <div class="card-title">Class Average — Whole Child Scores</div>
+          <div class="card-title">Class Average — Behavioral Scores</div>
           <button class="card-action">This Month</button>
         </div>
         <div class="whole-child-grid" id="classWholeChild"></div>
@@ -550,7 +550,7 @@
       <!-- INDIVIDUAL BREAKDOWN -->
       <div class="card full-col">
         <div class="card-header">
-          <div class="card-title">Individual Whole Child Scores</div>
+          <div class="card-title">Individual Behavioral Scores</div>
         </div>
         <table class="student-table" id="wholeChildTable">
           <thead>
@@ -706,7 +706,7 @@ function viewStudent(name) {
     <div class="stat-card"><div class="stat-icon">📖</div><div class="stat-num gold">${s.lessons}/10</div><div class="stat-label">Lessons Done</div></div>
     <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-num ${s.quizAvg>=80?'green':s.quizAvg>=60?'gold':'red'}">${s.quizAvg}%</div><div class="stat-label">Quiz Average</div></div>
     <div class="stat-card"><div class="stat-icon">♟</div><div class="stat-num blue">${s.wins + s.losses}</div><div class="stat-label">Games Played</div></div>
-    <div class="stat-card"><div class="stat-icon">🧠</div><div class="stat-num purple">${wcOverall(s.wc)}</div><div class="stat-label">Whole Child Score</div></div>`;
+    <div class="stat-card"><div class="stat-icon">🧠</div><div class="stat-num purple">${wcOverall(s.wc)}</div><div class="stat-label">Behavioral Score</div></div>`;
 
   const lessonNames = ['Meet the Pieces','The Chessboard','Check & Checkmate','The Fork','The Pin','The Skewer','Opening Principles',"Scholar's Mate",'King & Pawn Endgames','Rook Endgames'];
   document.getElementById('detailLessons').innerHTML = lessonNames.map((l,idx) => {
@@ -780,7 +780,7 @@ function buildClasses() {
       <div class="class-group-header">
         <div class="class-group-name">${cls}</div>
         <div class="class-group-count">${students.length} students</div>
-        <div class="class-group-avg">Avg Whole Child: ${avgWC}</div>
+        <div class="class-group-avg">Avg Behavioral: ${avgWC}</div>
       </div>
       <div class="student-cards">
         ${students.map((s,i) => `
@@ -795,7 +795,7 @@ function buildClasses() {
               <div class="sc-metric-row"><span class="sc-metric-label">Lessons</span><span class="sc-metric-val">${s.lessons}/10</span></div>
               <div class="sc-metric-row"><span class="sc-metric-label">Quiz Avg</span><span class="sc-metric-val" style="color:${s.quizAvg>=80?'var(--green)':s.quizAvg>=60?'var(--gold)':'var(--red)'}">${s.quizAvg}%</span></div>
               <div class="sc-metric-row"><span class="sc-metric-label">Record</span><span class="sc-metric-val">${s.wins}W/${s.losses}L</span></div>
-              <div class="sc-metric-row"><span class="sc-metric-label">Whole Child</span><span class="sc-metric-val" style="color:${wcColor(wcOverall(s.wc))}">${wcOverall(s.wc)}/100</span></div>
+              <div class="sc-metric-row"><span class="sc-metric-label">Behavioral</span><span class="sc-metric-val" style="color:${wcColor(wcOverall(s.wc))}">${wcOverall(s.wc)}/100</span></div>
             </div>
           </div>`).join('')}
       </div>
@@ -1069,7 +1069,7 @@ function buildAlerts() {
       alerts.push({ dot:'orange', text:`<strong>${s.name}</strong> may need support — low quiz average (${s.quizAvg}%) and limited progress so far.`, time:'Recent', name:s.name });
     }
     if (wcOverall(s.wc) >= 80) {
-      alerts.push({ dot:'blue', text:`<strong>${s.name}</strong> shows strong whole child development — focus and attention scores are improving.`, time:'Today', name:s.name });
+      alerts.push({ dot:'blue', text:`<strong>${s.name}</strong> shows strong behavioral development — focus and attention scores are improving.`, time:'Today', name:s.name });
     }
   });
 

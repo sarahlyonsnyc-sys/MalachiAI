@@ -258,7 +258,7 @@
     </div>
 
     <div class="section">
-      <div class="section-title">Whole Child Development</div>
+      <div class="section-title">Behavioral Insights</div>
       <div id="skillsSection">
         <div class="skill-row">
           <div class="skill-name" title="How often you pause and think before moving (>5s). High = deliberate decision-making.">Impulse Control</div>
@@ -486,7 +486,7 @@ async function loadProfile() {
     // Not enough data yet — show message, leave bars at 0
     if (minGamesMsg) {
       minGamesMsg.style.display = 'block';
-      minGamesMsg.textContent = `Play ${3 - completedGames.length} more complete game${3 - completedGames.length !== 1 ? 's' : ''} to unlock Whole Child metrics.`;
+      minGamesMsg.textContent = `Play ${3 - completedGames.length} more complete game${3 - completedGames.length !== 1 ? 's' : ''} to unlock Behavioral Insights.`;
     }
   } else {
     if (minGamesMsg) minGamesMsg.style.display = 'none';
