@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCC 50-State Expansion Map | The Classical Chess Collegium</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d0d0d; font-family: Georgia, serif; }
+  #root { min-height: 100vh; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #111; }
+  ::-webkit-scrollbar-thumb { background: #C9A84C40; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+const states = [
+  // Tier 1: States with sanctioned chess through their activities association
+  { state: "New Mexico", abbr: "NM", tier: 1, body: "NMAA", sanctioned: true, notes: "Your home state. NMAA sanctions chess with annual State Championship (February). No platform partner for chess yet. This is your beachhead.", schools: 163, competition: "Low — no chess platform competitor", priority: "NOW" },
+  { state: "Illinois", abbr: "IL", tier: 1, body: "IHSA", sanctioned: true, notes: "One of the strongest scholastic chess states. IHSA has run State Chess Team Championship since 1968. 128 teams at state. Very established — Illinois Chess Coaches Association (ICCA) is active. Large market but entrenched.", schools: 800, competition: "High — ICCA deeply established, ChessKid used widely", priority: "Phase 3" },
+  { state: "Arizona", abbr: "AZ", tier: 1, body: "AIA", sanctioned: true, notes: "AIA sanctions chess as an activity. Neighboring state to NM — natural geographic expansion. Smaller market, less established infrastructure.", schools: 350, competition: "Low-Medium", priority: "Phase 2" },
+
+  // Tier 2: States with UIL or strong state-level chess infrastructure
+  { state: "Texas", abbr: "TX", tier: 2, body: "UIL / TCA", sanctioned: false, notes: "UIL (University Interscholastic League) runs academic competitions but chess is through the Texas Chess Association. TCA is the largest state chess org in the US. 1,000+ students at South TX Scholastics alone. Massive market.", schools: 1900, competition: "High — TCA runs everything, Chess.com/ChessKid popular", priority: "Phase 2-3" },
+  { state: "California", abbr: "CA", tier: 2, body: "CIF / CalChess", sanctioned: false, notes: "CIF doesn't sanction chess, but CalChess (Northern) and SCCA (Southern) are very active. Bay Area has San Jose Chess School and many programs. Huge market, fragmented governance.", schools: 2500, competition: "Very High — San Jose Chess School, Silver Knights, many local orgs", priority: "Phase 3" },
+  { state: "New York", abbr: "NY", tier: 2, body: "NYSPHSAA / NYSCF", sanctioned: false, notes: "Not state-sanctioned but NYC is the epicenter of US scholastic chess. Massive tournament scene. Sarah's home turf (Brooklyn/NYU). Emotionally compelling but extremely competitive market.", schools: 1200, competition: "Very High — Impact Coaching Network, ChessKid, many local academies", priority: "Phase 3" },
+
+  // Tier 3: States with active scholastic chess scenes (not state-sanctioned but strong community)
+  { state: "Florida", abbr: "FL", tier: 3, body: "FHSAA", sanctioned: false, notes: "Active scholastic chess scene, especially South Florida. FHSAA doesn't sanction chess. Florida Chess Association runs events. Large retired population = consumer market too.", schools: 900, competition: "Medium", priority: "Phase 3" },
+  { state: "Pennsylvania", abbr: "PA", tier: 3, body: "PIAA", sanctioned: false, notes: "Not state-sanctioned. PA State Chess Federation and local clubs run scholastic events. Moderate market.", schools: 750, competition: "Medium", priority: "Phase 3" },
+  { state: "Ohio", abbr: "OH", tier: 3, body: "OHSAA", sanctioned: false, notes: "Not state-sanctioned. Ohio Chess Association runs scholastic events. Decent scholastic scene.", schools: 850, competition: "Medium", priority: "Phase 3" },
+  { state: "Virginia", abbr: "VA", tier: 3, body: "VHSL", sanctioned: false, notes: "Strong scholastic chess scene, especially Northern Virginia. Silver Knights Chess Academy has 350 school clubs in VA/MD/DC area. Major competitor territory.", schools: 400, competition: "Very High — Silver Knights dominates NoVA/MD/DC", priority: "Phase 3" },
+  { state: "Maryland", abbr: "MD", tier: 3, body: "MPSSAA", sanctioned: false, notes: "Silver Knights territory. Strong MD scholastic scene. Not state-sanctioned.", schools: 300, competition: "Very High — Silver Knights", priority: "Phase 3" },
+  { state: "Georgia", abbr: "GA", tier: 3, body: "GHSA", sanctioned: false, notes: "Growing scholastic chess scene. Georgia Chess Association runs state scholastics. Not GHSA sanctioned.", schools: 550, competition: "Low-Medium", priority: "Phase 3" },
+  { state: "North Carolina", abbr: "NC", tier: 3, body: "NCHSAA", sanctioned: false, notes: "NC Chess Association active. Not state-sanctioned. Charlotte area growing chess community.", schools: 500, competition: "Low-Medium", priority: "Phase 3" },
+  { state: "Michigan", abbr: "MI", tier: 3, body: "MHSAA", sanctioned: false, notes: "Not state-sanctioned. Michigan Chess Association runs events. Moderate scene.", schools: 750, competition: "Medium", priority: "Phase 3" },
+  { state: "Washington", abbr: "WA", tier: 3, body: "WIAA", sanctioned: false, notes: "Active scholastic chess scene in Seattle area. Washington Chess Federation runs state events.", schools: 450, competition: "Medium", priority: "Phase 3" },
+  { state: "Massachusetts", abbr: "MA", tier: 3, body: "MIAA", sanctioned: false, notes: "Strong chess culture, especially Greater Boston. Not state-sanctioned. MA Chess Association active.", schools: 400, competition: "Medium-High", priority: "Phase 3" },
+  { state: "Colorado", abbr: "CO", tier: 2, body: "CHSAA", sanctioned: false, notes: "CHSAA doesn't sanction chess but does sanction esports (via PlayVS). Neighboring NM state. Colorado State Chess Association active. Good geographic fit for early expansion.", schools: 400, competition: "Low-Medium", priority: "Phase 2" },
+  { state: "Minnesota", abbr: "MN", tier: 3, body: "MSHSL", sanctioned: false, notes: "Very active scholastic chess scene. MN Chess Association strong. Not MSHSL sanctioned.", schools: 500, competition: "Medium", priority: "Phase 3" },
+  { state: "Wisconsin", abbr: "WI", tier: 3, body: "WIAA", sanctioned: false, notes: "Wisconsin Scholastic Chess Federation (WSCF) very active. Resells ChessKid Gold at discount. Not state-sanctioned.", schools: 450, competition: "Medium — WSCF uses ChessKid", priority: "Phase 3" },
+  { state: "Missouri", abbr: "MO", tier: 3, body: "MSHSAA", sanctioned: false, notes: "St. Louis is the chess capital of America (STL Chess Club, Sinquefield). Not state-sanctioned but amazing chess culture.", schools: 550, competition: "High — Saint Louis Chess Club ecosystem", priority: "Phase 3" },
+  { state: "Indiana", abbr: "IN", tier: 3, body: "IHSAA", sanctioned: false, notes: "Indiana State Chess Association runs events. Not state-sanctioned. Moderate scene.", schools: 450, competition: "Low-Medium", priority: "Phase 3" },
+  { state: "Tennessee", abbr: "TN", tier: 3, body: "TSSAA", sanctioned: false, notes: "Nashville Chess Center growing. Not state-sanctioned. Smaller scene.", schools: 400, competition: "Low", priority: "Phase 3" },
+  { state: "Connecticut", abbr: "CT", tier: 3, body: "CIAC", sanctioned: false, notes: "Small state, active chess community. CT State Chess Association. Not sanctioned.", schools: 200, competition: "Low-Medium", priority: "Phase 3" },
+  { state: "New Jersey", abbr: "NJ", tier: 3, body: "NJSIAA", sanctioned: false, notes: "Strong scholastic chess. NJ State Chess Federation. Not sanctioned. Dense market near NYC.", schools: 450, competition: "Medium-High", priority: "Phase 3" },
+  
+  // Tier 4: Remaining states — smaller scenes, opportunity for first-mover
+  { state: "Oregon", abbr: "OR", tier: 4, body: "OSAA", sanctioned: false, notes: "Oregon Chess Federation. Small but active scene. Not sanctioned.", schools: 300, competition: "Low", priority: "Phase 3" },
+  { state: "Nevada", abbr: "NV", tier: 4, body: "NIAA", sanctioned: false, notes: "Las Vegas chess community growing. Not sanctioned. SW geographic expansion target.", schools: 200, competition: "Low", priority: "Phase 2-3" },
+  { state: "Utah", abbr: "UT", tier: 4, body: "UHSAA", sanctioned: false, notes: "Utah Chess Association. Not sanctioned. SW geographic expansion.", schools: 250, competition: "Low", priority: "Phase 2-3" },
+  { state: "Oklahoma", abbr: "OK", tier: 4, body: "OSSAA", sanctioned: false, notes: "Oklahoma Chess Association. Small scene. Border state to TX/NM.", schools: 350, competition: "Low", priority: "Phase 2" },
+  { state: "Kansas", abbr: "KS", tier: 4, body: "KSHSAA", sanctioned: false, notes: "KSHSAA offers some activities but chess not listed. KS Chess Association exists.", schools: 350, competition: "Low", priority: "Phase 3" },
+  { state: "Arkansas", abbr: "AR", tier: 4, body: "AAA", sanctioned: false, notes: "Small chess scene. Arkansas Chess Association. Not sanctioned.", schools: 300, competition: "Low", priority: "Phase 3" },
+  { state: "Iowa", abbr: "IA", tier: 4, body: "IHSAA", sanctioned: false, notes: "Iowa State Chess Association. Small scene. Not sanctioned.", schools: 350, competition: "Low", priority: "Phase 3" },
+  { state: "Louisiana", abbr: "LA", tier: 4, body: "LHSAA", sanctioned: false, notes: "Louisiana Chess Association. Small scene. Not sanctioned.", schools: 400, competition: "Low", priority: "Phase 3" },
+  { state: "Alabama", abbr: "AL", tier: 4, body: "AHSAA", sanctioned: false, notes: "Small chess scene. Alabama Chess Federation.", schools: 400, competition: "Low", priority: "Phase 3" },
+  { state: "South Carolina", abbr: "SC", tier: 4, body: "SCHSL", sanctioned: false, notes: "SC Chess Association. Small scene.", schools: 280, competition: "Low", priority: "Phase 3" },
+  { state: "Kentucky", abbr: "KY", tier: 4, body: "KHSAA", sanctioned: false, notes: "Kentucky Chess Association. Small scene.", schools: 300, competition: "Low", priority: "Phase 3" },
+  { state: "Mississippi", abbr: "MS", tier: 4, body: "MHSAA", sanctioned: false, notes: "Very small chess scene. Opportunity for first-mover.", schools: 250, competition: "Very Low", priority: "Phase 3" },
+  { state: "Nebraska", abbr: "NE", tier: 4, body: "NSAA", sanctioned: false, notes: "Nebraska Chess Association. Small scene.", schools: 300, competition: "Low", priority: "Phase 3" },
+  { state: "West Virginia", abbr: "WV", tier: 4, body: "WVSSAC", sanctioned: false, notes: "Very small chess scene.", schools: 150, competition: "Very Low", priority: "Phase 3" },
+  { state: "Hawaii", abbr: "HI", tier: 4, body: "HHSAA", sanctioned: false, notes: "Small but active Hawaii chess community.", schools: 80, competition: "Low", priority: "Phase 3" },
+  { state: "Idaho", abbr: "ID", tier: 4, body: "IHSAA", sanctioned: false, notes: "Small scene. Idaho Chess Association.", schools: 170, competition: "Low", priority: "Phase 3" },
+  { state: "Montana", abbr: "MT", tier: 4, body: "MHSA", sanctioned: false, notes: "Very small. Montana Chess Association.", schools: 170, competition: "Very Low", priority: "Phase 3" },
+  { state: "Wyoming", abbr: "WY", tier: 4, body: "WHSAA", sanctioned: false, notes: "Smallest state. Tiny chess scene. But — border state to CO.", schools: 80, competition: "Very Low", priority: "Phase 3" },
+  { state: "North Dakota", abbr: "ND", tier: 4, body: "NDHSAA", sanctioned: false, notes: "Very small scene.", schools: 120, competition: "Very Low", priority: "Phase 3" },
+  { state: "South Dakota", abbr: "SD", tier: 4, body: "SDHSAA", sanctioned: false, notes: "Very small scene.", schools: 170, competition: "Very Low", priority: "Phase 3" },
+  { state: "Alaska", abbr: "AK", tier: 4, body: "ASAA", sanctioned: false, notes: "Small scene. Remote. Alaska Chess Association.", schools: 100, competition: "Very Low", priority: "Phase 3" },
+  { state: "Maine", abbr: "ME", tier: 4, body: "MPA", sanctioned: false, notes: "Small scene. Maine Chess Association.", schools: 150, competition: "Low", priority: "Phase 3" },
+  { state: "Vermont", abbr: "VT", tier: 4, body: "VPA", sanctioned: false, notes: "Very small. Vermont Chess Association.", schools: 80, competition: "Very Low", priority: "Phase 3" },
+  { state: "New Hampshire", abbr: "NH", tier: 4, body: "NHIAA", sanctioned: false, notes: "Small scene. NH Chess Association.", schools: 100, competition: "Low", priority: "Phase 3" },
+  { state: "Rhode Island", abbr: "RI", tier: 4, body: "RIIL", sanctioned: false, notes: "Tiny state. RI Chess Association.", schools: 60, competition: "Low", priority: "Phase 3" },
+  { state: "Delaware", abbr: "DE", tier: 4, body: "DIAA", sanctioned: false, notes: "Very small. Delaware Chess Association.", schools: 50, competition: "Very Low", priority: "Phase 3" },
+  { state: "DC", abbr: "DC", tier: 3, body: "DCSAA", sanctioned: false, notes: "Silver Knights territory. Very active scholastic chess. Small geographic area but dense.", schools: 60, competition: "Very High — Silver Knights", priority: "Phase 3" },
+];
+
+const competitors = [
+  { name: "ChessKid (Chess.com)", type: "Platform", threat: "High", desc: "The 800-lb gorilla. Built by Chess.com, 500K+ monthly games, kid-safe, used by schools nationwide. Free tier + Gold ($49/yr). Strong puzzles and lessons. BUT: no cognitive assessment, no behavioral metrics, no school partnership model, no hardware.", moat: "CCC's cognitive data, behavioral tracking, and school pilot model are things ChessKid can't replicate easily. ChessKid is a playing platform. CCC is a developmental platform." },
+  { name: "Lichess", type: "Platform", threat: "Medium", desc: "100% free, open source, no ads. Excellent analysis tools. Used by many school clubs for online play. BUT: no school-facing tools, no curriculum, no cognitive assessment, no teacher dashboard.", moat: "Lichess will always be free and that's hard to compete with on play alone. But Lichess has zero school infrastructure, zero data, zero pilot model." },
+  { name: "Chess4Life", type: "Curriculum", threat: "Medium", desc: "Founded by NM Elliott Neff. Designed for schools/districts. Great curriculum, lesson plans, life skills integration (10 life skills mapped to chess). Class management tools. BUT: no AI play platform, no cognitive assessment, no hardware.", moat: "Chess4Life is the closest to CCC's school-facing philosophy but has no technology platform or data engine. You could actually partner with or learn from their curriculum approach." },
+  { name: "Silver Knights Chess Academy", type: "Academy", threat: "Medium-High", desc: "350 school clubs in VA/MD/DC. 100+ online classes/week. 11 state champions in 2025. Winner of USCF Scholastic Service Award. BUT: regional (East Coast), coach-dependent model, no technology platform, no cognitive assessment.", moat: "Silver Knights is coach-driven, CCC is platform-driven. They can't scale without hiring more coaches. CCC scales with software." },
+  { name: "Local chess coaches/clubs", type: "Fragmented", threat: "Low", desc: "Every city has local chess coaches who run school programs. They're your competition at the individual school level but can't compete on data, platform, or scale.", moat: "These are actually potential PARTNERS. A local coach can use CCC as their platform. You don't compete with them — you empower them." },
+  { name: "Chess.com (adult)", type: "Platform", threat: "Low", desc: "Dominant for adult players. Not focused on scholastic or school integration. Some schools use it informally.", moat: "Chess.com isn't trying to be a school platform. Different market." },
+];
+
+const tierColors = { 1: "#22c55e", 2: "#C9A84C", 3: "#3b82f6", 4: "#666" };
+const tierLabels = { 1: "STATE-SANCTIONED CHESS", 2: "STRONG INFRASTRUCTURE", 3: "ACTIVE SCENE", 4: "SMALLER MARKET" };
+
+function App() {
+  const [tab, setTab] = useState("map");
+  const [selectedTier, setSelectedTier] = useState(null);
+  const [expandedComp, setExpandedComp] = useState(null);
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    let list = states;
+    if (selectedTier) list = list.filter(s => s.tier === selectedTier);
+    if (search) list = list.filter(s => s.state.toLowerCase().includes(search.toLowerCase()) || s.abbr.toLowerCase().includes(search.toLowerCase()));
+    return list;
+  }, [selectedTier, search]);
+
+  const tierCounts = { 1: states.filter(s => s.tier === 1).length, 2: states.filter(s => s.tier === 2).length, 3: states.filter(s => s.tier === 3).length, 4: states.filter(s => s.tier === 4).length };
+
+  return (
+    <div style={{ fontFamily: "'Georgia', serif", background: "#0d0d0d", color: "#F2ECD8", minHeight: "100vh" }}>
+      {/* Header */}
+      <div style={{ borderBottom: "1px solid #C9A84C30", padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 100, background: "#0d0d0d" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 22 }}>♟</span>
+          <div>
+            <div style={{ fontSize: 10, letterSpacing: 3, color: "#C9A84C", fontFamily: "system-ui", fontWeight: 700 }}>50-STATE EXPANSION MAP</div>
+            <div style={{ fontSize: 14, fontWeight: 700 }}>CCC Market Landscape</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", borderBottom: "1px solid #C9A84C20", background: "#111" }}>
+        {[["map", "States"], ["comp", "Competitors"], ["plan", "Expansion Plan"]].map(([id, label]) => (
+          <button key={id} onClick={() => setTab(id)} style={{ flex: 1, padding: "14px", border: "none", borderBottom: tab === id ? "2px solid #C9A84C" : "2px solid transparent", background: "transparent", color: tab === id ? "#C9A84C" : "#666", cursor: "pointer", fontSize: 12, fontFamily: "system-ui", fontWeight: 600, letterSpacing: 0.5 }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ padding: 20, maxWidth: 800, margin: "0 auto" }}>
+        {/* STATES TAB */}
+        {tab === "map" && (
+          <div>
+            <h1 style={{ fontSize: 24, marginBottom: 6 }}>All 50 States + DC</h1>
+            <p style={{ color: "#999", fontSize: 13, fontFamily: "system-ui", marginBottom: 20 }}>Tiered by readiness for CCC expansion. Filter by tier or search.</p>
+
+            {/* Tier filters */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+              <button onClick={() => setSelectedTier(null)} style={{ padding: "6px 12px", borderRadius: 20, border: !selectedTier ? "1px solid #C9A84C" : "1px solid #333", background: !selectedTier ? "#C9A84C20" : "transparent", color: !selectedTier ? "#C9A84C" : "#666", cursor: "pointer", fontSize: 11, fontFamily: "system-ui", fontWeight: 600 }}>
+                All ({states.length})
+              </button>
+              {[1, 2, 3, 4].map(t => (
+                <button key={t} onClick={() => setSelectedTier(selectedTier === t ? null : t)} style={{ padding: "6px 12px", borderRadius: 20, border: selectedTier === t ? `1px solid ${tierColors[t]}` : "1px solid #333", background: selectedTier === t ? tierColors[t] + "20" : "transparent", color: selectedTier === t ? tierColors[t] : "#666", cursor: "pointer", fontSize: 11, fontFamily: "system-ui", fontWeight: 600 }}>
+                  Tier {t} ({tierCounts[t]})
+                </button>
+              ))}
+            </div>
+
+            <input
+              type="text"
+              placeholder="Search states..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: 6, border: "1px solid #333", background: "#1a1a1a", color: "#F2ECD8", fontSize: 13, fontFamily: "system-ui", marginBottom: 16, boxSizing: "border-box" }}
+            />
+
+            {/* Tier legend */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 20 }}>
+              {[1, 2, 3, 4].map(t => (
+                <div key={t} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, fontFamily: "system-ui", color: "#999" }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: tierColors[t], flexShrink: 0 }} />
+                  <span><strong style={{ color: tierColors[t] }}>Tier {t}:</strong> {tierLabels[t]}</span>
+                </div>
+              ))}
+            </div>
+
+            {filtered.map((s, i) => (
+              <div key={i} style={{ background: "#1a1a1a", border: "1px solid #ffffff10", borderLeft: `3px solid ${tierColors[s.tier]}`, borderRadius: 6, padding: "14px 16px", marginBottom: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "system-ui", color: tierColors[s.tier], minWidth: 28 }}>{s.abbr}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700 }}>{s.state}</span>
+                    {s.sanctioned && <span style={{ background: "#22c55e20", color: "#22c55e", padding: "1px 6px", borderRadius: 3, fontSize: 9, fontWeight: 700, fontFamily: "system-ui" }}>SANCTIONED</span>}
+                  </div>
+                  <span style={{ fontSize: 10, fontFamily: "monospace", color: "#C9A84C", background: "#C9A84C15", padding: "2px 6px", borderRadius: 3 }}>{s.priority}</span>
+                </div>
+                <div style={{ fontSize: 11, fontFamily: "system-ui", color: "#888", marginBottom: 4 }}>
+                  <strong>Body:</strong> {s.body} · <strong>~Schools:</strong> {s.schools} · <strong>Competition:</strong> {s.competition}
+                </div>
+                <p style={{ fontSize: 12, fontFamily: "system-ui", color: "#777", lineHeight: 1.5, margin: 0 }}>{s.notes}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* COMPETITORS TAB */}
+        {tab === "comp" && (
+          <div>
+            <h1 style={{ fontSize: 24, marginBottom: 6 }}>Competitive Landscape</h1>
+            <p style={{ color: "#999", fontSize: 13, fontFamily: "system-ui", marginBottom: 20 }}>Your competitors and why CCC still wins.</p>
+
+            {competitors.map((c, i) => (
+              <div key={i} style={{ background: "#1a1a1a", border: expandedComp === i ? "1px solid #C9A84C60" : "1px solid #ffffff10", borderRadius: 8, marginBottom: 10, overflow: "hidden" }}>
+                <button onClick={() => setExpandedComp(expandedComp === i ? null : i)} style={{ width: "100%", background: "transparent", border: "none", color: "#F2ECD8", padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", fontFamily: "system-ui" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left" }}>
+                    <span style={{ fontWeight: 700, fontSize: 14 }}>{c.name}</span>
+                    <span style={{ fontSize: 10, color: "#888", background: "#ffffff10", padding: "2px 6px", borderRadius: 3 }}>{c.type}</span>
+                  </div>
+                  <span style={{ background: c.threat === "High" || c.threat === "Medium-High" ? "#dc262630" : c.threat === "Medium" ? "#C9A84C30" : "#22c55e30", color: c.threat === "High" || c.threat === "Medium-High" ? "#dc2626" : c.threat === "Medium" ? "#C9A84C" : "#22c55e", padding: "2px 8px", borderRadius: 3, fontSize: 10, fontWeight: 700 }}>{c.threat} THREAT</span>
+                </button>
+                {expandedComp === i && (
+                  <div style={{ padding: "0 18px 18px" }}>
+                    <p style={{ fontSize: 13, fontFamily: "system-ui", color: "#999", lineHeight: 1.6, margin: "0 0 12px" }}>{c.desc}</p>
+                    <div style={{ background: "#0f1a0f", border: "1px solid #22c55e30", borderRadius: 6, padding: 14 }}>
+                      <div style={{ fontSize: 10, letterSpacing: 2, color: "#22c55e", fontFamily: "system-ui", fontWeight: 700, marginBottom: 6 }}>CCC'S MOAT</div>
+                      <p style={{ fontSize: 12, fontFamily: "system-ui", color: "#ccc", lineHeight: 1.5, margin: 0 }}>{c.moat}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* EXPANSION PLAN TAB */}
+        {tab === "plan" && (
+          <div>
+            <h1 style={{ fontSize: 24, marginBottom: 6 }}>Recommended Expansion Path</h1>
+            <p style={{ color: "#999", fontSize: 13, fontFamily: "system-ui", marginBottom: 24 }}>Geographic rings outward from Taos, prioritizing states with sanctioned chess or low competition.</p>
+
+            {[
+              { phase: "Phase 1: Home Base (Now)", color: "#22c55e", states: "New Mexico", strategy: "Prove the model in Taos County. Land 3 pilots. Build NMAA partnership. Become the official chess platform of NM before going anywhere else. You can't sell 'we did this in NM' until you've actually done it in NM." },
+              { phase: "Phase 2: The Southwest Ring (2027)", color: "#C9A84C", states: "Arizona, Colorado, Oklahoma, Utah, Nevada, Texas (border regions)", strategy: "After proving the NMAA model, approach AIA (Arizona — also sanctions chess), CHSAA (Colorado), and border regions of Texas. These are all driving distance for in-person relationship building. Arizona is the #1 target — they sanction chess and are right next door. Colorado already sanctions esports via PlayVS, which shows openness to platform partnerships." },
+              { phase: "Phase 3: Scale Nationally (2028+)", color: "#3b82f6", states: "Illinois, Texas (statewide), California, New York, + remaining states", strategy: "With 2-3 state partnerships and real data, approach the big markets. Illinois (IHSA chess since 1968, 128 teams at state) is the gold standard. Texas via TCA. California and New York are huge but fragmented — go after specific regions rather than the whole state. Also target underserved states (MS, WV, AR, etc.) where you'd be the first-mover with zero competition." },
+            ].map((p, i) => (
+              <div key={i} style={{ borderLeft: `3px solid ${p.color}`, paddingLeft: 20, marginBottom: 28 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, fontFamily: "system-ui", color: p.color, letterSpacing: 0.5, marginBottom: 6 }}>{p.phase}</div>
+                <div style={{ fontSize: 11, fontFamily: "system-ui", color: "#888", marginBottom: 8 }}>Target states: <strong style={{ color: "#F2ECD8" }}>{p.states}</strong></div>
+                <p style={{ fontSize: 13, fontFamily: "system-ui", color: "#999", lineHeight: 1.6, margin: 0 }}>{p.strategy}</p>
+              </div>
+            ))}
+
+            <div style={{ background: "#1a1a1a", border: "1px solid #C9A84C30", borderRadius: 8, padding: 20, marginTop: 16 }}>
+              <div style={{ fontSize: 10, letterSpacing: 2, color: "#C9A84C", fontFamily: "system-ui", fontWeight: 700, marginBottom: 10 }}>KEY TAKEAWAYS</div>
+              {[
+                "Only 3 states sanction chess through their activities association: NM, IL, AZ. These are your Tier 1 targets.",
+                "ChessKid is everywhere but has no school partnership model, no pilots, no cognitive data. You're not competing on play — you're competing on outcomes.",
+                "Silver Knights is the closest competitor model (350 school clubs) but they're coach-dependent and regional (VA/MD/DC). CCC is platform-dependent and scalable.",
+                "20+ states have very low or zero scholastic chess competition. First-mover advantage is real in places like Mississippi, West Virginia, Arkansas.",
+                "The PlayVS playbook works: start with one state association, prove it, then replicate. They went from 5 states (2018) to 25 (2024). You can too.",
+              ].map((t, j) => (
+                <div key={j} style={{ fontSize: 12, fontFamily: "system-ui", color: "#ccc", padding: "8px 0", borderBottom: j < 4 ? "1px solid #ffffff08" : "none", lineHeight: 1.5, display: "flex", gap: 8 }}>
+                  <span style={{ color: "#C9A84C", flexShrink: 0 }}>→</span>{t}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script>
+</body>
+</html>
