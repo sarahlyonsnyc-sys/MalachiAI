@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Malachi AI — My Profile</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Classical Chess Collegium — My Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --black:  #0a0a0a; --dark: #111; --panel: #161616; --panel2: #1c1c1c;
+      --black:  #0a0a0a; --dark: #111; --panel: #151515; --panel2: #1c1c1c;
       --border: #2a2a2a; --gold: #c9a84c; --gold2: #e8c97a;
-      --cream: #f5f0e8; --muted: #6b6b6b; --green: #4caf50; --red: #e05068; --blue: #5b8dee;
+      --cream: #F2ECD8; --muted: #6b6b6b; --green: #4caf50; --red: #e05068; --blue: #5b8dee;
     }
-    *, body { background: var(--black); color: var(--cream); font-family: 'Outfit', sans-serif; }
+    *, body { background: var(--black); color: var(--cream); font-family: 'Lato', sans-serif; }
     body { min-height: 100vh; overflow-x: hidden; }
     .chess-bg { position:fixed; inset:0; z-index:0; opacity:0.025; background-image:repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%); background-size:48px 48px; pointer-events:none; }
 
@@ -33,32 +33,33 @@
     .page { position:relative; z-index:1; max-width:900px; margin:0 auto; padding:48px 24px; }
 
     /* HERO CARD */
-    .profile-hero { background:var(--panel); border:1px solid var(--border); padding:40px; display:flex; align-items:center; gap:36px; margin-bottom:32px; position:relative; overflow:hidden; }
+    .profile-hero { background:var(--panel); border:1px solid var(--border); border-top:3px solid var(--gold); padding:40px; display:flex; align-items:center; gap:36px; margin-bottom:32px; position:relative; overflow:hidden; }
     .profile-hero::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%); pointer-events:none; }
-    .avatar { width:96px; height:96px; border-radius:50%; background:linear-gradient(135deg, var(--gold), #8b6914); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:32px; font-weight:700; color:#000; flex-shrink:0; border:3px solid rgba(201,168,76,0.3); }
+    .avatar { width:96px; height:96px; border-radius:0; background:linear-gradient(135deg, var(--gold), #8b6914); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:32px; font-weight:700; color:#000; flex-shrink:0; border:2px solid rgba(201,168,76,0.4); }
     .profile-info { flex:1; }
-    .profile-name { font-family:'Cormorant Garamond',serif; font-size:36px; font-weight:700; color:#fff; margin-bottom:6px; }
+    .profile-name { font-family:'Cormorant Garamond',serif; font-size:36px; font-weight:700; color:var(--cream); margin-bottom:6px; }
     .profile-role { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
-    .profile-email { font-size:13px; color:var(--muted); }
+    .profile-email { font-size:13px; color:var(--muted); font-weight:300; }
     .rating-hero { text-align:center; background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.2); padding:24px 36px; flex-shrink:0; }
     .rating-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
-    .rating-number { font-family:'DM Mono',monospace; font-size:48px; font-weight:700; color:var(--gold); line-height:1; }
+    .rating-number { font-family:'Cormorant Garamond',serif; font-size:52px; font-weight:700; color:var(--gold); line-height:1; }
     .rating-sub { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); margin-top:6px; }
-    .rating-change { display:inline-block; margin-top:8px; font-family:'DM Mono',monospace; font-size:12px; padding:3px 10px; border-radius:2px; }
+    .rating-change { display:inline-block; margin-top:8px; font-family:'DM Mono',monospace; font-size:12px; padding:3px 10px; }
     .rating-change.up { background:rgba(76,175,80,0.15); color:var(--green); }
     .rating-change.down { background:rgba(224,80,104,0.15); color:var(--red); }
 
     /* GRID */
     .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
-    .stat-card { background:var(--panel); border:1px solid var(--border); padding:20px; text-align:center; }
-    .stat-card .val { font-family:'DM Mono',monospace; font-size:28px; font-weight:700; color:var(--gold); margin-bottom:4px; }
+    .stat-card { background:var(--panel); border:1px solid var(--border); border-top:2px solid var(--gold); padding:24px 20px; text-align:center; }
+    .stat-card .val { font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:700; color:var(--gold); margin-bottom:4px; }
     .stat-card .val.green { color:var(--green); }
     .stat-card .val.blue { color:var(--blue); }
     .stat-card .lbl { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); }
 
     /* SECTIONS */
     .section { background:var(--panel); border:1px solid var(--border); padding:28px; margin-bottom:24px; }
-    .section-title { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+    .section-title { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600; letter-spacing:0.02em; color:var(--cream); margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+    .section-title::before { content:''; width:3px; height:16px; background:var(--gold); display:inline-block; }
 
     /* RATING HISTORY CHART */
     .chart-wrap { position:relative; height:160px; }
@@ -78,9 +79,9 @@
 
     /* SKILLS */
     .skill-row { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
-    .skill-name { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; color:var(--cream); width:140px; flex-shrink:0; }
-    .skill-bar-bg { flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
-    .skill-bar-fill { height:100%; border-radius:3px; transition:width 1s ease; }
+    .skill-name { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; color:var(--cream); width:140px; flex-shrink:0; font-weight:400; }
+    .skill-bar-bg { flex:1; height:4px; background:var(--border); overflow:hidden; }
+    .skill-bar-fill { height:100%; transition:width 1s ease; }
     .skill-val { font-family:'DM Mono',monospace; font-size:11px; color:var(--gold); width:36px; text-align:right; flex-shrink:0; }
 
     /* EDIT FORM */
@@ -143,10 +144,10 @@
     .form-input { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--cream); font-family:'DM Mono',monospace; font-size:13px; padding:10px 14px; outline:none; transition:border-color 0.2s; }
     .form-input:focus { border-color:var(--gold); }
     .btn { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; padding:10px 20px; border:1px solid; cursor:pointer; transition:all 0.2s; }
-    .btn-gold { border-color:rgba(201,168,76,0.5); color:var(--gold); background:rgba(201,168,76,0.08); }
-    .btn-gold:hover { background:rgba(201,168,76,0.15); }
+    .btn-gold { border-color:var(--gold); color:var(--gold); background:transparent; }
+    .btn-gold:hover { background:var(--gold); color:var(--black); }
     .btn-muted { border-color:var(--border); color:var(--muted); background:transparent; margin-left:10px; }
-    .btn-muted:hover { color:var(--cream); }
+    .btn-muted:hover { color:var(--cream); border-color:var(--gold); }
 
     .empty-msg { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); text-align:center; padding:24px; }
     .loading { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.15em; color:var(--muted); text-align:center; padding:60px; text-transform:uppercase; }
@@ -157,7 +158,7 @@
 <nav>
   <a href="index.html" class="logo">
     <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
-    <div class="logo-text">Malachi <span>AI</span></div>
+    <div class="logo-text">The Classical Chess <span>Collegium</span></div>
   </a>
   <div class="nav-right">
     <a href="learn.html" class="nav-link">Learn</a>
@@ -171,6 +172,12 @@
   <div class="loading" id="loadingMsg">Loading profile...</div>
 
   <div id="profileContent" style="display:none">
+    <!-- PAGE EYEBROW -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:32px;">
+      <div style="width:24px;height:1px;background:var(--gold);"></div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);">Player Profile</div>
+    </div>
+
     <!-- HERO -->
     <div class="profile-hero">
       <div class="avatar" id="avatarEl">?</div>
@@ -295,7 +302,7 @@ const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
 const { createClient } = window.supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, storageKey: 'malachi-auth' }
+  auth: { persistSession: true, storageKey: 'ccc-auth' }
 });
 
 let currentProfile = null;

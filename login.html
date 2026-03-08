@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Malachi AI — Sign In</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Classical Chess Collegium — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --black:  #0a0a0a;
-      --panel:  #161616;
+      --panel:  #151515;
       --panel2: #1c1c1c;
       --border: #2a2a2a;
       --gold:   #c9a84c;
       --gold2:  #e8c97a;
-      --cream:  #f5f0e8;
+      --cream:  #F2ECD8;
       --muted:  #6b6b6b;
       --white:  #ffffff;
       --green:  #4caf50;
       --red:    #e05068;
     }
-    body { background:var(--black); color:var(--cream); font-family:'Outfit',sans-serif; min-height:100vh; display:flex; flex-direction:column; cursor:none; overflow-x:hidden; }
+    body { background:var(--black); color:var(--cream); font-family:'Lato',sans-serif; min-height:100vh; display:flex; flex-direction:column; cursor:none; overflow-x:hidden; }
     .cursor { position:fixed; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:difference; }
     .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid var(--gold); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:0.4; transition:left 0.12s ease-out,top 0.12s ease-out; }
     .chess-bg { position:fixed; inset:0; z-index:0; opacity:0.025; background-image:repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%); background-size:48px 48px; pointer-events:none; }
@@ -65,12 +65,12 @@
 
     .form-group { margin-bottom:16px; }
     .form-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:8px; }
-    .form-input { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--cream); font-family:'Outfit',sans-serif; font-size:14px; padding:13px 16px; outline:none; transition:border-color 0.2s; }
+    .form-input { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--cream); font-family:'Lato',sans-serif; font-size:14px; padding:13px 16px; outline:none; transition:border-color 0.2s; }
     .form-input:focus { border-color:var(--gold); }
     .form-input::placeholder { color:var(--muted); }
     .form-input-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
-    .form-select { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--cream); font-family:'Outfit',sans-serif; font-size:14px; padding:13px 16px; outline:none; appearance:none; cursor:none; transition:border-color 0.2s; }
+    .form-select { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--cream); font-family:'Lato',sans-serif; font-size:14px; padding:13px 16px; outline:none; appearance:none; cursor:none; transition:border-color 0.2s; }
     .form-select:focus { border-color:var(--gold); }
     .form-select option { background:var(--panel2); }
 
@@ -130,12 +130,12 @@
   <div class="left-panel">
     <a href="index.html" class="left-logo">
       <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
-      <div class="logo-text">Malachi <span>AI</span></div>
+      <div class="logo-text">The Classical Chess <span>Collegium</span></div>
     </a>
     <div class="left-content">
       <div class="left-eyebrow">Chess × AI × Education</div>
       <h1 class="left-headline">Your journey<br><em>starts here.</em></h1>
-      <p class="left-sub">Join Malachi AI and develop critical thinking, focus, and resilience through the world's greatest game.</p>
+      <p class="left-sub">Join The Classical Chess Collegium and develop critical thinking, focus, and resilience through the world's greatest game.</p>
       <div class="features">
         <div class="feature">
           <div class="feature-icon">♟</div>
@@ -190,7 +190,7 @@
 
       <!-- SIGN UP FORM -->
       <div id="signupForm" style="display:none">
-        <div class="form-title">Join Malachi AI.</div>
+        <div class="form-title">Join the Collegium.</div>
         <div class="form-subtitle">Create your free account to start learning.</div>
 
         <div class="form-group">
@@ -264,7 +264,7 @@
       <div class="success-screen" id="successScreen">
         <div class="success-icon">♔</div>
         <div class="success-title" id="successTitle">You're in!</div>
-        <div class="success-msg" id="successMsg">Welcome to Malachi AI. Your chess journey starts now.</div>
+        <div class="success-msg" id="successMsg">Welcome to The Classical Chess Collegium. Your chess journey starts now.</div>
         <a href="learn.html" class="btn-go" id="successBtn">Go to Dashboard →</a>
       </div>
 
@@ -286,7 +286,7 @@ const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_jwmpkQztilsA5JyrDx1O1w_jQghAceu';
 
 const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, storageKey: 'malachi-auth' } });
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, storageKey: 'ccc-auth' } });
 
 // ── STATE ──
 let selectedRole = 'student';
@@ -394,7 +394,7 @@ async function signUp() {
   // Just redirect
   const dest = (selectedRole === 'teacher' || selectedRole === 'parent') ? 'dashboard.html' : 'learn.html';
   showSuccess(
-    'Welcome to Malachi AI!',
+    'Welcome to the Collegium!',
     `Hey ${first}! Your account is ready. Let's start your chess journey.`,
     dest
   );

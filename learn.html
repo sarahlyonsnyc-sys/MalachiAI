@@ -3,27 +3,27 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Malachi AI — Learn Chess</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Classical Chess Collegium — Learn Chess</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --black:  #0a0a0a;
       --dark:   #111111;
-      --panel:  #161616;
+      --panel:  #151515;
       --panel2: #1c1c1c;
       --border: #2a2a2a;
       --gold:   #c9a84c;
       --gold2:  #e8c97a;
-      --cream:  #f5f0e8;
+      --cream:  #F2ECD8;
       --muted:  #6b6b6b;
       --white:  #ffffff;
       --green:  #4caf50;
       --red:    #e05068;
     }
     html { scroll-behavior: smooth; }
-    body { background: var(--black); color: var(--cream); font-family: 'Outfit', sans-serif; overflow-x: hidden; cursor: none; min-height: 100vh; }
+    body { background: var(--black); color: var(--cream); font-family: 'Lato', sans-serif; overflow-x: hidden; cursor: none; min-height: 100vh; }
     .cursor { position:fixed; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:difference; }
     .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid var(--gold); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:0.4; transition:left 0.12s ease-out,top 0.12s ease-out; }
     .chess-bg { position:fixed; inset:0; z-index:0; opacity:0.025; background-image:repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%); background-size:48px 48px; pointer-events:none; }
@@ -216,7 +216,7 @@
     .quiz-block { background:var(--panel); border:1px solid var(--border); padding:32px; }
     .quiz-question { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:600; color:var(--white); margin-bottom:24px; line-height:1.3; }
     .quiz-options { display:flex; flex-direction:column; gap:10px; margin-bottom:24px; }
-    .quiz-option { background:transparent; border:1px solid var(--border); color:var(--cream); font-family:'Outfit',sans-serif; font-size:14px; padding:14px 20px; text-align:left; cursor:none; transition:all 0.2s; display:flex; align-items:center; gap:12px; }
+    .quiz-option { background:transparent; border:1px solid var(--border); color:var(--cream); font-family:'Lato',sans-serif; font-size:14px; padding:14px 20px; text-align:left; cursor:none; transition:all 0.2s; display:flex; align-items:center; gap:12px; }
     .quiz-option:hover:not(.answered) { border-color:var(--gold); color:var(--gold); }
     .quiz-option.correct { border-color:var(--green); background:rgba(76,175,80,0.1); color:var(--green); }
     .quiz-option.wrong { border-color:var(--red); background:rgba(220,80,104,0.1); color:var(--red); }
@@ -291,7 +291,7 @@
 <nav>
   <a href="index.html" class="logo">
     <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
-    <div class="logo-text">Malachi <span>AI</span></div>
+    <div class="logo-text">The Classical Chess <span>Collegium</span></div>
   </a>
   <div class="nav-links">
     <a href="index.html" class="nav-link">Home</a>
@@ -2324,7 +2324,7 @@ function showComplete() {
     <div class="complete-screen show">
       <div class="complete-icon">♔</div>
       <h2>Course Complete!</h2>
-      <p>You've completed all 10 lessons in the Malachi AI Chess Academy. You've earned ${xp} XP and ${earnedBadges.size} badges. Now go practice what you've learned!</p>
+      <p>You've completed all 10 lessons in the Classical Chess Collegium Academy. You've earned ${xp} XP and ${earnedBadges.size} badges. Now go practice what you've learned!</p>
       <a href="play.html"><button class="btn-primary" style="margin-right:12px">Play a Game →</button></a>
       <button class="btn-ghost" onclick="goToLesson(0)">Review Lessons</button>
     </div>`;
@@ -2336,7 +2336,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // ── INIT ──
 const { createClient } = supabase.createClient ? supabase : window.supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, storageKey: 'malachi-auth' } });
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, storageKey: 'ccc-auth' } });
 
 async function init() {
   renderBadges();

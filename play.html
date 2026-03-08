@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Malachi AI — Play Chess</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Classical Chess Collegium — Play Chess</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
   <!-- Chess engine -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,11 +13,11 @@
     :root {
       --black:  #0a0a0a;
       --dark:   #111111;
-      --panel:  #161616;
+      --panel:  #151515;
       --border: #2a2a2a;
       --gold:   #c9a84c;
       --gold2:  #e8c97a;
-      --cream:  #f5f0e8;
+      --cream:  #F2ECD8;
       --muted:  #6b6b6b;
       --white:  #ffffff;
       --sq-light: #f0d9b5;
@@ -30,7 +30,7 @@
     body {
       background: var(--black);
       color: var(--cream);
-      font-family: 'Outfit', sans-serif;
+      font-family: 'Lato', sans-serif;
       overflow-x: hidden;
       cursor: none;
       min-height: 100vh;
@@ -349,7 +349,7 @@
 <nav>
   <a href="index.html" class="logo">
     <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
-    <div class="logo-text">Malachi <span>AI</span></div>
+    <div class="logo-text">The Classical Chess <span>Collegium</span></div>
   </a>
   <div class="nav-right">
     <a href="index.html" class="nav-back">Home</a>
@@ -391,12 +391,12 @@
 
 <!-- ════ MODE SELECT SCREEN ════ -->
 <div id="modeScreen">
-  <div class="mode-title">Malachi Chess</div>
+  <div class="mode-title">Classical Chess</div>
   <div class="mode-subtitle">Choose your game</div>
   <div class="mode-cards">
     <div class="mode-card" onclick="selectMode('ai')">
       <span class="mode-card-icon">🤖</span>
-      <div class="mode-card-title">vs Malachi AI</div>
+      <div class="mode-card-title">vs Collegium AI</div>
       <div class="mode-card-desc">Challenge our multilevel AI — from friendly Novice to near-perfect Master. Great for training and learning.</div>
       <div class="mode-card-btn">Play vs AI →</div>
     </div>
@@ -454,7 +454,7 @@
     <div>
       <div class="panel-title">Players</div>
       <div class="player-card" id="aiCard">
-        <div class="player-name" id="opponentName">Malachi AI</div>
+        <div class="player-name" id="opponentName">Collegium AI</div>
         <div class="player-color" id="opponentColor">Black ♟</div>
         <div class="captured" id="capturedByAI"></div>
         <div class="material-score" id="aiScore"></div>
@@ -492,7 +492,7 @@
           <div class="thinking-overlay" id="thinkingOverlay">
             <div class="thinking-box">
               <div class="thinking-dots"><span></span><span></span><span></span></div>
-              <div class="thinking-text">Malachi is thinking...</div>
+              <div class="thinking-text">Collegium AI is thinking...</div>
             </div>
           </div>
         </div>
@@ -517,7 +517,7 @@
     <div class="ai-tip">
       <div class="ai-tip-header">
         <div class="ai-tip-icon">♟</div>
-        <div class="ai-tip-label">Malachi's Tip</div>
+        <div class="ai-tip-label">Collegium Tip</div>
       </div>
       <div class="ai-tip-text" id="aiTipText">Control the center early — e4 or d4 are strong opening moves for White.</div>
     </div>
@@ -564,7 +564,7 @@ function selectMode(mode) {
     if (mode === 'ai') {
       gameMode = 'ai';
       document.getElementById('modeScreen').style.display = 'none';
-      document.getElementById('opponentName').textContent = 'Malachi AI';
+      document.getElementById('opponentName').textContent = 'Collegium AI';
       document.getElementById('opponentColor').textContent = 'Black ♟';
       document.getElementById('playerName').textContent = currentUserName || 'You';
       newGame();
@@ -807,7 +807,7 @@ function leaveOnlineGame() {
   document.getElementById('createIcon').textContent = '♟';
   document.getElementById('joinCodeInput').value = '';
   switchLobbyTab('create');
-  document.querySelector('.thinking-text').textContent = 'Malachi is thinking...';
+  document.querySelector('.thinking-text').textContent = 'Collegium AI is thinking...';
 }
 
 // ── CHESS ENGINE ──
@@ -819,7 +819,7 @@ const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
 const { createClient } = supabase.createClient ? supabase : window.supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, storageKey: 'malachi-auth' },
+  auth: { persistSession: true, storageKey: 'ccc-auth' },
   realtime: {
     params: { eventsPerSecond: 10 }
   }
@@ -1203,7 +1203,7 @@ function aiMove() {
   document.getElementById('thinkingOverlay').classList.add('active');
   document.getElementById('aiCard').classList.add('active');
   document.getElementById('playerCard').classList.remove('active');
-  document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Malachi thinking...';
+  document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Collegium AI thinking...';
 
   const thinkTime = cfg.thinkMin + Math.random() * (cfg.thinkMax - cfg.thinkMin);
 
@@ -1418,7 +1418,7 @@ function updatePanels() {
     banner.textContent = 'Your move. Think carefully before you commit.';
     banner.className = 'status-banner';
   } else {
-    banner.textContent = 'Malachi AI is calculating the best response...';
+    banner.textContent = 'The Collegium AI is calculating the best response...';
     banner.className = 'status-banner';
   }
 }
@@ -1443,7 +1443,7 @@ function checkGameOver() {
         playerWon = true;
       } else {
         icon.textContent = '♚'; title.textContent = 'Checkmate';
-        msg.textContent = "Malachi AI wins this round. Study the game and try again — every loss is a lesson.";
+        msg.textContent = "The Collegium AI wins this round. Study the game and try again — every loss is a lesson.";
       }
     } else if (game.in_draw()) {
       icon.textContent = '🤝'; title.textContent = 'Draw!';
@@ -1742,7 +1742,7 @@ const PROVISIONAL_GAMES = 5;
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
   if (!window.supabase) return;
   const { createClient } = window.supabase;
-  const _sb = createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
+  const _sb = createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'ccc-auth' } });
 
   async function injectProfileNav() {
     // Also grab the username for online play display

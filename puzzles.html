@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Malachi AI — Puzzle Trainer</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>Classical Chess Collegium — Puzzle Trainer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lato:wght@300;400;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <style>
     :root {
       --black:  #0a0a0a;
       --dark:   #111111;
-      --panel:  #161616;
+      --panel:  #151515;
       --panel2: #1c1c1c;
       --border: #2a2a2a;
       --gold:   #c9a84c;
       --gold2:  #e8c97a;
-      --cream:  #f5f0e8;
+      --cream:  #F2ECD8;
       --muted:  #6b6b6b;
       --white:  #ffffff;
       --green:  #4caf50;
@@ -26,7 +26,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body { background: var(--black); color: var(--cream); font-family: 'Outfit', sans-serif; overflow-x: hidden; min-height: 100vh; }
+    body { background: var(--black); color: var(--cream); font-family: 'Lato', sans-serif; overflow-x: hidden; min-height: 100vh; }
     .cursor { position:fixed; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:difference; }
     .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid var(--gold); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:0.4; transition:left 0.12s ease-out,top 0.12s ease-out; }
     .chess-bg { position:fixed; inset:0; z-index:0; opacity:0.025; background-image:repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%); background-size:48px 48px; pointer-events:none; }
@@ -37,7 +37,7 @@
     .logo-icon { display:grid; grid-template-columns:1fr 1fr; gap:2px; width:18px; height:18px; }
     .logo-icon span { background:var(--gold); border-radius:1px; display:block; }
     .logo-icon span:nth-child(2),.logo-icon span:nth-child(3) { background:transparent; border:1px solid var(--gold); }
-    .logo-text { font-family:'DM Mono',monospace; font-size:13px; letter-spacing:0.1em; color:var(--cream); }
+    .logo-text { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; color:var(--cream); white-space:nowrap; }
     .logo-text span { color:var(--gold); }
     .nav-right { display:flex; align-items:center; gap:16px; }
     .nav-link { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); text-decoration:none; padding:8px 14px; border:1px solid transparent; transition:all 0.2s; }
@@ -182,7 +182,7 @@
 <nav>
   <a href="index.html" class="logo">
     <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
-    <div class="logo-text">Malachi <span>AI</span></div>
+    <div class="logo-text">The Classical Chess <span>Collegium</span></div>
   </a>
   <div class="nav-right">
     <a href="index.html" class="nav-link">Home</a>
@@ -998,7 +998,7 @@ updateStats();
 
   function tryInject() {
     if (!window.supabase) { setTimeout(tryInject, 50); return; }
-    const _sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
+    const _sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'ccc-auth' } });
     _sb.auth.getSession().then(({ data: { session } }) => {
       window._puzzleSB = _sb;
       window._puzzleSession = session;

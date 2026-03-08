@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Malachi AI — Teacher Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <title>Classical Chess Collegium — Teacher Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -26,7 +26,7 @@
       --orange:  #f0924a;
     }
     html { scroll-behavior: smooth; }
-    body { background: var(--black); color: var(--cream); font-family: 'Outfit', sans-serif; overflow-x: hidden; min-height: 100vh; cursor: none; }
+    body { background: var(--black); color: var(--cream); font-family: 'Lato', sans-serif; overflow-x: hidden; min-height: 100vh; cursor: none; }
     .cursor { position:fixed; width:10px; height:10px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); mix-blend-mode:difference; }
     .cursor-ring { position:fixed; width:32px; height:32px; border:1px solid var(--gold); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); opacity:0.4; transition:left 0.12s ease-out,top 0.12s ease-out; }
     .chess-bg { position:fixed; inset:0; z-index:0; opacity:0.02; background-image:repeating-conic-gradient(var(--gold) 0% 25%, transparent 0% 50%); background-size:48px 48px; pointer-events:none; }
@@ -64,7 +64,7 @@
     .sidebar { background:var(--panel); border-right:1px solid var(--border); padding:24px 0; position:sticky; top:61px; height:calc(100vh - 61px); overflow-y:auto; display:flex; flex-direction:column; }
     .sidebar-section { margin-bottom:24px; }
     .sidebar-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--muted); padding:0 20px 8px; }
-    .sidebar-btn { width:100%; background:transparent; border:none; text-align:left; padding:10px 20px; cursor:none; display:flex; align-items:center; gap:10px; transition:all 0.2s; color:var(--muted); font-size:13px; font-family:'Outfit',sans-serif; }
+    .sidebar-btn { width:100%; background:transparent; border:none; text-align:left; padding:10px 20px; cursor:none; display:flex; align-items:center; gap:10px; transition:all 0.2s; color:var(--muted); font-size:13px; font-family:'Lato',sans-serif; }
     .sidebar-btn:hover { background:rgba(201,168,76,0.05); color:var(--cream); }
     .sidebar-btn.active { background:rgba(201,168,76,0.1); border-left:2px solid var(--gold); color:var(--cream); }
     .sidebar-icon { width:20px; text-align:center; font-size:14px; }
@@ -275,7 +275,7 @@
 <nav>
   <a href="index.html" class="logo">
     <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
-    <div class="logo-text">Malachi <span>AI</span></div>
+    <div class="logo-text">The Classical Chess <span>Collegium</span></div>
   </a>
   <div class="nav-center">
     <button class="nav-tab active" onclick="showPage('overview')">Overview</button>
@@ -502,7 +502,7 @@
         </div>
         <div class="card" style="margin-top:24px">
           <div class="card-header"><div class="card-title">Teacher Notes</div></div>
-          <textarea style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--cream);font-family:'Outfit',sans-serif;font-size:14px;padding:16px;resize:vertical;min-height:100px;outline:none;" placeholder="Add private notes about this student..."></textarea>
+          <textarea style="width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--cream);font-family:'Lato',sans-serif;font-size:14px;padding:16px;resize:vertical;min-height:100px;outline:none;" placeholder="Add private notes about this student..."></textarea>
           <div style="margin-top:10px"><button class="btn btn-gold">Save Notes</button></div>
         </div>
       </div>
@@ -533,7 +533,7 @@
 
       <!-- PHILOSOPHY BANNER -->
       <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);padding:24px 28px;margin-bottom:32px;border-left:3px solid var(--gold)">
-        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Malachi AI Philosophy</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Our Philosophy</div>
         <div style="font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--white);line-height:1.4">Chess is not measured by rating alone. Every game develops <em>attention</em>, <em>resilience</em>, <em>creative thinking</em>, and <em>emotional regulation</em> — the skills modern education overlooks. These metrics track the whole child.</div>
       </div>
 
@@ -872,7 +872,7 @@ function buildWholeChildPage() {
 const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
 const { createClient } = supabase.createClient ? supabase : window.supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, storageKey: 'malachi-auth' } });
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, storageKey: 'ccc-auth' } });
 
 async function initDashboard() {
   const { data: { session } } = await sb.auth.getSession();
@@ -1099,7 +1099,7 @@ initDashboard();
   const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
   if (!window.supabase) return;
   const { createClient } = window.supabase;
-  const _sb = createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'malachi-auth' } });
+  const _sb = createClient(SB_URL, SB_KEY, { auth: { persistSession:true, storageKey:'ccc-auth' } });
 
   async function injectProfileNav() {
     const { data: { session } } = await _sb.auth.getSession();
