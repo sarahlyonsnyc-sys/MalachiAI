@@ -12,7 +12,6 @@
     :root{--black:#0a0a0a;--panel:#151515;--border:#2a2a2a;--gold:#c9a84c;--gold2:#e8c97a;--cream:#F2ECD8;--muted:#6b6b6b}
     body{background:var(--black);color:var(--cream);font-family:'Lato',sans-serif;min-height:100vh}
     .chess-bg{position:fixed;inset:0;z-index:0;opacity:0.02;background-image:repeating-conic-gradient(var(--gold) 0% 25%,transparent 0% 50%);background-size:48px 48px;pointer-events:none}
-
     .page{position:relative;z-index:1;max-width:800px;margin:0 auto;padding:48px 24px}
     .page-eyebrow{display:flex;align-items:center;gap:12px;margin-bottom:20px}
     .page-eyebrow::before{content:'';width:24px;height:1px;background:var(--gold)}
@@ -20,93 +19,150 @@
     .page-title{font-family:'Cormorant Garamond',serif;font-size:clamp(32px,5vw,48px);font-weight:700;line-height:1.1;margin-bottom:12px}
     .page-title em{color:var(--gold);font-style:italic}
     .page-sub{font-size:15px;color:var(--muted);font-weight:300;line-height:1.7;max-width:560px;margin-bottom:40px}
-
-    /* CATEGORY TABS */
     .tabs{display:flex;gap:0;border:1px solid var(--border);margin-bottom:32px;overflow-x:auto}
     .tab{flex:1;background:transparent;border:none;border-right:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:12px 16px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
     .tab:last-child{border-right:none}
     .tab:hover{color:var(--cream);background:rgba(255,255,255,0.02)}
     .tab.active{background:var(--gold);color:var(--black);font-weight:500}
-
-    /* NEWS CARDS */
-    .news-list{display:flex;flex-direction:column;gap:24px}
-    .news-card{background:var(--panel);border:1px solid var(--border);padding:28px;transition:border-color 0.2s;cursor:pointer}
+    .news-list{display:flex;flex-direction:column;gap:20px}
+    .news-card{background:var(--panel);border:1px solid var(--border);padding:24px;transition:border-color 0.2s;cursor:pointer;text-decoration:none;display:block}
     .news-card:hover{border-color:var(--gold)}
-    .news-category{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
-    .news-headline{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--cream);margin-bottom:8px;line-height:1.25}
-    .news-excerpt{font-size:14px;color:var(--muted);font-weight:300;line-height:1.6;margin-bottom:12px}
-    .news-meta{font-family:'DM Mono',monospace;font-size:9px;color:#555;letter-spacing:0.08em}
-    .news-meta span{color:var(--gold)}
-
-    /* FEATURED */
-    .featured{background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--gold);padding:36px;margin-bottom:32px}
-    .featured .news-category{font-size:10px;margin-bottom:14px}
-    .featured .news-headline{font-size:28px;margin-bottom:12px}
+    .news-source{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+    .news-headline{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--cream);margin-bottom:8px;line-height:1.25}
+    .news-excerpt{font-size:13px;color:var(--muted);font-weight:300;line-height:1.6;margin-bottom:10px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .news-meta{font-family:'DM Mono',monospace;font-size:9px;color:#555;letter-spacing:0.06em}
+    .featured{background:var(--panel);border:1px solid var(--border);border-top:3px solid var(--gold);padding:32px;margin-bottom:24px;text-decoration:none;display:block;transition:border-color 0.2s}
+    .featured:hover{border-color:var(--gold)}
+    .featured .news-source{font-size:10px;margin-bottom:12px}
+    .featured .news-headline{font-size:26px;margin-bottom:10px}
+    .loading-msg{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:center;padding:40px;letter-spacing:0.1em}
+    .source-badge{display:inline-block;padding:2px 6px;border:1px solid var(--border);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.06em;color:var(--muted);margin-left:8px;vertical-align:middle}
   </style>
 </head>
 <body>
 <div class="chess-bg"></div>
 <nav id="cccNav"></nav>
-
 <div class="page">
   <div class="page-eyebrow"><span>Club — News</span></div>
   <h1 class="page-title">Chess <em>News.</em></h1>
-  <p class="page-sub">Stay current with the chess world — from world championship coverage to scholastic results.</p>
+  <p class="page-sub">Live from the chess world — aggregated from Chess.com, ChessBase, FIDE, and The Week in Chess.</p>
 
   <div class="tabs">
-    <button class="tab active" onclick="filterNews('all',this)">All</button>
-    <button class="tab" onclick="filterNews('world',this)">World Chess</button>
-    <button class="tab" onclick="filterNews('scholastic',this)">Scholastic</button>
-    <button class="tab" onclick="filterNews('technology',this)">Tech & Tools</button>
-    <button class="tab" onclick="filterNews('culture',this)">Culture</button>
+    <button class="tab active" onclick="filterNews('all',this)">All Sources</button>
+    <button class="tab" onclick="filterNews('chess.com',this)">Chess.com</button>
+    <button class="tab" onclick="filterNews('chessbase',this)">ChessBase</button>
+    <button class="tab" onclick="filterNews('fide',this)">FIDE</button>
   </div>
 
-  <div id="newsContainer"></div>
+  <div id="newsContainer"><div class="loading-msg">LOADING LIVE NEWS...</div></div>
 </div>
 
 <script>
-const NEWS = [
-  { cat:"world", headline:"Ding Liren Defends World Title in Dramatic Tiebreak", excerpt:"The defending champion held off challenger Gukesh D in a grueling 14-game match that came down to rapid tiebreaks in Singapore. The chess world watched as classical games produced 12 draws before the rapid format broke the deadlock.", date:"Mar 7, 2026", source:"FIDE", featured:true },
-  { cat:"scholastic", headline:"Ohio Scholastic Chess Participation Hits Record High", excerpt:"More than 4,200 K-12 students are registered for competitive chess programs across Ohio this season, a 23% increase from last year. After-school programs are driving the growth.", date:"Mar 5, 2026", source:"Ohio Chess Association" },
-  { cat:"technology", headline:"The Rise of Behavioral Analytics in Chess Education", excerpt:"New platforms are using move-timing data and game behavior patterns to assess cognitive development in young players — going beyond traditional rating systems.", date:"Mar 3, 2026", source:"Chess Education Weekly" },
-  { cat:"world", headline:"Candidates Tournament Field Set for Toronto 2026", excerpt:"Eight players will compete for the right to challenge the World Champion. The field includes three first-time qualifiers and the youngest candidate in FIDE history.", date:"Feb 28, 2026", source:"FIDE" },
-  { cat:"scholastic", headline:"CCC Partners with 12 New Schools in Northeast Ohio", excerpt:"The Classical Chess Collegium expanded its after-school program to 12 additional elementary and middle schools, bringing total enrollment to over 800 students.", date:"Feb 25, 2026", source:"CCC Press" },
-  { cat:"culture", headline:"Why Silicon Valley Executives Are Turning to Chess", excerpt:"From board rooms to chess boards — a growing number of tech leaders are citing chess as their preferred tool for sharpening strategic thinking and decision-making.", date:"Feb 20, 2026", source:"The Wall Street Journal" },
-  { cat:"technology", headline:"Cognitive Assessment Through Chess: A New Frontier", excerpt:"Researchers at Karolinska Institutet published findings showing chess players exhibit reorganized cognitive architecture with enhanced executive function networks.", date:"Feb 15, 2026", source:"Frontiers in Psychology" },
-  { cat:"scholastic", headline:"National Chess Day Brings 500 New Students to the Game", excerpt:"Schools across 14 states participated in National Chess Day events, introducing hundreds of students to competitive chess for the first time.", date:"Feb 10, 2026", source:"US Chess" },
+// RSS feeds — fetched via a public CORS proxy
+const FEEDS = [
+  { url: 'https://www.chess.com/rss/news', source: 'Chess.com', key: 'chess.com' },
+  { url: 'https://en.chessbase.com/feed', source: 'ChessBase', key: 'chessbase' },
+  { url: 'https://www.fide.com/news?format=feed&type=rss', source: 'FIDE', key: 'fide' },
 ];
 
-function renderNews(list) {
-  const container = document.getElementById('newsContainer');
-  const featured = list.find(n => n.featured);
-  const rest = list.filter(n => n !== featured);
-  let html = '';
-  if (featured) {
-    html += `<div class="featured">
-      <div class="news-category">${featured.cat} · FEATURED</div>
-      <div class="news-headline">${featured.headline}</div>
-      <div class="news-excerpt">${featured.excerpt}</div>
-      <div class="news-meta">${featured.date} · <span>${featured.source}</span></div>
-    </div>`;
+// Multiple CORS proxies as fallbacks
+const PROXIES = [
+  'https://api.allorigins.win/raw?url=',
+  'https://corsproxy.io/?',
+  'https://api.codetabs.com/v1/proxy?quest=',
+];
+
+let allArticles = [];
+
+async function fetchFeed(feed) {
+  const articles = [];
+  for (const proxy of PROXIES) {
+    try {
+      const resp = await fetch(proxy + encodeURIComponent(feed.url), { signal: AbortSignal.timeout(8000) });
+      if (!resp.ok) continue;
+      const text = await resp.text();
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(text, 'text/xml');
+      const items = xml.querySelectorAll('item');
+      items.forEach(item => {
+        const title = item.querySelector('title')?.textContent?.trim() || '';
+        const link = item.querySelector('link')?.textContent?.trim() || '';
+        const desc = item.querySelector('description')?.textContent?.trim() || '';
+        const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
+        // Strip HTML from description
+        const clean = desc.replace(/<[^>]*>/g, '').replace(/&[^;]+;/g, ' ').substring(0, 300);
+        if (title) {
+          articles.push({
+            title, link, excerpt: clean, date: new Date(pubDate),
+            source: feed.source, key: feed.key,
+            dateStr: pubDate ? new Date(pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
+          });
+        }
+      });
+      break; // success, stop trying proxies
+    } catch (e) { continue; }
   }
-  html += '<div class="news-list">' + rest.map(n => `
-    <div class="news-card">
-      <div class="news-category">${n.cat}</div>
-      <div class="news-headline">${n.headline}</div>
-      <div class="news-excerpt">${n.excerpt}</div>
-      <div class="news-meta">${n.date} · <span>${n.source}</span></div>
-    </div>
+  return articles;
+}
+
+function renderNews(articles) {
+  const el = document.getElementById('newsContainer');
+  if (articles.length === 0) {
+    el.innerHTML = '<div class="loading-msg">No articles found. RSS feeds may be temporarily unavailable.</div>';
+    return;
+  }
+  // Sort by date descending
+  articles.sort((a, b) => b.date - a.date);
+
+  // First article as featured
+  const feat = articles[0];
+  const rest = articles.slice(1);
+
+  let html = `<a href="${feat.link}" target="_blank" rel="noopener" class="featured">
+    <div class="news-source">${feat.source} · LATEST</div>
+    <div class="news-headline">${feat.title}</div>
+    <div class="news-excerpt">${feat.excerpt}</div>
+    <div class="news-meta">${feat.dateStr}</div>
+  </a>`;
+
+  html += '<div class="news-list">' + rest.slice(0, 30).map(a => `
+    <a href="${a.link}" target="_blank" rel="noopener" class="news-card">
+      <div class="news-source">${a.source}</div>
+      <div class="news-headline">${a.title}</div>
+      <div class="news-excerpt">${a.excerpt}</div>
+      <div class="news-meta">${a.dateStr}</div>
+    </a>
   `).join('') + '</div>';
-  container.innerHTML = html;
+
+  el.innerHTML = html;
 }
 
-function filterNews(cat, btn) {
+function filterNews(key, btn) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  renderNews(cat === 'all' ? NEWS : NEWS.filter(n => n.cat === cat));
+  if (btn) btn.classList.add('active');
+  if (key === 'all') renderNews(allArticles);
+  else renderNews(allArticles.filter(a => a.key === key));
 }
 
-renderNews(NEWS);
+async function loadAllNews() {
+  const results = await Promise.allSettled(FEEDS.map(f => fetchFeed(f)));
+  results.forEach(r => { if (r.status === 'fulfilled') allArticles.push(...r.value); });
+
+  if (allArticles.length === 0) {
+    // Fallback — show curated content if RSS fails
+    document.getElementById('newsContainer').innerHTML = `
+      <div class="loading-msg" style="line-height:1.8">
+        Live feeds are loading or temporarily unavailable.<br>
+        Visit <a href="https://chess.com/news" target="_blank" style="color:var(--gold)">Chess.com</a>,
+        <a href="https://en.chessbase.com" target="_blank" style="color:var(--gold)">ChessBase</a>, or
+        <a href="https://fide.com/news" target="_blank" style="color:var(--gold)">FIDE</a> directly.
+      </div>`;
+    return;
+  }
+  renderNews(allArticles);
+}
+
+loadAllNews();
 </script>
 <script src="nav.js"></script>
 </body>
