@@ -1069,12 +1069,14 @@ function finishDrill() {
   const playerMoveCount = quizMoves.filter((_,i)=>i%2===0).length;
   const playerCorrect = quizScore;
   const pct = playerMoveCount > 0 ? Math.round((playerCorrect/playerMoveCount)*100) : 0;
-  const passed = drillErrors < DRILL_MAX_ERRORS && pct === 100;
+  const passed = drillErrors < DRILL_MAX_ERRORS && pct >= 80;
+
+  console.log('[Drill] Finished:', { playerCorrect, playerMoveCount, pct, drillErrors, passed });
 
   document.getElementById('quizTitle').textContent = passed ? '🏆 Drill Complete!' : '✗ Drill Failed';
   document.getElementById('quizSubtitle').textContent = passed
-    ? `Perfect! ${playerCorrect}/${playerMoveCount} moves, ${drillErrors} errors`
-    : `${playerCorrect}/${playerMoveCount} moves correct, ${drillErrors} errors`;
+    ? `${playerCorrect}/${playerMoveCount} moves correct (${pct}%), ${drillErrors} errors`
+    : `${playerCorrect}/${playerMoveCount} moves correct (${pct}%), ${drillErrors} errors — need 80%+ to pass`;
   setQuizFeedback('', '');
   document.getElementById('quizProgress').textContent = '';
 
@@ -1089,7 +1091,14 @@ function finishDrill() {
   exitBtn.parentNode.insertBefore(closeBtn, exitBtn.nextSibling);
 
   // Save drill result
-  window._saveOpeningDrillResult?.(currentOpening, pct, playerCorrect, playerMoveCount, passed);
+  console.log('[Drill] Saving result...');
+  if (window._saveOpeningDrillResult) {
+    window._saveOpeningDrillResult(currentOpening, pct, playerCorrect, playerMoveCount, passed)
+      .then(() => console.log('[Drill] Save complete'))
+      .catch(e => console.error('[Drill] Save failed:', e));
+  } else {
+    console.warn('[Drill] _saveOpeningDrillResult not available — not logged in?');
+  }
   drillMode = false;
 }
 
