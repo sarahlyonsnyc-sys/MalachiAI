@@ -164,7 +164,17 @@
       <button class="ctrl-btn primary" onclick="playAll()">▶ Play All</button>
     </div>
     <div id="quizBtnWrap" style="display:none;margin-top:14px;text-align:center">
-      <button class="ctrl-btn primary" onclick="startQuiz()" style="width:100%;padding:12px;font-size:12px;letter-spacing:0.12em">🎯 TEST YOURSELF</button>
+      <button class="ctrl-btn primary" onclick="startQuiz()" style="width:48%;padding:12px;font-size:11px;letter-spacing:0.1em;margin-right:4%">🎯 QUIZ</button>
+      <button class="ctrl-btn primary" onclick="startDrill()" style="width:48%;padding:12px;font-size:11px;letter-spacing:0.1em;background:transparent;border:1px solid var(--gold);color:var(--gold)">🔄 DRILL</button>
+    </div>
+    <!-- Mastery bar -->
+    <div id="masteryWrap" style="display:none;margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)">Mastery</span>
+        <span id="masteryPct" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);font-weight:600">0%</span>
+      </div>
+      <div style="height:4px;background:var(--border);width:100%"><div id="masteryBar" style="height:100%;background:var(--gold);width:0%;transition:width 0.6s ease"></div></div>
+      <div id="masteryChecks" style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap"></div>
     </div>
 
     <!-- QUIZ OVERLAY -->
@@ -633,6 +643,9 @@ function selectOpening(eco) {
   // Save happens when they finish watching (reach last move), not on click
   const qbw = document.getElementById('quizBtnWrap');
   if (qbw) qbw.style.display = 'none';
+  
+  // Update mastery display for this opening
+  if (typeof updateMasteryDisplay === 'function') setTimeout(updateMasteryDisplay, 100);
 
   // Highlight button
   document.querySelectorAll('.opening-btn').forEach(b => b.classList.remove('active'));
@@ -985,13 +998,136 @@ function exitQuiz() {
   const overlay = document.getElementById('quizOverlay');
   overlay.style.display = 'none';
   quizSelectedSq = null;
-  // Reset exit button
   const exitBtn = overlay.querySelector('button');
   exitBtn.textContent = '✕ EXIT QUIZ';
   exitBtn.onclick = exitQuiz;
-  // Remove extra close button if added
   const extra = overlay.querySelectorAll('button');
   if (extra.length > 1) extra[1].remove();
+  // Refresh mastery display
+  updateMasteryDisplay();
+}
+
+// ── DRILL MODE ──
+// Like quiz but: no hints, you must get every move right to pass, 
+// 3 wrong attempts = fail. Drill pass = 25% mastery credit.
+let drillMode = false;
+let drillErrors = 0;
+const DRILL_MAX_ERRORS = 3;
+
+function startDrill() {
+  drillMode = true;
+  drillErrors = 0;
+  startQuiz(); // reuse quiz infrastructure
+  document.getElementById('quizTitle').textContent = 'Drill Mode';
+  document.getElementById('quizSubtitle').textContent = 'No hints. ' + DRILL_MAX_ERRORS + ' wrong moves = fail. Play perfectly.';
+}
+
+// Override quiz click handler for drill mode
+const _origOnQuizSquareClick = onQuizSquareClick;
+onQuizSquareClick = function(sq) {
+  if (!drillMode) { _origOnQuizSquareClick(sq); return; }
+  if (quizWaitingForOpponent) return;
+  const piece = quizGame.get(sq);
+
+  if (!quizSelectedSq) {
+    if (piece && piece.color === quizGame.turn()) {
+      quizSelectedSq = sq;
+      renderQuizBoard();
+    }
+    return;
+  }
+  if (quizSelectedSq === sq) { quizSelectedSq = null; renderQuizBoard(); return; }
+
+  const attempt = quizSelectedSq + sq;
+  const correct = quizMoves[quizIndex];
+  quizSelectedSq = null;
+
+  if (attempt === correct.slice(0,4)) {
+    quizGame.move({ from: correct.slice(0,2), to: correct.slice(2,4), promotion: correct[4]||'q' });
+    quizScore++;
+    quizIndex++;
+    quizTotal++;
+    setQuizFeedback('✓ Correct!', '#4caf50');
+    updateQuizProgress();
+    renderQuizBoard();
+    if (quizIndex >= quizMoves.length) { finishDrill(); return; }
+    if (quizGame.turn() === 'b') playOpponentQuizMove();
+  } else {
+    drillErrors++;
+    quizTotal++;
+    setQuizFeedback(`✗ Wrong (${drillErrors}/${DRILL_MAX_ERRORS} errors)`, '#e05068');
+    renderQuizBoard();
+    if (drillErrors >= DRILL_MAX_ERRORS) {
+      finishDrill();
+    } else {
+      setTimeout(() => { setQuizFeedback('Try again...', 'var(--muted)'); }, 1500);
+    }
+  }
+};
+
+function finishDrill() {
+  const playerMoveCount = quizMoves.filter((_,i)=>i%2===0).length;
+  const playerCorrect = quizScore;
+  const pct = playerMoveCount > 0 ? Math.round((playerCorrect/playerMoveCount)*100) : 0;
+  const passed = drillErrors < DRILL_MAX_ERRORS && pct === 100;
+
+  document.getElementById('quizTitle').textContent = passed ? '🏆 Drill Complete!' : '✗ Drill Failed';
+  document.getElementById('quizSubtitle').textContent = passed
+    ? `Perfect! ${playerCorrect}/${playerMoveCount} moves, ${drillErrors} errors`
+    : `${playerCorrect}/${playerMoveCount} moves correct, ${drillErrors} errors`;
+  setQuizFeedback('', '');
+  document.getElementById('quizProgress').textContent = '';
+
+  const overlay = document.getElementById('quizOverlay');
+  const exitBtn = overlay.querySelector('button');
+  exitBtn.textContent = '↩ Retry Drill';
+  exitBtn.onclick = startDrill;
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕ Close';
+  closeBtn.style.cssText = 'margin-top:10px;margin-left:10px;background:none;border:1px solid var(--border);color:var(--muted);font-family:DM Mono,monospace;font-size:10px;letter-spacing:0.1em;padding:8px 20px;cursor:pointer';
+  closeBtn.onclick = function() { drillMode = false; exitQuiz(); };
+  exitBtn.parentNode.insertBefore(closeBtn, exitBtn.nextSibling);
+
+  // Save drill result
+  window._saveOpeningDrillResult?.(currentOpening, pct, playerCorrect, playerMoveCount, passed);
+  drillMode = false;
+}
+
+// ── MASTERY DISPLAY ──
+async function updateMasteryDisplay() {
+  if (!currentOpening) return;
+  const wrap = document.getElementById('masteryWrap');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+
+  // Get current progress data
+  let mastery = { read: false, quiz: false, drill: false, game: false };
+  try {
+    if (window._openingSB && window._openingSession) {
+      const { data: prog } = await window._openingSB.from('progress')
+        .select('quiz_scores').eq('user_id', window._openingSession.user.id).single();
+      const od = prog?.quiz_scores?.opening_progress;
+      if (od?.studied?.[currentOpening.eco]) {
+        const entry = od.studied[currentOpening.eco];
+        mastery.read = (entry.count || 0) > 0;
+        mastery.quiz = (entry.bestScore || 0) >= 80;
+        mastery.drill = entry.drillPassed === true;
+        mastery.game = entry.playedInGame === true;
+      }
+    }
+  } catch(e) {}
+
+  const pct = [mastery.read, mastery.quiz, mastery.drill, mastery.game].filter(Boolean).length * 25;
+  document.getElementById('masteryPct').textContent = pct + '%';
+  document.getElementById('masteryBar').style.width = pct + '%';
+
+  const checks = document.getElementById('masteryChecks');
+  checks.innerHTML = [
+    { key: 'read', label: 'Read', done: mastery.read },
+    { key: 'quiz', label: 'Quiz 80%+', done: mastery.quiz },
+    { key: 'drill', label: 'Drill', done: mastery.drill },
+    { key: 'game', label: 'In Game', done: mastery.game },
+  ].map(c => `<span style="font-family:'DM Mono',monospace;font-size:9px;color:${c.done ? '#4caf50' : 'var(--muted)'};letter-spacing:0.06em">${c.done ? '✓' : '○'} ${c.label}</span>`).join('');
 }
 
 
@@ -1155,7 +1291,6 @@ if (OPENINGS.length > 0) selectOpening(OPENINGS[0].eco);
 
   // ── save opening studied (called when user reaches last move) ──
   window._saveOpeningStudied = async function(opening) {
-    // Wait for session to be ready (up to 3s)
     let waited = 0;
     while ((!window._openingSB || !window._openingSession) && waited < 3000) {
       await new Promise(r => setTimeout(r, 100));
@@ -1167,14 +1302,16 @@ if (OPENINGS.length > 0) selectOpening(OPENINGS[0].eco);
       const od = qs.opening_progress || { studied: {}, totalSessions: 0, lastPlayed: null };
       const eco = opening?.eco || 'unknown';
       if (!od.studied[eco]) {
-        od.studied[eco] = { name: opening.name, eco, count: 0, firstStudied: new Date().toISOString(), bestScore: null };
+        od.studied[eco] = { name: opening.name, eco, category: opening.category || '', count: 0, firstStudied: new Date().toISOString(), bestScore: null, drillPassed: false, drillBestScore: null, drillHistory: [], playedInGame: false, gameDetections: 0 };
       }
       od.studied[eco].count++;
       od.studied[eco].lastStudied = new Date().toISOString();
+      od.studied[eco].category = opening.category || od.studied[eco].category || '';
       od.totalSessions = (od.totalSessions || 0) + 1;
       od.lastPlayed = new Date().toISOString();
       await writeProgress({ ...qs, opening_progress: od });
       console.log('[Opening] Saved studied:', opening?.eco);
+      if (typeof updateMasteryDisplay === 'function') updateMasteryDisplay();
     } catch(e) { console.warn('Opening save failed', e); }
   };
 
@@ -1204,6 +1341,34 @@ if (OPENINGS.length > 0) selectOpening(OPENINGS[0].eco);
       await writeProgress({ ...qs, opening_progress: od });
       console.log('[Opening] Saved quiz result:', opening?.eco, pct + '%');
     } catch(e) { console.warn('Quiz save failed', e); }
+  };
+
+  // ── save drill result ──
+  window._saveOpeningDrillResult = async function(opening, pct, correct, total, passed) {
+    let waited = 0;
+    while ((!window._openingSB || !window._openingSession) && waited < 3000) {
+      await new Promise(r => setTimeout(r, 100));
+      waited += 100;
+    }
+    if (!window._openingSB || !window._openingSession) return;
+    try {
+      const { qs } = await getProgressData();
+      const od = qs.opening_progress || { studied: {}, totalSessions: 0, lastPlayed: null };
+      const eco = opening?.eco || 'unknown';
+      if (!od.studied[eco]) {
+        od.studied[eco] = { name: opening.name, eco, category: opening.category || '', count: 0, firstStudied: new Date().toISOString(), bestScore: null, drillPassed: false, drillBestScore: null, drillHistory: [], playedInGame: false, gameDetections: 0 };
+      }
+      const entry = od.studied[eco];
+      entry.drillHistory = [...(entry.drillHistory || []),
+        { date: new Date().toISOString(), pct, correct, total, passed }
+      ].slice(-20);
+      entry.drillBestScore = Math.max(entry.drillBestScore || 0, pct);
+      if (passed) entry.drillPassed = true;
+      entry.lastDrilled = new Date().toISOString();
+      od.lastPlayed = new Date().toISOString();
+      await writeProgress({ ...qs, opening_progress: od });
+      console.log('[Opening] Saved drill result:', opening?.eco, pct + '%', passed ? 'PASSED' : 'failed');
+    } catch(e) { console.warn('Drill save failed', e); }
   };
 
   function tryInject() {

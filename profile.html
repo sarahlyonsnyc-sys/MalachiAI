@@ -933,56 +933,94 @@ function loadOpeningProgress(behavior) {
   const studied = Object.values(od.studied).sort((a,b) => b.count - a.count);
   const totalOpenings = studied.length;
   const totalSessions = od.totalSessions || 0;
-  const quizzed = studied.filter(o => o.bestScore !== null && o.bestScore !== undefined);
-  const avgBest = quizzed.length > 0
-    ? Math.round(quizzed.reduce((s,o) => s + o.bestScore, 0) / quizzed.length) : null;
-  const lastStudied = od.lastPlayed ? formatTimeAgo(new Date(od.lastPlayed)) : null;
-  const mostStudied = studied[0];
+
+  // Calculate mastery for each opening
+  studied.forEach(o => {
+    const read = (o.count || 0) > 0;
+    const quiz = (o.bestScore || 0) >= 80;
+    const drill = o.drillPassed === true;
+    const game = o.playedInGame === true;
+    o._mastery = { read, quiz, drill, game };
+    o._masteryPct = [read, quiz, drill, game].filter(Boolean).length * 25;
+  });
+
+  const avgMastery = studied.length > 0
+    ? Math.round(studied.reduce((s,o) => s + o._masteryPct, 0) / studied.length) : 0;
+  const mastered = studied.filter(o => o._masteryPct === 100).length;
+  const inProgress = studied.filter(o => o._masteryPct > 0 && o._masteryPct < 100).length;
+
+  // Category rollups
+  const categories = {};
+  studied.forEach(o => {
+    const cat = o.category || 'Other';
+    if (!categories[cat]) categories[cat] = { name: cat, openings: [], totalMastery: 0 };
+    categories[cat].openings.push(o);
+    categories[cat].totalMastery += o._masteryPct;
+  });
+  const catList = Object.values(categories).map(c => ({
+    ...c, avgMastery: Math.round(c.totalMastery / c.openings.length)
+  })).sort((a,b) => b.avgMastery - a.avgMastery);
 
   el.innerHTML = `
     <div class="prog-grid" style="margin-bottom:20px">
       <div class="prog-stat">
-        <div class="prog-stat-val">${totalOpenings}</div>
-        <div class="prog-stat-lbl">Openings Studied</div>
-        ${lastStudied ? `<div class="prog-stat-sub">Last: ${lastStudied}</div>` : ''}
+        <div class="prog-stat-val">${avgMastery}%</div>
+        <div class="prog-stat-lbl">Avg Mastery</div>
+        <div class="prog-stat-sub">${totalOpenings} openings</div>
       </div>
       <div class="prog-stat">
-        <div class="prog-stat-val">${totalSessions}</div>
-        <div class="prog-stat-lbl">Study Sessions</div>
-        ${mostStudied ? `<div class="prog-stat-sub">Most: ${mostStudied.name.split(' ').slice(0,2).join(' ')}</div>` : ''}
-      </div>
-      ${avgBest !== null ? `
-      <div class="prog-stat">
-        <div class="prog-stat-val">${avgBest}%</div>
-        <div class="prog-stat-lbl">Avg Quiz Score</div>
-        <div class="prog-stat-sub">${quizzed.length} opening${quizzed.length!==1?'s':''} tested</div>
-      </div>
-      <div class="prog-stat">
-        <div class="prog-stat-val">${studied.filter(o=>(o.bestScore||0)===100).length}</div>
+        <div class="prog-stat-val">${mastered}</div>
         <div class="prog-stat-lbl">Mastered</div>
-        <div class="prog-stat-sub">100% quiz score</div>
-      </div>` : ''}
+        <div class="prog-stat-sub">100% complete</div>
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${inProgress}</div>
+        <div class="prog-stat-lbl">In Progress</div>
+        <div class="prog-stat-sub">${totalSessions} total sessions</div>
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${studied.filter(o=>o._mastery.drill).length}</div>
+        <div class="prog-stat-lbl">Drills Passed</div>
+        <div class="prog-stat-sub">of ${totalOpenings} attempted</div>
+      </div>
     </div>
 
+    ${catList.length > 1 ? `
+    <div style="margin-bottom:16px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">By Category</div>
+    ${catList.map(c => `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <span style="font-size:12px;color:var(--cream);width:140px;flex-shrink:0">${c.name}</span>
+        <div style="flex:1;height:4px;background:var(--border);overflow:hidden"><div style="height:100%;width:${c.avgMastery}%;background:${c.avgMastery===100?'#4caf50':'var(--gold)'};transition:width 1s"></div></div>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:${c.avgMastery===100?'#4caf50':'var(--gold)'};width:36px;text-align:right">${c.avgMastery}%</span>
+      </div>
+    `).join('')}
+    <div style="height:16px"></div>
+    ` : ''}
+
     <div style="margin-bottom:8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Your Repertoire</div>
-    ${studied.slice(0, 10).map(o => {
+    ${studied.slice(0, 12).map(o => {
+      const m = o._mastery;
+      const pct = o._masteryPct;
+      const color = pct === 100 ? '#4caf50' : pct >= 50 ? '#c9a84c' : pct > 0 ? '#e8c97a' : 'var(--muted)';
+      const checks = [
+        m.read ? '✓R' : '○R',
+        m.quiz ? '✓Q' : '○Q',
+        m.drill ? '✓D' : '○D',
+        m.game ? '✓G' : '○G',
+      ].join(' ');
       const last = o.lastStudied ? formatTimeAgo(new Date(o.lastStudied)) : '';
-      const hasQuiz = o.bestScore !== null && o.bestScore !== undefined;
-      const scoreColor = !hasQuiz ? 'var(--muted)' : o.bestScore === 100 ? '#4caf50' : o.bestScore >= 70 ? '#c9a84c' : '#e05068';
-      const scoreLabel = hasQuiz ? `${o.bestScore}%` : 'Not tested';
-      const mastered = o.bestScore === 100 ? ' 🏆' : '';
       return `<div class="opening-row">
         <div>
-          <div class="opening-name">${o.name}${mastered}</div>
-          <div class="opening-eco">${o.eco}${last ? ' · ' + last : ''} · ${o.count} session${o.count!==1?'s':''}</div>
+          <div class="opening-name">${o.name}${pct===100?' 🏆':''}</div>
+          <div class="opening-eco">${o.eco}${o.category?' · '+o.category:''}${last ? ' · ' + last : ''}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-family:'DM Mono',monospace;font-size:11px;color:${scoreColor};font-weight:600">${scoreLabel}</div>
-          ${o.quizHistory?.length > 1 ? `<div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)">${o.quizHistory.length} attempts</div>` : ''}
+          <div style="font-family:'DM Mono',monospace;font-size:13px;color:${color};font-weight:600">${pct}%</div>
+          <div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:0.04em">${checks}</div>
         </div>
       </div>`;
     }).join('')}
-    ${studied.length > 10 ? `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:12px">+${studied.length-10} more openings studied</div>` : ''}
+    ${studied.length > 12 ? `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:12px">+${studied.length-12} more openings</div>` : ''}
   `;
 }
 
