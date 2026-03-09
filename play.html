@@ -1230,12 +1230,79 @@ function ev(g) {
   if (g.in_draw()||g.in_stalemate()) return 0;
   let s=0; const b=g.board();
   const pv={p:100,n:320,b:330,r:500,q:900,k:20000};
+  
+  // Track pawn files and piece counts for structure eval
+  const wPawnFiles=new Set(), bPawnFiles=new Set();
+  const wPawnRanks=[], bPawnRanks=[];
+  let wBishops=0, bBishops=0, wMinors=0, bMinors=0;
+  let wKingR=0, wKingC=0, bKingR=0, bKingC=0;
+  
   for(let r=0;r<8;r++) for(let c=0;c<8;c++){
     const p=b[r][c]; if(!p) continue;
     const idx=p.color==='w'?(r*8+c):((7-r)*8+c);
     const ps=PST[p.type]?PST[p.type][idx]:0;
     s+=p.color==='b'?(pv[p.type]+ps):-(pv[p.type]+ps);
+    
+    // Track pawns
+    if(p.type==='p'){
+      if(p.color==='w'){wPawnFiles.add(c);wPawnRanks.push({r,c});}
+      else{bPawnFiles.add(c);bPawnRanks.push({r,c});}
+    }
+    if(p.type==='b'){if(p.color==='w')wBishops++;else bBishops++;}
+    if(p.type==='n'||p.type==='b'){if(p.color==='w')wMinors++;else bMinors++;}
+    if(p.type==='k'){if(p.color==='w'){wKingR=r;wKingC=c;}else{bKingR=r;bKingC=c;}}
   }
+  
+  // Bishop pair bonus (+50cp)
+  if(bBishops>=2) s+=50;
+  if(wBishops>=2) s-=50;
+  
+  // Doubled pawns penalty (-20cp each)
+  const wFileCounts={}, bFileCounts={};
+  wPawnRanks.forEach(p=>{wFileCounts[p.c]=(wFileCounts[p.c]||0)+1;});
+  bPawnRanks.forEach(p=>{bFileCounts[p.c]=(bFileCounts[p.c]||0)+1;});
+  for(const f in wFileCounts) if(wFileCounts[f]>1) s+=(wFileCounts[f]-1)*20;
+  for(const f in bFileCounts) if(bFileCounts[f]>1) s-=(bFileCounts[f]-1)*20;
+  
+  // Isolated pawns penalty (-15cp each)
+  wPawnRanks.forEach(p=>{
+    if(!wPawnFiles.has(p.c-1)&&!wPawnFiles.has(p.c+1)) s+=15;
+  });
+  bPawnRanks.forEach(p=>{
+    if(!bPawnFiles.has(p.c-1)&&!bPawnFiles.has(p.c+1)) s-=15;
+  });
+  
+  // Passed pawns bonus
+  bPawnRanks.forEach(p=>{
+    let passed=true;
+    for(const wp of wPawnRanks){
+      if(Math.abs(wp.c-p.c)<=1 && wp.r>p.r) passed=false;
+    }
+    if(passed) s+= 20 + (7-p.r)*15; // more advanced = bigger bonus
+  });
+  wPawnRanks.forEach(p=>{
+    let passed=true;
+    for(const bp of bPawnRanks){
+      if(Math.abs(bp.c-p.c)<=1 && bp.r<p.r) passed=false;
+    }
+    if(passed) s-= 20 + p.r*15;
+  });
+  
+  // King safety: penalize open files near king
+  for(let dc=-1;dc<=1;dc++){
+    const fc=bKingC+dc;
+    if(fc>=0&&fc<8&&!bPawnFiles.has(fc)) s-=20;
+    const fc2=wKingC+dc;
+    if(fc2>=0&&fc2<8&&!wPawnFiles.has(fc2)) s+=20;
+  }
+  
+  // Mobility: count legal moves (expensive but worth it for strength)
+  const mob=g.moves().length;
+  s+=(g.turn()==='b'?mob:-mob)*3;
+  
+  // Check bonus
+  if(g.in_check()) s+=(g.turn()==='w'?30:-30);
+  
   return s;
 }
 
@@ -1317,9 +1384,9 @@ self.onmessage = function(e) {
   }
 
   // Rival/Competitor/Master: deeper search
-  const sd={rival:4,competitor:5,master:6}[difficulty]||4;
-  const noise={rival:15,competitor:5,master:0}[difficulty]||0;
-  const blunder={rival:0.03,competitor:0.01,master:0}[difficulty]||0;
+  const sd={rival:5,competitor:5,master:6}[difficulty]||4;
+  const noise={rival:8,competitor:3,master:0}[difficulty]||0;
+  const blunder={rival:0.01,competitor:0,master:0}[difficulty]||0;
 
   if(blunder>0&&Math.random()<blunder){self.postMessage({move:moves[Math.floor(Math.random()*moves.length)]});return;}
 
