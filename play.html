@@ -1188,278 +1188,202 @@ function makePlayerMove(from, to) {
 }
 
 // ══════════════════════════════════════════════════
-// ENHANCED CHESS ENGINE v2
-// Self-contained, no external dependencies.
-// Uses piece-square tables, opening book, quiescence search,
-// alpha-beta pruning, and iterative deepening for strong play.
+// ENHANCED CHESS ENGINE v3 — Web Worker
+// Runs in a separate thread so the UI never freezes.
+// Includes chess.js + full engine inside the worker blob.
 // ══════════════════════════════════════════════════
 
-// Piece-square tables (from white's perspective, flipped for black)
+let engineWorker = null;
+let engineResolve = null;
+
+function createEngineWorker() {
+  const workerCode = `
+importScripts('https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js');
+
 const PST = {
-  p: [
-     0,  0,  0,  0,  0,  0,  0,  0,
-    50, 50, 50, 50, 50, 50, 50, 50,
-    10, 10, 20, 30, 30, 20, 10, 10,
-     5,  5, 10, 25, 25, 10,  5,  5,
-     0,  0,  0, 20, 20,  0,  0,  0,
-     5, -5,-10,  0,  0,-10, -5,  5,
-     5, 10, 10,-20,-20, 10, 10,  5,
-     0,  0,  0,  0,  0,  0,  0,  0
-  ],
-  n: [
-    -50,-40,-30,-30,-30,-30,-40,-50,
-    -40,-20,  0,  0,  0,  0,-20,-40,
-    -30,  0, 10, 15, 15, 10,  0,-30,
-    -30,  5, 15, 20, 20, 15,  5,-30,
-    -30,  0, 15, 20, 20, 15,  0,-30,
-    -30,  5, 10, 15, 15, 10,  5,-30,
-    -40,-20,  0,  5,  5,  0,-20,-40,
-    -50,-40,-30,-30,-30,-30,-40,-50
-  ],
-  b: [
-    -20,-10,-10,-10,-10,-10,-10,-20,
-    -10,  0,  0,  0,  0,  0,  0,-10,
-    -10,  0, 10, 10, 10, 10,  0,-10,
-    -10,  5,  5, 10, 10,  5,  5,-10,
-    -10,  0, 10, 10, 10, 10,  0,-10,
-    -10, 10, 10, 10, 10, 10, 10,-10,
-    -10,  5,  0,  0,  0,  0,  5,-10,
-    -20,-10,-10,-10,-10,-10,-10,-20
-  ],
-  r: [
-     0,  0,  0,  0,  0,  0,  0,  0,
-     5, 10, 10, 10, 10, 10, 10,  5,
-    -5,  0,  0,  0,  0,  0,  0, -5,
-    -5,  0,  0,  0,  0,  0,  0, -5,
-    -5,  0,  0,  0,  0,  0,  0, -5,
-    -5,  0,  0,  0,  0,  0,  0, -5,
-    -5,  0,  0,  0,  0,  0,  0, -5,
-     0,  0,  0,  5,  5,  0,  0,  0
-  ],
-  q: [
-    -20,-10,-10, -5, -5,-10,-10,-20,
-    -10,  0,  0,  0,  0,  0,  0,-10,
-    -10,  0,  5,  5,  5,  5,  0,-10,
-     -5,  0,  5,  5,  5,  5,  0, -5,
-      0,  0,  5,  5,  5,  5,  0, -5,
-    -10,  5,  5,  5,  5,  5,  0,-10,
-    -10,  0,  5,  0,  0,  0,  0,-10,
-    -20,-10,-10, -5, -5,-10,-10,-20
-  ],
-  k: [
-    -30,-40,-40,-50,-50,-40,-40,-30,
-    -30,-40,-40,-50,-50,-40,-40,-30,
-    -30,-40,-40,-50,-50,-40,-40,-30,
-    -30,-40,-40,-50,-50,-40,-40,-30,
-    -20,-30,-30,-40,-40,-30,-30,-20,
-    -10,-20,-20,-20,-20,-20,-20,-10,
-     20, 20,  0,  0,  0,  0, 20, 20,
-     20, 30, 10,  0,  0, 10, 30, 20
-  ]
+  p:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
+  n:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
+  b:[-20,-10,-10,-10,-10,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,10,10,10,10,0,-10,-10,5,5,10,10,5,5,-10,-10,0,10,10,10,10,0,-10,-10,10,10,10,10,10,10,-10,-10,5,0,0,0,0,5,-10,-20,-10,-10,-10,-10,-10,-10,-20],
+  r:[0,0,0,0,0,0,0,0,5,10,10,10,10,10,10,5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,0,0,0,5,5,0,0,0],
+  q:[-20,-10,-10,-5,-5,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,5,5,5,0,-10,-5,0,5,5,5,5,0,-5,0,0,5,5,5,5,0,-5,-10,5,5,5,5,5,0,-10,-10,0,5,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20],
+  k:[-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20]
 };
 
-// Opening book (first few moves as FEN → UCI move)
-const OPENING_BOOK = {
-  'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b': ['e7e5','c7c5','e7e6','c7c6','d7d5','g8f6'],
-  'rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b': ['d7d5','g8f6','e7e6','c7c5','f7f5'],
-  'rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b': ['e7e5','g8f6','e7e6','c7c5'],
-  'rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w': ['d2d4','g1f3','b1c3'],
-  'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w': ['g1f3','f2f4','b1c3','f1c4','d2d4'],
-  'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w': ['g1f3','b1c3','c2c3','d2d4'],
-  'rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR w': ['e4e5','b1c3','d2d3'],
-  'rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w': ['e4d5','e4e5','b1c3'],
-  'rnbqkbnr/pppppppp/8/8/8/5N2/PPPPPPPP/RNBQKB1R b': ['d7d5','g8f6','c7c5','f7f5'],
-  'rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w': ['c2c4','g1f3','b1c3','c1f4'],
+const BOOK = {
+  'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b':['e7e5','c7c5','e7e6','c7c6','d7d5','g8f6'],
+  'rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b':['d7d5','g8f6','e7e6','c7c5'],
+  'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w':['g1f3','f1c4','b1c3','d2d4'],
+  'rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w':['d2d4','g1f3','b1c3'],
+  'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w':['g1f3','b1c3','c2c3','d2d4'],
+  'rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR w':['e4e5','b1c3','d2d3'],
+  'rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w':['e4d5','e4e5','b1c3'],
+  'rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w':['c2c4','g1f3','b1c3'],
 };
 
-function getBookMove(fen) {
-  // Simplify FEN for lookup (just position + side to move)
-  const parts = fen.split(' ');
-  const key = parts[0] + ' ' + parts[1];
-  const moves = OPENING_BOOK[key];
-  if (moves && moves.length > 0) {
-    return moves[Math.floor(Math.random() * moves.length)];
+let nodes = 0;
+let deadline = 0;
+const MAX_NODES = 500000;
+const MAX_Q = 6;
+
+function ev(g) {
+  if (g.in_checkmate()) return g.turn()==='b' ? 99999 : -99999;
+  if (g.in_draw()||g.in_stalemate()) return 0;
+  let s=0; const b=g.board();
+  const pv={p:100,n:320,b:330,r:500,q:900,k:20000};
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+    const p=b[r][c]; if(!p) continue;
+    const idx=p.color==='w'?(r*8+c):((7-r)*8+c);
+    const ps=PST[p.type]?PST[p.type][idx]:0;
+    s+=p.color==='b'?(pv[p.type]+ps):-(pv[p.type]+ps);
   }
-  return null;
+  return s;
 }
 
-function evaluateBoard() {
-  if (game.in_checkmate()) return game.turn() === 'b' ? 99999 : -99999;
-  if (game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) return 0;
-  
-  let score = 0;
-  const board = game.board();
-  const pieceVal = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
-  
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
-      const p = board[r][c];
-      if (!p) continue;
-      
-      const val = pieceVal[p.type];
-      // Piece-square table index
-      const idx = p.color === 'w' ? (r * 8 + c) : ((7 - r) * 8 + c);
-      const pstVal = PST[p.type] ? PST[p.type][idx] : 0;
-      
-      if (p.color === 'b') {
-        score += val + pstVal;
-      } else {
-        score -= val + pstVal;
-      }
-    }
+function quiesce(g,a,b,d){
+  nodes++;
+  if(nodes>MAX_NODES||Date.now()>deadline) return ev(g);
+  const sp=ev(g);
+  if(sp>=b) return b;
+  if(sp>a) a=sp;
+  if(d<=0) return a;
+  const caps=g.moves({verbose:true}).filter(m=>m.captured);
+  const vl={p:1,n:3,b:3,r:5,q:9,k:0};
+  caps.sort((x,y)=>(vl[y.captured]||0)-(vl[x.captured]||0));
+  for(const m of caps){
+    g.move(m);
+    const sc=-quiesce(g,-b,-a,d-1);
+    g.undo();
+    if(sc>=b) return b;
+    if(sc>a) a=sc;
   }
-  
-  // Mobility bonus (number of legal moves)
-  const mobility = game.moves().length;
-  score += (game.turn() === 'b' ? mobility : -mobility) * 2;
-  
-  return score;
+  return a;
 }
 
-// Quiescence search — resolves captures to avoid horizon effect
-let nodeCount = 0;
-let searchDeadline = 0;
-const MAX_NODES = 100000;  // hard cap to prevent freezing
-const MAX_QUIESCE_DEPTH = 4; // limit quiescence depth
-
-function quiesce(alpha, beta, qDepth) {
-  nodeCount++;
-  if (nodeCount > MAX_NODES || Date.now() > searchDeadline) return evaluateBoard();
-  
-  const standPat = evaluateBoard();
-  if (standPat >= beta) return beta;
-  if (standPat > alpha) alpha = standPat;
-  if (qDepth <= 0) return alpha;
-  
-  const captures = game.moves({ verbose: true }).filter(m => m.captured);
-  // MVV-LVA ordering
-  const vals = { p:1, n:3, b:3, r:5, q:9, k:0 };
-  captures.sort((a,b) => (vals[b.captured]||0) - (vals[a.captured]||0));
-  
-  for (const m of captures) {
-    game.move(m);
-    const score = -quiesce(-beta, -alpha, qDepth - 1);
-    game.undo();
-    if (score >= beta) return beta;
-    if (score > alpha) alpha = score;
-  }
-  return alpha;
-}
-
-function alphaBeta(depth, alpha, beta, isMaximizing) {
-  nodeCount++;
-  if (nodeCount > MAX_NODES || Date.now() > searchDeadline) return evaluateBoard();
-  if (depth === 0) return quiesce(alpha, beta, MAX_QUIESCE_DEPTH);
-  if (game.game_over()) return evaluateBoard();
-  
-  const moves = game.moves({ verbose: true });
-  
-  // Move ordering: captures first (MVV-LVA), then checks, then rest
-  const vals = { p:1, n:3, b:3, r:5, q:9, k:0 };
-  moves.sort((a, b) => {
-    const aScore = a.captured ? (vals[a.captured]||0) * 10 - (vals[a.piece]||0) : 0;
-    const bScore = b.captured ? (vals[b.captured]||0) * 10 - (vals[b.piece]||0) : 0;
-    return bScore - aScore;
+function ab(g,depth,a,b,isMax){
+  nodes++;
+  if(nodes>MAX_NODES||Date.now()>deadline) return ev(g);
+  if(depth===0) return quiesce(g,a,b,MAX_Q);
+  if(g.game_over()) return ev(g);
+  const moves=g.moves({verbose:true});
+  const vl={p:1,n:3,b:3,r:5,q:9,k:0};
+  moves.sort((x,y)=>{
+    const xs=x.captured?(vl[x.captured]||0)*10-(vl[x.piece]||0):0;
+    const ys=y.captured?(vl[y.captured]||0)*10-(vl[y.piece]||0):0;
+    return ys-xs;
   });
-  
-  if (isMaximizing) {
-    let maxEval = -Infinity;
-    for (const m of moves) {
-      game.move(m);
-      const val = alphaBeta(depth - 1, alpha, beta, false);
-      game.undo();
-      maxEval = Math.max(maxEval, val);
-      alpha = Math.max(alpha, val);
-      if (beta <= alpha) break;
-    }
-    return maxEval;
+  if(isMax){
+    let mx=-Infinity;
+    for(const m of moves){g.move(m);const v=ab(g,depth-1,a,b,false);g.undo();mx=Math.max(mx,v);a=Math.max(a,v);if(b<=a)break;}
+    return mx;
   } else {
-    let minEval = Infinity;
-    for (const m of moves) {
-      game.move(m);
-      const val = alphaBeta(depth - 1, alpha, beta, true);
-      game.undo();
-      minEval = Math.min(minEval, val);
-      beta = Math.min(beta, val);
-      if (beta <= alpha) break;
-    }
-    return minEval;
+    let mn=Infinity;
+    for(const m of moves){g.move(m);const v=ab(g,depth-1,a,b,true);g.undo();mn=Math.min(mn,v);b=Math.min(b,v);if(b<=a)break;}
+    return mn;
   }
 }
 
-function getBestMove() {
-  const cfg = DIFFICULTY_LEVELS[currentDifficulty];
-  const moves = game.moves({ verbose: true });
-  if (!moves.length) return null;
-  
-  // Check opening book first (for rival, competitor, master)
-  if (['rival','competitor','master'].includes(currentDifficulty)) {
-    const bookMove = getBookMove(game.fen());
-    if (bookMove) {
-      return { from: bookMove.substring(0,2), to: bookMove.substring(2,4), promotion: bookMove.length > 4 ? bookMove[4] : undefined };
+self.onmessage = function(e) {
+  const {fen, difficulty} = e.data;
+  const g = new Chess(fen);
+  const moves = g.moves({verbose:true});
+  if(!moves.length){self.postMessage({move:null});return;}
+
+  // Opening book
+  if(['rival','competitor','master'].includes(difficulty)){
+    const key=fen.split(' ').slice(0,2).join(' ');
+    if(BOOK[key]){
+      const bm=BOOK[key][Math.floor(Math.random()*BOOK[key].length)];
+      self.postMessage({move:{from:bm.substring(0,2),to:bm.substring(2,4),promotion:bm.length>4?bm[4]:undefined}});
+      return;
     }
   }
+
+  // Explorer: random
+  if(difficulty==='explorer'){
+    if(Math.random()<0.15){const c=moves.filter(m=>m.captured);if(c.length)return self.postMessage({move:c[Math.floor(Math.random()*c.length)]});}
+    self.postMessage({move:moves[Math.floor(Math.random()*moves.length)]});
+    return;
+  }
+
+  // Challenger: depth 2 + noise
+  if(difficulty==='challenger'){
+    nodes=0;deadline=Date.now()+2000;
+    const sc=[];
+    for(const m of moves){g.move(m);const v=-ab(g,1,-Infinity,Infinity,true);g.undo();sc.push({move:m,val:v+(Math.random()-0.5)*150});}
+    sc.sort((a,b)=>b.val-a.val);
+    if(Math.random()<0.2&&sc.length>3) self.postMessage({move:sc[Math.floor(Math.random()*Math.min(5,sc.length))].move});
+    else self.postMessage({move:sc[0].move});
+    return;
+  }
+
+  // Rival/Competitor/Master: deeper search
+  const sd={rival:3,competitor:4,master:5}[difficulty]||3;
+  const noise={rival:40,competitor:10,master:0}[difficulty]||0;
+  const blunder={rival:0.08,competitor:0.02,master:0}[difficulty]||0;
+
+  if(blunder>0&&Math.random()<blunder){self.postMessage({move:moves[Math.floor(Math.random()*moves.length)]});return;}
+
+  nodes=0;
+  deadline=Date.now()+{rival:3000,competitor:5000,master:8000}[difficulty]||5000;
+
+  const sc=[];
+  for(const m of moves){
+    g.move(m);
+    const v=-ab(g,sd-1,-Infinity,Infinity,true);
+    g.undo();
+    sc.push({move:m,val:v+(Math.random()-0.5)*noise});
+  }
+  sc.sort((a,b)=>b.val-a.val);
+  self.postMessage({move:sc[0].move});
+};
+`;
+
+  const blob = new Blob([workerCode], { type: 'application/javascript' });
+  const url = URL.createObjectURL(blob);
+  engineWorker = new Worker(url);
   
-  // EXPLORER: mostly random, occasionally captures hanging pieces
-  if (currentDifficulty === 'explorer') {
-    if (Math.random() < 0.15) {
-      const captures = moves.filter(m => m.captured);
-      if (captures.length > 0) return captures[Math.floor(Math.random() * captures.length)];
+  engineWorker.onmessage = function(e) {
+    if (engineResolve) {
+      engineResolve(e.data.move);
+      engineResolve = null;
     }
-    return moves[Math.floor(Math.random() * moves.length)];
-  }
+  };
   
-  // CHALLENGER: depth 2 search with high randomness
-  if (currentDifficulty === 'challenger') {
-    nodeCount = 0;
-    searchDeadline = Date.now() + 2000;
-    const scored = [];
-    for (const m of moves) {
-      game.move(m);
-      const val = -alphaBeta(1, -Infinity, Infinity, true);
-      game.undo();
-      scored.push({ move: m, val: val + (Math.random() - 0.5) * 150 }); // lots of noise
+  engineWorker.onerror = function(e) {
+    console.error('Engine worker error:', e);
+    // Fallback: random move
+    if (engineResolve) {
+      const moves = game.moves({ verbose: true });
+      engineResolve(moves.length > 0 ? moves[Math.floor(Math.random() * moves.length)] : null);
+      engineResolve = null;
     }
-    scored.sort((a,b) => b.val - a.val);
-    // Sometimes blunder (20% chance)
-    if (Math.random() < 0.2 && scored.length > 3) {
-      return scored[Math.floor(Math.random() * Math.min(5, scored.length))].move;
-    }
-    return scored[0].move;
-  }
-  
-  // RIVAL: depth 3, COMPETITOR: depth 3-4, MASTER: depth 4
-  // Kept conservative to avoid UI freezing on main thread
-  const searchDepth = {
-    rival: 3,
-    competitor: 3 + (game.moves().length < 20 ? 1 : 0),
-    master: 4,
-  }[currentDifficulty] || 3;
-  
-  const noise = { rival: 40, competitor: 10, master: 0 }[currentDifficulty] || 0;
-  const blunderRate = { rival: 0.08, competitor: 0.02, master: 0 }[currentDifficulty] || 0;
-  
-  // Occasional blunder
-  if (blunderRate > 0 && Math.random() < blunderRate) {
-    return moves[Math.floor(Math.random() * moves.length)];
-  }
-  
-  // Reset node counter and set time limit (3 seconds max)
-  nodeCount = 0;
-  searchDeadline = Date.now() + 3000;
-  
-  const scored = [];
-  for (const m of moves) {
-    game.move(m);
-    const val = -alphaBeta(searchDepth - 1, -Infinity, Infinity, true);
-    game.undo();
-    scored.push({ move: m, val: val + (Math.random() - 0.5) * noise });
-  }
-  scored.sort((a, b) => b.val - a.val);
-  return scored[0].move;
+  };
 }
 
-function minimax() { return 0; } // legacy stub
+// Initialize worker
+createEngineWorker();
+
+function getEngineMove(fen, difficulty) {
+  return new Promise((resolve) => {
+    if (!engineWorker) {
+      // Fallback
+      const moves = game.moves({ verbose: true });
+      resolve(moves.length > 0 ? moves[Math.floor(Math.random() * moves.length)] : null);
+      return;
+    }
+    engineResolve = resolve;
+    engineWorker.postMessage({ fen, difficulty });
+    
+    // Safety timeout (10s)
+    setTimeout(() => {
+      if (engineResolve) {
+        const moves = game.moves({ verbose: true });
+        engineResolve(moves.length > 0 ? moves[Math.floor(Math.random() * moves.length)] : null);
+        engineResolve = null;
+      }
+    }, 10000);
+  });
+}
 
 function aiMove() {
   if (gameMode === 'online') return;
@@ -1470,13 +1394,11 @@ function aiMove() {
   document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'The Collegium is thinking...';
 
   const thinkTime = cfg.thinkMin + Math.random() * (cfg.thinkMax - cfg.thinkMin);
+  const startTime = Date.now();
 
-  // Run in setTimeout to allow UI to update before heavy computation
-  setTimeout(() => {
-    const best = getBestMove();
-    
-    // Apply minimum think time for realism
-    const elapsed = Date.now();
+  getEngineMove(game.fen(), currentDifficulty).then((best) => {
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, thinkTime - elapsed);
     
     setTimeout(() => {
       if (best) {
@@ -1496,12 +1418,13 @@ function aiMove() {
       renderBoard();
       checkGameOver();
       moveStartTime = Date.now();
-    }, Math.max(0, thinkTime - 50));
-  }, 50);
+    }, remaining);
+  });
 }
 
-// No external init needed — engine is self-contained
-function configureStockfish() {} // stub for compatibility
+function getBestMove() { return null; }
+function minimax() { return 0; }
+function configureStockfish() {}
 
 // ── MOVE HISTORY ──
 function addMoveToHistory(move, color) {
@@ -1794,11 +1717,6 @@ function newGame() {
 
   game = new Chess();
   selectedSquare = null; possibleMoves = []; lastMove = null; moveHistory = [];
-  // Reset Stockfish for new game
-  if (stockfish && sfReady) {
-    stockfish.postMessage('ucinewgame');
-    configureStockfish();
-  }
   document.getElementById('movesTable').querySelector('tbody').innerHTML = '';
   document.getElementById('statusBanner').textContent = 'Make your first move to begin. You play as White.';
   document.getElementById('statusBanner').className = 'status-banner';
