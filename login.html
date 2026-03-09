@@ -184,6 +184,9 @@
         </div>
         <button class="btn-submit" id="signinBtn" onclick="signIn()">Sign In →</button>
         <div class="form-footer">
+          <a href="#" onclick="forgotPassword()" style="color:var(--gold);font-size:12px">Forgot password?</a>
+        </div>
+        <div class="form-footer">
           Don't have an account? <a href="#" onclick="switchTab('signup')">Create one free</a>
         </div>
       </div>
@@ -325,6 +328,23 @@ function setLoading(btnId, loading, defaultText) {
   btn.innerHTML = loading ? '<span class="spinner"></span>Please wait...' : defaultText;
 }
 
+// ── FORGOT PASSWORD ──
+async function forgotPassword() {
+  const email = document.getElementById('signinEmail').value.trim();
+  if (!email) {
+    showMessage('Enter your email above first, then click Forgot Password.', 'error');
+    return;
+  }
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/login.html'
+  });
+  if (error) {
+    showMessage(error.message, 'error');
+  } else {
+    showMessage('Password reset link sent to ' + email + '. Check your inbox.', 'success');
+  }
+}
+
 // ── SIGN IN ──
 async function signIn() {
   const email = document.getElementById('signinEmail').value.trim();
@@ -418,12 +438,43 @@ function showSuccess(title, msg, dest) {
 // ── CHECK IF ALREADY LOGGED IN ──
 sb.auth.getSession().then(({ data: { session } }) => {
   if (session) {
+    // Check if this is a password reset flow (token in URL)
+    const hash = window.location.hash;
+    if (hash && hash.includes('type=recovery')) {
+      // Show password reset form
+      document.querySelector('.form-card').innerHTML = `
+        <div class="form-title">Reset Your Password</div>
+        <div class="form-subtitle">Enter your new password below.</div>
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input class="form-input" type="password" id="newPassword" placeholder="••••••••"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <input class="form-input" type="password" id="confirmPassword" placeholder="••••••••"/>
+        </div>
+        <button class="btn-submit" onclick="updatePassword()">Update Password →</button>
+        <div id="resetMsg" style="margin-top:12px;font-family:'DM Mono',monospace;font-size:12px"></div>
+      `;
+      return;
+    }
     sb.from('profiles').select('role').eq('id', session.user.id).single().then(({ data }) => {
       const role = data?.role || 'student';
       window.location.href = role === 'teacher' || role === 'parent' ? 'dashboard.html' : 'learn.html';
     });
   }
 });
+
+async function updatePassword() {
+  const pw = document.getElementById('newPassword').value;
+  const confirm = document.getElementById('confirmPassword').value;
+  const msg = document.getElementById('resetMsg');
+  if (!pw || pw.length < 6) { msg.textContent = 'Password must be at least 6 characters.'; msg.style.color = '#e05068'; return; }
+  if (pw !== confirm) { msg.textContent = 'Passwords do not match.'; msg.style.color = '#e05068'; return; }
+  const { error } = await sb.auth.updateUser({ password: pw });
+  if (error) { msg.textContent = error.message; msg.style.color = '#e05068'; }
+  else { msg.textContent = 'Password updated! Redirecting...'; msg.style.color = '#4caf50'; setTimeout(() => window.location.href = 'learn.html', 1500); }
+}
 </script>
 </body>
 </html>
