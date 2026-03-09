@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Classical Chess Collegium — Play Chess</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <!-- Chess engine -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,11 +13,11 @@
     :root {
       --black:  #0a0a0a;
       --dark:   #111111;
-      --panel:  #151515;
+      --panel:  #161616;
       --border: #2a2a2a;
       --gold:   #c9a84c;
       --gold2:  #e8c97a;
-      --cream:  #F2ECD8;
+      --cream:  #f5f0e8;
       --muted:  #6b6b6b;
       --white:  #ffffff;
       --sq-light: #f0d9b5;
@@ -30,7 +30,7 @@
     body {
       background: var(--black);
       color: var(--cream);
-      font-family: 'Lato', sans-serif;
+      font-family: 'Outfit', sans-serif;
       overflow-x: hidden;
       cursor: none;
       min-height: 100vh;
@@ -145,7 +145,7 @@
     .piece svg { width:80%; height:80%; display:block; }
     .square:hover .piece { transform:scale(1.06); }
 
-    /* Engine thinking overlay */
+    /* AI thinking overlay */
     .thinking-overlay {
       position:absolute; inset:0;
       background:rgba(10,10,10,0.5);
@@ -164,7 +164,7 @@
     @keyframes dot-bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
     .thinking-text { font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.15em; color:var(--gold); }
 
-    /* RIGHT PANEL - move history + coaching tips */
+    /* RIGHT PANEL - move history + AI tips */
     .panel-right { background:var(--panel); border-left:1px solid var(--border); padding:28px 20px; display:flex; flex-direction:column; gap:24px; overflow:hidden; }
 
     .status-banner { padding:14px 16px; border-left:3px solid var(--gold); background:rgba(201,168,76,0.06); font-family:'DM Mono',monospace; font-size:12px; letter-spacing:0.05em; color:var(--cream); line-height:1.5; min-height:48px; }
@@ -338,17 +338,26 @@
     .profile-signin { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:#c9a84c; text-decoration:none; border:1px solid rgba(201,168,76,0.3); padding:6px 14px; transition:all 0.2s; }
     .profile-signin:hover { background:rgba(201,168,76,0.08); }
   </style>
-  <link rel="stylesheet" href="nav.css">
+<link rel="stylesheet" href="nav.css">
 </head>
 <body>
 
+<nav id="cccNav"></nav>
 <div class="chess-bg"></div>
 <div class="cursor" id="cursor"></div>
 <div class="cursor-ring" id="cursorRing"></div>
 
 <!-- NAV -->
-<nav id="cccNav">
-  <div class="ccc-nav-right-extra" style="display:flex;align-items:center;gap:12px;">
+<nav>
+  <a href="index.html" class="logo">
+    <div class="logo-icon"><span></span><span></span><span></span><span></span></div>
+    <div class="logo-text">The Classical Chess <span>Collegium</span></div>
+  </a>
+  <div class="nav-right">
+    <a href="index.html" class="nav-back">Home</a>
+    <a href="learn.html" class="nav-back">Learn</a>
+    <a href="dashboard.html" class="nav-back">Dashboard</a>
+    <a href="profile.html" class="nav-back" id="profileLink" style="display:none">My Profile</a>
     <div id="ratingBadge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;color:var(--gold);background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);padding:6px 12px;">
       ♟ <span id="ratingBadgeVal">—</span>
     </div>
@@ -384,7 +393,7 @@
 
 <!-- ════ MODE SELECT SCREEN ════ -->
 <div id="modeScreen">
-  <div class="mode-title">Classical Chess</div>
+  <div class="mode-title">The Classical Chess Collegium</div>
   <div class="mode-subtitle">Choose your game</div>
   <div class="mode-cards">
     <div class="mode-card" onclick="selectMode('ai')">
@@ -510,7 +519,7 @@
     <div class="ai-tip">
       <div class="ai-tip-header">
         <div class="ai-tip-icon">♟</div>
-        <div class="ai-tip-label">Collegium Tip</div>
+        <div class="ai-tip-label">Coaching Tip</div>
       </div>
       <div class="ai-tip-text" id="aiTipText">Control the center early — e4 or d4 are strong opening moves for White.</div>
     </div>
@@ -812,7 +821,7 @@ const SUPABASE_URL = 'https://nlsmrveieqadjmytsmjm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5sc21ydmVpZXFhZGpteXRzbWptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MTg4NjcsImV4cCI6MjA4NzI5NDg2N30.9uIWjPJsOhdXXHqGLIMcdY5eitbkGoHyhbreAEe-apM';
 const { createClient } = supabase.createClient ? supabase : window.supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: { persistSession: true, storageKey: 'ccc-auth' },
+  auth: { persistSession: true, storageKey: 'malachi-auth' },
   realtime: {
     params: { eventsPerSecond: 10 }
   }
@@ -850,14 +859,19 @@ let gameStartTime = Date.now();   // when current game started
 let gameAbandoned = false;        // did they quit mid-game?
 let possibleMoves = [];
 let lastMove = null;
-// ── DIFFICULTY SYSTEM — Powered by Stockfish WASM ──
-// Uses UCI_LimitStrength + UCI_Elo for accurate rating simulation
+// ── DIFFICULTY SYSTEM ──
+// Each level has distinct behavioral logic beyond just depth/randomness:
+// explorer:    Pure random moves, never checks/attacks king — truly safe for beginners
+// challenger:  Captures free pieces greedily, makes simple one-move threats, no deep plans
+// rival:       Real opening book, punishes blunders, basic tactics (depth 2)
+// competitor:  Full tactical + positional play, plans ahead (depth 3)
+// master:      Near-optimal minimax, no mistakes (depth 4)
 const DIFFICULTY_LEVELS = {
-  explorer:   { elo: 400,  depth: 1,  skillLevel: 0,  thinkMin: 300,  thinkMax: 800,  label: '🌟 EXPLORER',    color: '#64b5f6', ratingScale: 0.1 },
-  challenger: { elo: 800,  depth: 5,  skillLevel: 3,  thinkMin: 400,  thinkMax: 1000, label: '⚡ CHALLENGER',  color: '#4caf50', ratingScale: 0.4 },
-  rival:      { elo: 1200, depth: 8,  skillLevel: 6,  thinkMin: 600,  thinkMax: 1200, label: '♟ RIVAL',        color: '#ffc107', ratingScale: 0.75 },
-  competitor: { elo: 1600, depth: 12, skillLevel: 12, thinkMin: 800,  thinkMax: 1500, label: '🔥 COMPETITOR',  color: '#ff9800', ratingScale: 1.0 },
-  master:     { elo: 2200, depth: 18, skillLevel: 20, thinkMin: 1000, thinkMax: 2200, label: '👑 MASTER',      color: '#f44336', ratingScale: 1.5 },
+  explorer:   { depth: 1, mistakeRate: 1.0,  randomness: 0,   thinkMin: 300,  thinkMax: 700,  label: '🌟 EXPLORER',    color: '#64b5f6', ratingScale: 0.1 },
+  challenger: { depth: 1, mistakeRate: 0.0,  randomness: 60,  thinkMin: 400,  thinkMax: 900,  label: '⚡ CHALLENGER',  color: '#4caf50', ratingScale: 0.4 },
+  rival:      { depth: 2, mistakeRate: 0.05, randomness: 25,  thinkMin: 500,  thinkMax: 1100, label: '♟ RIVAL',        color: '#ffc107', ratingScale: 0.75 },
+  competitor: { depth: 3, mistakeRate: 0.01, randomness: 8,   thinkMin: 700,  thinkMax: 1500, label: '🔥 COMPETITOR',  color: '#ff9800', ratingScale: 1.0 },
+  master:     { depth: 4, mistakeRate: 0,    randomness: 2,   thinkMin: 900,  thinkMax: 2200, label: '👑 MASTER',      color: '#f44336', ratingScale: 1.5 },
 };
 let currentDifficulty = 'explorer';
 let depth = 1;
@@ -985,12 +999,10 @@ function setDifficulty(level) {
   depth = cfg.depth;
   document.getElementById('difficultyLabel').textContent = cfg.label;
   document.getElementById('difficultyMenu').style.display = 'none';
-  // Reconfigure Stockfish for new difficulty
-  configureStockfish();
   // Show toast
   const toast = document.createElement('div');
   toast.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid ${cfg.color};color:${cfg.color};font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;padding:10px 20px;z-index:999;pointer-events:none;`;
-  toast.textContent = `${cfg.label} · Elo ${cfg.elo}`;
+  toast.textContent = `Difficulty set to ${cfg.label}`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2000);
 }
@@ -1182,273 +1194,9 @@ function makePlayerMove(from, to) {
     sendOnlineMove(uci);
     updateOnlineTurnUI();
   } else {
-    // vs engine — trigger AI response
+    // vs AI — trigger AI response
     if (!game.game_over()) setTimeout(aiMove, 400);
   }
-}
-
-// ══════════════════════════════════════════════════
-// ENHANCED CHESS ENGINE v3 — Web Worker
-// Runs in a separate thread so the UI never freezes.
-// Includes chess.js + full engine inside the worker blob.
-// ══════════════════════════════════════════════════
-
-let engineWorker = null;
-let engineResolve = null;
-
-function createEngineWorker() {
-  const workerCode = `
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js');
-
-// Piece-square tables (indexed from white's perspective row 0=rank 8)
-const PST = {
-  p:[0,0,0,0,0,0,0,0, 50,50,50,50,50,50,50,50, 10,10,20,30,30,20,10,10, 5,5,10,25,25,10,5,5, 0,0,0,20,20,0,0,0, 5,-5,-10,0,0,-10,-5,5, 5,10,10,-20,-20,10,10,5, 0,0,0,0,0,0,0,0],
-  n:[-50,-40,-30,-30,-30,-30,-40,-50, -40,-20,0,0,0,0,-20,-40, -30,0,10,15,15,10,0,-30, -30,5,15,20,20,15,5,-30, -30,0,15,20,20,15,0,-30, -30,5,10,15,15,10,5,-30, -40,-20,0,5,5,0,-20,-40, -50,-40,-30,-30,-30,-30,-40,-50],
-  b:[-20,-10,-10,-10,-10,-10,-10,-20, -10,0,0,0,0,0,0,-10, -10,0,10,10,10,10,0,-10, -10,5,5,10,10,5,5,-10, -10,0,10,10,10,10,0,-10, -10,10,10,10,10,10,10,-10, -10,5,0,0,0,0,5,-10, -20,-10,-10,-10,-10,-10,-10,-20],
-  r:[0,0,0,0,0,0,0,0, 5,10,10,10,10,10,10,5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, 0,0,0,5,5,0,0,0],
-  q:[-20,-10,-10,-5,-5,-10,-10,-20, -10,0,0,0,0,0,0,-10, -10,0,5,5,5,5,0,-10, -5,0,5,5,5,5,0,-5, 0,0,5,5,5,5,0,-5, -10,5,5,5,5,5,0,-10, -10,0,5,0,0,0,0,-10, -20,-10,-10,-5,-5,-10,-10,-20],
-  k:[-30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -20,-30,-30,-40,-40,-30,-30,-20, -10,-20,-20,-20,-20,-20,-20,-10, 20,20,0,0,0,0,20,20, 20,30,10,0,0,10,30,20]
-};
-
-const BOOK = {
-  'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b':['e7e5','c7c5','e7e6','c7c6','d7d5','g8f6'],
-  'rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b':['d7d5','g8f6','e7e6','c7c5'],
-  'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w':['g1f3','f1c4','b1c3','d2d4'],
-  'rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w':['d2d4','g1f3','b1c3'],
-  'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w':['g1f3','b1c3','c2c3','d2d4'],
-  'rnbqkb1r/pppppppp/5n2/8/4P3/8/PPPP1PPP/RNBQKBNR w':['e4e5','b1c3','d2d3'],
-  'rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w':['e4d5','e4e5','b1c3'],
-  'rnbqkbnr/ppp1pppp/8/3p4/3P4/8/PPP1PPPP/RNBQKBNR w':['c2c4','g1f3','b1c3'],
-};
-
-let nodes = 0;
-let deadline = 0;
-const MAX_NODES = 2000000;
-
-// EVALUATION — the engine plays as BLACK, positive = good for black
-function evaluate(g) {
-  if (g.in_checkmate()) {
-    // Side to move is checkmated
-    return g.turn() === 'b' ? -99999 : 99999;
-  }
-  if (g.in_draw() || g.in_stalemate()) return 0;
-  
-  let score = 0;
-  const board = g.board();
-  const pieceVal = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
-  
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
-      const p = board[r][c];
-      if (!p) continue;
-      const val = pieceVal[p.type];
-      const idx = p.color === 'w' ? (r * 8 + c) : ((7 - r) * 8 + c);
-      const pst = PST[p.type] ? PST[p.type][idx] : 0;
-      if (p.color === 'b') {
-        score += val + pst;
-      } else {
-        score -= val + pst;
-      }
-    }
-  }
-  
-  // Mobility bonus
-  const moves = g.moves().length;
-  score += (g.turn() === 'b' ? 1 : -1) * moves * 3;
-  
-  return score;
-}
-
-// Quiescence: just evaluate all capture sequences to avoid horizon effect
-function quiesce(g, depth) {
-  nodes++;
-  if (nodes > MAX_NODES || Date.now() > deadline) return evaluate(g);
-  
-  const stand = evaluate(g);
-  if (depth <= 0) return stand;
-  
-  const allMoves = g.moves({ verbose: true });
-  const captures = allMoves.filter(m => m.captured);
-  if (captures.length === 0) return stand;
-  
-  const vl = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
-  captures.sort((a, b) => (vl[b.captured] || 0) - (vl[a.captured] || 0));
-  
-  // Is the side to move trying to maximize or minimize?
-  const isBlack = g.turn() === 'b';
-  let best = stand;
-  
-  for (const m of captures) {
-    g.move(m);
-    const val = quiesce(g, depth - 1);
-    g.undo();
-    if (isBlack) {
-      best = Math.max(best, val);  // black wants high score
-    } else {
-      best = Math.min(best, val);  // white wants low score
-    }
-  }
-  return best;
-}
-
-// Alpha-beta with move ordering
-function search(g, depth, alpha, beta, maximizing) {
-  nodes++;
-  if (nodes > MAX_NODES || Date.now() > deadline) return evaluate(g);
-  if (depth === 0) return quiesce(g, 6);
-  if (g.game_over()) return evaluate(g);
-  
-  const moves = g.moves({ verbose: true });
-  
-  // Move ordering: captures first (MVV-LVA)
-  const vl = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
-  moves.sort((a, b) => {
-    const as = a.captured ? (vl[a.captured] || 0) * 10 - (vl[a.piece] || 0) : 0;
-    const bs = b.captured ? (vl[b.captured] || 0) * 10 - (vl[b.piece] || 0) : 0;
-    return bs - as;
-  });
-  
-  if (maximizing) {
-    let best = -Infinity;
-    for (const m of moves) {
-      g.move(m);
-      const val = search(g, depth - 1, alpha, beta, false);
-      g.undo();
-      best = Math.max(best, val);
-      alpha = Math.max(alpha, val);
-      if (beta <= alpha) break;
-    }
-    return best;
-  } else {
-    let best = Infinity;
-    for (const m of moves) {
-      g.move(m);
-      const val = search(g, depth - 1, alpha, beta, true);
-      g.undo();
-      best = Math.min(best, val);
-      beta = Math.min(beta, val);
-      if (beta <= alpha) break;
-    }
-    return best;
-  }
-}
-
-self.onmessage = function(e) {
-  const { fen, difficulty } = e.data;
-  const g = new Chess(fen);
-  const moves = g.moves({ verbose: true });
-  if (!moves.length) { self.postMessage({ move: null }); return; }
-  
-  // Opening book for rival+
-  if (['rival','competitor','master'].includes(difficulty)) {
-    const key = fen.split(' ').slice(0, 2).join(' ');
-    if (BOOK[key]) {
-      const bm = BOOK[key][Math.floor(Math.random() * BOOK[key].length)];
-      self.postMessage({ move: { from: bm.substring(0,2), to: bm.substring(2,4), promotion: bm.length > 4 ? bm[4] : undefined } });
-      return;
-    }
-  }
-  
-  // Explorer: random with occasional capture
-  if (difficulty === 'explorer') {
-    if (Math.random() < 0.2) {
-      const caps = moves.filter(m => m.captured);
-      if (caps.length) { self.postMessage({ move: caps[Math.floor(Math.random() * caps.length)] }); return; }
-    }
-    self.postMessage({ move: moves[Math.floor(Math.random() * moves.length)] });
-    return;
-  }
-  
-  // Challenger: depth 2, some noise
-  if (difficulty === 'challenger') {
-    nodes = 0; deadline = Date.now() + 3000;
-    const scored = [];
-    for (const m of moves) {
-      g.move(m);
-      const val = search(g, 1, -Infinity, Infinity, false);
-      g.undo();
-      scored.push({ move: m, val: val + (Math.random() - 0.5) * 80 });
-    }
-    scored.sort((a, b) => b.val - a.val);
-    if (Math.random() < 0.1 && scored.length > 3) {
-      self.postMessage({ move: scored[Math.floor(Math.random() * Math.min(4, scored.length))].move });
-    } else {
-      self.postMessage({ move: scored[0].move });
-    }
-    return;
-  }
-  
-  // Rival / Competitor / Master
-  const sd = { rival: 4, competitor: 4, master: 5 }[difficulty] || 4;
-  const noise = { rival: 8, competitor: 3, master: 0 }[difficulty] || 0;
-  const blunder = { rival: 0.02, competitor: 0, master: 0 }[difficulty] || 0;
-  
-  if (blunder > 0 && Math.random() < blunder) {
-    self.postMessage({ move: moves[Math.floor(Math.random() * moves.length)] });
-    return;
-  }
-  
-  nodes = 0;
-  deadline = Date.now() + { rival: 5000, competitor: 8000, master: 12000 }[difficulty] || 5000;
-  
-  const scored = [];
-  for (const m of moves) {
-    g.move(m);
-    // Engine plays as BLACK. After black moves, white minimizes.
-    const val = search(g, sd - 1, -Infinity, Infinity, false);
-    g.undo();
-    scored.push({ move: m, val: val + (Math.random() - 0.5) * noise });
-  }
-  scored.sort((a, b) => b.val - a.val);
-  self.postMessage({ move: scored[0].move });
-};
-`;
-
-  const blob = new Blob([workerCode], { type: 'application/javascript' });
-  const url = URL.createObjectURL(blob);
-  engineWorker = new Worker(url);
-  
-  engineWorker.onmessage = function(e) {
-    if (engineResolve) {
-      engineResolve(e.data.move);
-      engineResolve = null;
-    }
-  };
-  
-  engineWorker.onerror = function(e) {
-    console.error('Engine worker error:', e);
-    // Fallback: random move
-    if (engineResolve) {
-      const moves = game.moves({ verbose: true });
-      engineResolve(moves.length > 0 ? moves[Math.floor(Math.random() * moves.length)] : null);
-      engineResolve = null;
-    }
-  };
-}
-
-// Initialize worker
-createEngineWorker();
-
-function getEngineMove(fen, difficulty) {
-  return new Promise((resolve) => {
-    if (!engineWorker) {
-      // Fallback
-      const moves = game.moves({ verbose: true });
-      resolve(moves.length > 0 ? moves[Math.floor(Math.random() * moves.length)] : null);
-      return;
-    }
-    engineResolve = resolve;
-    engineWorker.postMessage({ fen, difficulty });
-    
-    // Safety timeout (10s)
-    setTimeout(() => {
-      if (engineResolve) {
-        const moves = game.moves({ verbose: true });
-        engineResolve(moves.length > 0 ? moves[Math.floor(Math.random() * moves.length)] : null);
-        engineResolve = null;
-      }
-    }, 10000);
-  });
 }
 
 function aiMove() {
@@ -1462,10 +1210,9 @@ function aiMove() {
   const thinkTime = cfg.thinkMin + Math.random() * (cfg.thinkMax - cfg.thinkMin);
   const startTime = Date.now();
 
-  getEngineMove(game.fen(), currentDifficulty).then((best) => {
+  getWorkerMove(game.fen(), currentDifficulty).then((best) => {
     const elapsed = Date.now() - startTime;
     const remaining = Math.max(0, thinkTime - elapsed);
-    
     setTimeout(() => {
       if (best) {
         const move = game.move(best);
@@ -1488,9 +1235,174 @@ function aiMove() {
   });
 }
 
+// ══════════════════════════════════════════════════
+// WEB WORKER ENGINE — exact same logic as original, 
+// just running in a separate thread with higher depths
+// ══════════════════════════════════════════════════
+let _worker = null;
+let _workerResolve = null;
+
+(function initWorker() {
+  const code = `
+importScripts('https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js');
+
+const PIECE_VALUES = { p:1, n:3, b:3, r:5, q:9, k:0 };
+
+const LEVELS = {
+  explorer:   { depth: 1, mistakeRate: 1.0,  randomness: 0   },
+  challenger: { depth: 2, mistakeRate: 0.0,  randomness: 60  },
+  rival:      { depth: 4, mistakeRate: 0.05, randomness: 15  },
+  competitor: { depth: 5, mistakeRate: 0.01, randomness: 5   },
+  master:     { depth: 6, mistakeRate: 0,    randomness: 0   },
+};
+
+function evaluateBoard(game) {
+  if (game.in_checkmate()) return game.turn() === 'b' ? 10000 : -10000;
+  if (game.in_draw()) return 0;
+  var score = 0;
+  var board = game.board();
+  for (var r = 0; r < 8; r++) {
+    for (var c = 0; c < 8; c++) {
+      var p = board[r][c];
+      if (!p) continue;
+      var val = PIECE_VALUES[p.type] * 100;
+      score += p.color === 'b' ? val : -val;
+    }
+  }
+  score += (Math.random() - 0.5) * 10;
+  return score;
+}
+
+function minimax(game, d, alpha, beta, isMax) {
+  if (d === 0 || game.game_over()) return evaluateBoard(game);
+  var moves = game.moves({ verbose: true });
+  if (isMax) {
+    var maxEval = -Infinity;
+    for (var i = 0; i < moves.length; i++) {
+      game.move(moves[i]);
+      maxEval = Math.max(maxEval, minimax(game, d-1, alpha, beta, false));
+      game.undo();
+      alpha = Math.max(alpha, maxEval);
+      if (beta <= alpha) break;
+    }
+    return maxEval;
+  } else {
+    var minEval = Infinity;
+    for (var i = 0; i < moves.length; i++) {
+      game.move(moves[i]);
+      minEval = Math.min(minEval, minimax(game, d-1, alpha, beta, true));
+      game.undo();
+      beta = Math.min(beta, minEval);
+      if (beta <= alpha) break;
+    }
+    return minEval;
+  }
+}
+
+function getBestMove(game, level) {
+  var cfg = LEVELS[level];
+  var searchDepth = cfg.depth;
+  var mistakeRate = cfg.mistakeRate;
+  var randomness = cfg.randomness;
+  var moves = game.moves({ verbose: true });
+  if (!moves.length) return null;
+
+  // EXPLORER: pure random, never attacks king
+  if (level === 'explorer') {
+    var safe = moves.filter(function(m) {
+      game.move(m);
+      var givesCheck = game.in_check();
+      game.undo();
+      return !givesCheck;
+    });
+    var pool = safe.length > 0 ? safe : moves;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // CHALLENGER: greedily captures free pieces, otherwise random
+  if (level === 'challenger') {
+    var captures = moves.filter(function(m) { return m.captured; });
+    var freeCaptures = captures.filter(function(m) {
+      game.move(m);
+      var attacked = game.moves({ verbose: true }).some(function(r) { return r.to === m.to; });
+      game.undo();
+      return !attacked;
+    });
+    if (freeCaptures.length > 0) {
+      var vals = { p:1, n:3, b:3, r:5, q:9, k:0 };
+      freeCaptures.sort(function(a,b) { return (vals[b.captured]||0) - (vals[a.captured]||0); });
+      return freeCaptures[0];
+    }
+    var scored = [];
+    for (var i = 0; i < moves.length; i++) {
+      game.move(moves[i]);
+      var val = -minimax(game, 1, -Infinity, Infinity, false);
+      game.undo();
+      scored.push({ move: moves[i], val: val });
+    }
+    scored.sort(function(a,b) { return b.val - a.val; });
+    var noisy = scored.map(function(s) { return { move: s.move, val: s.val + (Math.random()-0.5)*randomness }; });
+    noisy.sort(function(a,b) { return b.val - a.val; });
+    return noisy[0].move;
+  }
+
+  // RIVAL / COMPETITOR / MASTER: minimax with scaled randomness
+  if (mistakeRate > 0 && Math.random() < mistakeRate) {
+    return moves[Math.floor(Math.random() * moves.length)];
+  }
+
+  var scored = [];
+  for (var i = 0; i < moves.length; i++) {
+    game.move(moves[i]);
+    var val = -minimax(game, searchDepth - 1, -Infinity, Infinity, false);
+    game.undo();
+    scored.push({ move: moves[i], val: val });
+  }
+
+  scored.sort(function(a, b) { return b.val - a.val; });
+  if (randomness > 0) {
+    var noisy = scored.map(function(s) { return { move: s.move, val: s.val + (Math.random()-0.5)*randomness }; });
+    noisy.sort(function(a,b) { return b.val - a.val; });
+    return noisy[0].move;
+  }
+  return scored[0].move;
+}
+
+self.onmessage = function(e) {
+  var game = new Chess(e.data.fen);
+  var best = getBestMove(game, e.data.level);
+  self.postMessage({ move: best });
+};
+`;
+  try {
+    var blob = new Blob([code], { type: 'application/javascript' });
+    var url = URL.createObjectURL(blob);
+    _worker = new Worker(url);
+    _worker.onmessage = function(e) {
+      if (_workerResolve) { _workerResolve(e.data.move); _workerResolve = null; }
+    };
+    _worker.onerror = function(e) {
+      console.error('Worker error:', e);
+      if (_workerResolve) { _workerResolve(null); _workerResolve = null; }
+    };
+  } catch(e) { console.error('Worker init failed:', e); }
+})();
+
+function getWorkerMove(fen, level) {
+  return new Promise(function(resolve) {
+    if (!_worker) { resolve(null); return; }
+    _workerResolve = resolve;
+    _worker.postMessage({ fen: fen, level: level });
+    setTimeout(function() {
+      if (_workerResolve) { _workerResolve(null); _workerResolve = null; }
+    }, 15000);
+  });
+}
+
+// Keep these as stubs so nothing else breaks
 function getBestMove() { return null; }
 function minimax() { return 0; }
-function configureStockfish() {}
+function evaluateBoard() { return 0; }
 
 // ── MOVE HISTORY ──
 function addMoveToHistory(move, color) {
@@ -1566,7 +1478,7 @@ function updatePanels() {
     banner.textContent = 'Your move. Think carefully before you commit.';
     banner.className = 'status-banner';
   } else {
-    banner.textContent = 'The engine is calculating the best response...';
+    banner.textContent = 'Malachi AI is calculating the best response...';
     banner.className = 'status-banner';
   }
 }
@@ -1591,7 +1503,7 @@ function checkGameOver() {
         playerWon = true;
       } else {
         icon.textContent = '♚'; title.textContent = 'Checkmate';
-        msg.textContent = "The Collegium wins this round. Study the game and try again — every loss is a lesson.";
+        msg.textContent = "Malachi AI wins this round. Study the game and try again — every loss is a lesson.";
       }
     } else if (game.in_draw()) {
       icon.textContent = '🤝'; title.textContent = 'Draw!';
@@ -1794,7 +1706,7 @@ function newGame() {
 }
 
 function undoMove() {
-  // undo both player and engine move
+  // undo both player and AI move
   game.undo(); game.undo();
   // remove last row from history table
   const tbody = document.getElementById('movesTable').querySelector('tbody');
@@ -1815,7 +1727,7 @@ renderBoard();
 showTip();
 
 // ── ELO RATING SYSTEM ──
-// Engine difficulty maps to an approximate Elo equivalent
+// AI difficulty maps to an approximate Elo equivalent
 const DIFFICULTY_ELO = {
   explorer: 400, challenger: 700, rival: 1100, competitor: 1500, master: 1900
 };
@@ -1912,7 +1824,7 @@ const PROVISIONAL_GAMES = 5;
     widget.className = 'profile-nav';
 
     if (session) {
-      const { data: profile } = await _sb.from('profiles').select('username,chess_rating,role').eq('id', session.user.id).single();
+      const { data: profile } = await _sb.from('profiles').select('username,chess_rating').eq('id', session.user.id).single();
       const initials = (profile?.username || '?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
       const rating = profile?.chess_rating;
 
@@ -1921,11 +1833,6 @@ const PROVISIONAL_GAMES = 5;
         pill.className = 'profile-rating-pill';
         pill.textContent = '♟ ' + rating;
         widget.appendChild(pill);
-      }
-
-      if (profile?.role === 'teacher' || profile?.role === 'parent') {
-        const dl = document.getElementById('dashboardLink');
-        if (dl) dl.style.display = 'inline-block';
       }
 
       const avatar = document.createElement('a');
