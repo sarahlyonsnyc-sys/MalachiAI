@@ -1259,49 +1259,52 @@ function evaluate(g) {
   return score;
 }
 
-// Quiescence search with depth limit
-function quiesce(g, alpha, beta, depth) {
+// Quiescence: just evaluate all capture sequences to avoid horizon effect
+function quiesce(g, depth) {
   nodes++;
   if (nodes > MAX_NODES || Date.now() > deadline) return evaluate(g);
   
   const stand = evaluate(g);
-  if (stand >= beta) return beta;
-  if (stand > alpha) alpha = stand;
-  if (depth <= 0) return alpha;
+  if (depth <= 0) return stand;
   
-  // Only search captures, ordered by value
   const allMoves = g.moves({ verbose: true });
   const captures = allMoves.filter(m => m.captured);
+  if (captures.length === 0) return stand;
+  
   const vl = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
   captures.sort((a, b) => (vl[b.captured] || 0) - (vl[a.captured] || 0));
   
+  // Is the side to move trying to maximize or minimize?
+  const isBlack = g.turn() === 'b';
+  let best = stand;
+  
   for (const m of captures) {
     g.move(m);
-    const val = -quiesce(g, -beta, -alpha, depth - 1);
+    const val = quiesce(g, depth - 1);
     g.undo();
-    if (val >= beta) return beta;
-    if (val > alpha) alpha = val;
+    if (isBlack) {
+      best = Math.max(best, val);  // black wants high score
+    } else {
+      best = Math.min(best, val);  // white wants low score
+    }
   }
-  return alpha;
+  return best;
 }
 
 // Alpha-beta with move ordering
 function search(g, depth, alpha, beta, maximizing) {
   nodes++;
   if (nodes > MAX_NODES || Date.now() > deadline) return evaluate(g);
-  if (depth === 0) return quiesce(g, alpha, beta, 6);
+  if (depth === 0) return quiesce(g, 6);
   if (g.game_over()) return evaluate(g);
   
   const moves = g.moves({ verbose: true });
   
-  // Move ordering: captures first (MVV-LVA), checks, then quiet moves
+  // Move ordering: captures first (MVV-LVA)
   const vl = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
   moves.sort((a, b) => {
-    let as = 0, bs = 0;
-    if (a.captured) as += (vl[a.captured] || 0) * 10 - (vl[a.piece] || 0);
-    if (b.captured) bs += (vl[b.captured] || 0) * 10 - (vl[b.piece] || 0);
-    // Bonus for checks
-    g.move(a); if (g.in_check()) as += 50; g.undo();
+    const as = a.captured ? (vl[a.captured] || 0) * 10 - (vl[a.piece] || 0) : 0;
+    const bs = b.captured ? (vl[b.captured] || 0) * 10 - (vl[b.piece] || 0) : 0;
     return bs - as;
   });
   
@@ -1362,7 +1365,7 @@ self.onmessage = function(e) {
     const scored = [];
     for (const m of moves) {
       g.move(m);
-      const val = -search(g, 1, -Infinity, Infinity, true);
+      const val = search(g, 1, -Infinity, Infinity, false);
       g.undo();
       scored.push({ move: m, val: val + (Math.random() - 0.5) * 80 });
     }
@@ -1391,8 +1394,8 @@ self.onmessage = function(e) {
   const scored = [];
   for (const m of moves) {
     g.move(m);
-    // Engine plays as BLACK, so after black moves, white is maximizing
-    const val = -search(g, sd - 1, -Infinity, Infinity, true);
+    // Engine plays as BLACK. After black moves, white minimizes.
+    const val = search(g, sd - 1, -Infinity, Infinity, false);
     g.undo();
     scored.push({ move: m, val: val + (Math.random() - 0.5) * noise });
   }
