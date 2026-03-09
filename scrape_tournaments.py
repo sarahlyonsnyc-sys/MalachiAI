@@ -301,6 +301,51 @@ def main():
     except Exception as e:
         print(f"— error: {e}")
 
+    # ── STATE CHESS ORGANIZATIONS ──
+    # These sites list local/regional tournaments that US Chess doesn't include
+    STATE_ORGS = [
+        # New Mexico
+        {'url': 'https://www.newmexicochess.org/tournament-events', 'state': 'NM', 'name': 'NM Chess Organization', 'source': 'nmco'},
+        {'url': 'https://learnerschess.org/cnmtcl/', 'state': 'NM', 'name': 'Learners Chess Academy NM', 'source': 'learners_chess'},
+        {'url': 'https://www.kingregistration.com/tournaments/state/NM', 'state': 'NM', 'name': 'King Registration NM', 'source': 'king_reg'},
+        # Ohio
+        {'url': 'https://www.kingregistration.com/tournaments/state/OH', 'state': 'OH', 'name': 'King Registration OH', 'source': 'king_reg'},
+        # Florida
+        {'url': 'https://www.kingregistration.com/tournaments/state/FL', 'state': 'FL', 'name': 'King Registration FL', 'source': 'king_reg'},
+        # Texas
+        {'url': 'https://www.kingregistration.com/tournaments/state/TX', 'state': 'TX', 'name': 'King Registration TX', 'source': 'king_reg'},
+        # California
+        {'url': 'https://www.kingregistration.com/tournaments/state/CA', 'state': 'CA', 'name': 'King Registration CA', 'source': 'king_reg'},
+        # New York
+        {'url': 'https://www.kingregistration.com/tournaments/state/NY', 'state': 'NY', 'name': 'King Registration NY', 'source': 'king_reg'},
+        # Pennsylvania
+        {'url': 'https://www.kingregistration.com/tournaments/state/PA', 'state': 'PA', 'name': 'King Registration PA', 'source': 'king_reg'},
+        # Illinois
+        {'url': 'https://www.kingregistration.com/tournaments/state/IL', 'state': 'IL', 'name': 'King Registration IL', 'source': 'king_reg'},
+    ]
+    
+    print(f"\n── State Chess Organizations ({len(STATE_ORGS)} sources) ──")
+    for org in STATE_ORGS:
+        print(f"📡 {org['name']}", end=" ", flush=True)
+        try:
+            r = requests.get(org['url'], headers=HEADERS, timeout=20)
+            text = extract_text(r.text)
+            if len(text.strip()) > 150:
+                t = parse_claude(text, org['state'], org['name'])
+                total_found += len(t)
+                if t:
+                    new = push_staging(t, org['source'], org['url'], existing)
+                    total_new += new
+                    print(f"— {len(t)} found, {new} new")
+                else:
+                    print("— 0 parsed")
+            else:
+                print("— no content")
+            time.sleep(1)
+        except Exception as e:
+            print(f"— error: {e}")
+            continue
+
     # Summary
     print(f"\n{'=' * 60}")
     print(f"📊 Scraped {total_pages} total pages across {len(ALL_STATES)} states")
