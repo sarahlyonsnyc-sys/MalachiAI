@@ -1222,8 +1222,8 @@ const BOOK = {
 
 let nodes = 0;
 let deadline = 0;
-const MAX_NODES = 500000;
-const MAX_Q = 6;
+const MAX_NODES = 2000000;
+const MAX_Q = 8;
 
 function ev(g) {
   if (g.in_checkmate()) return g.turn()==='b' ? 99999 : -99999;
@@ -1307,24 +1307,24 @@ self.onmessage = function(e) {
 
   // Challenger: depth 2 + noise
   if(difficulty==='challenger'){
-    nodes=0;deadline=Date.now()+2000;
+    nodes=0;deadline=Date.now()+3000;
     const sc=[];
-    for(const m of moves){g.move(m);const v=-ab(g,1,-Infinity,Infinity,true);g.undo();sc.push({move:m,val:v+(Math.random()-0.5)*150});}
+    for(const m of moves){g.move(m);const v=-ab(g,2,-Infinity,Infinity,true);g.undo();sc.push({move:m,val:v+(Math.random()-0.5)*80});}
     sc.sort((a,b)=>b.val-a.val);
-    if(Math.random()<0.2&&sc.length>3) self.postMessage({move:sc[Math.floor(Math.random()*Math.min(5,sc.length))].move});
+    if(Math.random()<0.1&&sc.length>3) self.postMessage({move:sc[Math.floor(Math.random()*Math.min(4,sc.length))].move});
     else self.postMessage({move:sc[0].move});
     return;
   }
 
   // Rival/Competitor/Master: deeper search
-  const sd={rival:3,competitor:4,master:5}[difficulty]||3;
-  const noise={rival:40,competitor:10,master:0}[difficulty]||0;
-  const blunder={rival:0.08,competitor:0.02,master:0}[difficulty]||0;
+  const sd={rival:4,competitor:5,master:6}[difficulty]||4;
+  const noise={rival:15,competitor:5,master:0}[difficulty]||0;
+  const blunder={rival:0.03,competitor:0.01,master:0}[difficulty]||0;
 
   if(blunder>0&&Math.random()<blunder){self.postMessage({move:moves[Math.floor(Math.random()*moves.length)]});return;}
 
   nodes=0;
-  deadline=Date.now()+{rival:3000,competitor:5000,master:8000}[difficulty]||5000;
+  deadline=Date.now()+{rival:5000,competitor:8000,master:12000}[difficulty]||5000;
 
   const sc=[];
   for(const m of moves){
