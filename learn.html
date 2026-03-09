@@ -2278,9 +2278,17 @@ function renderLesson(idx) {
       </div>
     </div>`;
 
-  // Render lesson boards
-  setTimeout(() => renderLessonBoard(idx), 50);
-  setTimeout(() => initOpeningBoards(), 80);
+  // Render lesson boards with retry to handle first-load timing
+  function renderBoardWithRetry(idx, attempts) {
+    const id = 'lb-' + idx;
+    if (document.getElementById(id)) {
+      renderLessonBoard(idx);
+      initOpeningBoards();
+    } else if (attempts > 0) {
+      setTimeout(() => renderBoardWithRetry(idx, attempts - 1), 100);
+    }
+  }
+  setTimeout(() => renderBoardWithRetry(idx, 10), 50);
 }
 
 function goToLesson(idx) {
@@ -2332,6 +2340,9 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSessio
 async function init() {
   renderBadges();
   renderSidebar();
+  
+  // Render first lesson IMMEDIATELY so it's visible while auth loads
+  renderLesson(currentLesson);
 
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
