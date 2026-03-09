@@ -850,19 +850,14 @@ let gameStartTime = Date.now();   // when current game started
 let gameAbandoned = false;        // did they quit mid-game?
 let possibleMoves = [];
 let lastMove = null;
-// ── DIFFICULTY SYSTEM ──
-// Each level has distinct behavioral logic beyond just depth/randomness:
-// explorer:    Pure random moves, never checks/attacks king — truly safe for beginners
-// challenger:  Captures free pieces greedily, makes simple one-move threats, no deep plans
-// rival:       Real opening book, punishes blunders, basic tactics (depth 2)
-// competitor:  Full tactical + positional play, plans ahead (depth 3)
-// master:      Near-optimal minimax, no mistakes (depth 4)
+// ── DIFFICULTY SYSTEM — Powered by Stockfish WASM ──
+// Uses UCI_LimitStrength + UCI_Elo for accurate rating simulation
 const DIFFICULTY_LEVELS = {
-  explorer:   { depth: 1, mistakeRate: 1.0,  randomness: 0,   thinkMin: 300,  thinkMax: 700,  label: '🌟 EXPLORER',    color: '#64b5f6', ratingScale: 0.1 },
-  challenger: { depth: 1, mistakeRate: 0.0,  randomness: 60,  thinkMin: 400,  thinkMax: 900,  label: '⚡ CHALLENGER',  color: '#4caf50', ratingScale: 0.4 },
-  rival:      { depth: 2, mistakeRate: 0.05, randomness: 25,  thinkMin: 500,  thinkMax: 1100, label: '♟ RIVAL',        color: '#ffc107', ratingScale: 0.75 },
-  competitor: { depth: 3, mistakeRate: 0.01, randomness: 8,   thinkMin: 700,  thinkMax: 1500, label: '🔥 COMPETITOR',  color: '#ff9800', ratingScale: 1.0 },
-  master:     { depth: 4, mistakeRate: 0,    randomness: 2,   thinkMin: 900,  thinkMax: 2200, label: '👑 MASTER',      color: '#f44336', ratingScale: 1.5 },
+  explorer:   { elo: 400,  depth: 1,  skillLevel: 0,  thinkMin: 300,  thinkMax: 800,  label: '🌟 EXPLORER',    color: '#64b5f6', ratingScale: 0.1 },
+  challenger: { elo: 800,  depth: 5,  skillLevel: 3,  thinkMin: 400,  thinkMax: 1000, label: '⚡ CHALLENGER',  color: '#4caf50', ratingScale: 0.4 },
+  rival:      { elo: 1200, depth: 8,  skillLevel: 6,  thinkMin: 600,  thinkMax: 1200, label: '♟ RIVAL',        color: '#ffc107', ratingScale: 0.75 },
+  competitor: { elo: 1600, depth: 12, skillLevel: 12, thinkMin: 800,  thinkMax: 1500, label: '🔥 COMPETITOR',  color: '#ff9800', ratingScale: 1.0 },
+  master:     { elo: 2200, depth: 18, skillLevel: 20, thinkMin: 1000, thinkMax: 2200, label: '👑 MASTER',      color: '#f44336', ratingScale: 1.5 },
 };
 let currentDifficulty = 'explorer';
 let depth = 1;
@@ -990,10 +985,12 @@ function setDifficulty(level) {
   depth = cfg.depth;
   document.getElementById('difficultyLabel').textContent = cfg.label;
   document.getElementById('difficultyMenu').style.display = 'none';
+  // Reconfigure Stockfish for new difficulty
+  configureStockfish();
   // Show toast
   const toast = document.createElement('div');
   toast.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid ${cfg.color};color:${cfg.color};font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.08em;padding:10px 20px;z-index:999;pointer-events:none;`;
-  toast.textContent = `Difficulty set to ${cfg.label}`;
+  toast.textContent = `${cfg.label} · Elo ${cfg.elo}`;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 2000);
 }
@@ -1190,152 +1187,153 @@ function makePlayerMove(from, to) {
   }
 }
 
+// ══════════════════════════════════════════════════
+// STOCKFISH WASM ENGINE
+// Uses stockfish.js lite-single from nmrugg/stockfish.js
+// Loaded as Web Worker for non-blocking play
+// ══════════════════════════════════════════════════
+
+let stockfish = null;
+let sfReady = false;
+let sfResolve = null; // resolve function for current move promise
+
+function initStockfish() {
+  try {
+    // Use the lite single-threaded WASM build (works everywhere, ~6MB)
+    stockfish = new Worker('https://cdn.jsdelivr.net/npm/stockfish@16.1.0/src/stockfish-16.1-lite-single.js');
+    
+    stockfish.onmessage = function(e) {
+      const line = e.data;
+      
+      if (line === 'uciok') {
+        sfReady = true;
+        console.log('Stockfish ready');
+        configureStockfish();
+      }
+      
+      // Parse bestmove response
+      if (typeof line === 'string' && line.startsWith('bestmove')) {
+        const parts = line.split(' ');
+        const bestMove = parts[1];
+        if (sfResolve && bestMove && bestMove !== '(none)') {
+          sfResolve(bestMove);
+          sfResolve = null;
+        }
+      }
+    };
+    
+    stockfish.onerror = function(e) {
+      console.error('Stockfish error:', e);
+      sfReady = false;
+    };
+    
+    // Initialize UCI protocol
+    stockfish.postMessage('uci');
+    
+  } catch(e) {
+    console.error('Failed to load Stockfish:', e);
+    sfReady = false;
+  }
+}
+
+function configureStockfish() {
+  if (!stockfish) return;
+  const cfg = DIFFICULTY_LEVELS[currentDifficulty];
+  
+  // UCI_LimitStrength + UCI_Elo gives the most accurate rating simulation
+  stockfish.postMessage('setoption name UCI_LimitStrength value true');
+  stockfish.postMessage(`setoption name UCI_Elo value ${cfg.elo}`);
+  stockfish.postMessage(`setoption name Skill Level value ${cfg.skillLevel}`);
+  stockfish.postMessage('setoption name Hash value 16');
+  stockfish.postMessage('setoption name Threads value 1');
+  stockfish.postMessage('isready');
+}
+
+function getStockfishMove(fen, depth) {
+  return new Promise((resolve) => {
+    if (!stockfish || !sfReady) {
+      // Fallback: return a random legal move
+      const moves = game.moves({ verbose: true });
+      resolve(moves.length > 0 ? moves[Math.floor(Math.random() * moves.length)].from + moves[Math.floor(Math.random() * moves.length)].to : null);
+      return;
+    }
+    
+    sfResolve = resolve;
+    
+    // Set position and search
+    stockfish.postMessage(`position fen ${fen}`);
+    stockfish.postMessage(`go depth ${depth}`);
+    
+    // Safety timeout — if Stockfish doesn't respond in 10s, use random move
+    setTimeout(() => {
+      if (sfResolve) {
+        const moves = game.moves({ verbose: true });
+        if (moves.length > 0) {
+          sfResolve(moves[0].from + moves[0].to);
+        }
+        sfResolve = null;
+      }
+    }, 10000);
+  });
+}
+
+// Initialize Stockfish on page load
+initStockfish();
+
 function aiMove() {
-  if (gameMode === 'online') return; // no engine in online mode
+  if (gameMode === 'online') return;
   const cfg = DIFFICULTY_LEVELS[currentDifficulty];
   document.getElementById('thinkingOverlay').classList.add('active');
   document.getElementById('aiCard').classList.add('active');
   document.getElementById('playerCard').classList.remove('active');
   document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'The Collegium is thinking...';
 
+  // Reconfigure Stockfish for current difficulty
+  configureStockfish();
+
   const thinkTime = cfg.thinkMin + Math.random() * (cfg.thinkMax - cfg.thinkMin);
+  const startTime = Date.now();
 
-  setTimeout(() => {
-    const best = getBestMove(cfg.depth, cfg.mistakeRate, cfg.randomness);
-    if (best) {
-      const move = game.move(best);
-      if (move.captured) SFX.play('capture');
-      else SFX.play('move');
-      if (game.in_check()) SFX.play('check');
-      lastMove = { from: move.from, to: move.to };
-      addMoveToHistory(move, 'b');
-    }
-    document.getElementById('thinkingOverlay').classList.remove('active');
-    document.getElementById('aiCard').classList.remove('active');
-    document.getElementById('playerCard').classList.add('active');
-    document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Your Turn';
-    renderBoard();
-    checkGameOver();
-    moveStartTime = Date.now();
-  }, thinkTime);
+  // Get move from Stockfish
+  getStockfishMove(game.fen(), cfg.depth).then((sfMove) => {
+    // Ensure minimum think time for realism
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, thinkTime - elapsed);
+    
+    setTimeout(() => {
+      if (sfMove && sfMove.length >= 4) {
+        // Parse Stockfish UCI move format (e.g. "e2e4", "e7e8q" for promotion)
+        const from = sfMove.substring(0, 2);
+        const to = sfMove.substring(2, 4);
+        const promotion = sfMove.length > 4 ? sfMove[4] : undefined;
+        
+        const moveObj = { from, to };
+        if (promotion) moveObj.promotion = promotion;
+        
+        const move = game.move(moveObj);
+        if (move) {
+          if (move.captured) SFX.play('capture');
+          else SFX.play('move');
+          if (game.in_check()) SFX.play('check');
+          lastMove = { from: move.from, to: move.to };
+          addMoveToHistory(move, 'b');
+        }
+      }
+      
+      document.getElementById('thinkingOverlay').classList.remove('active');
+      document.getElementById('aiCard').classList.remove('active');
+      document.getElementById('playerCard').classList.add('active');
+      document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Your Turn';
+      renderBoard();
+      checkGameOver();
+      moveStartTime = Date.now();
+    }, remaining);
+  });
 }
 
-// ── MINIMAX AI ──
-function getBestMove(searchDepth, mistakeRate, randomness) {
-  const moves = game.moves({ verbose: true });
-  if (!moves.length) return null;
-  const level = currentDifficulty;
-
-  // ── EXPLORER: pure random, never attacks king ──
-  if (level === 'explorer') {
-    // Filter out moves that give check — explorer never hunts the king
-    const safe = moves.filter(m => {
-      game.move(m);
-      const givesCheck = game.in_check();
-      game.undo();
-      return !givesCheck;
-    });
-    const pool = safe.length > 0 ? safe : moves;
-    return pool[Math.floor(Math.random() * pool.length)];
-  }
-
-  // ── CHALLENGER: greedily captures free pieces, otherwise random ──
-  if (level === 'challenger') {
-    // First priority: capture a piece if it's free (not defended)
-    const captures = moves.filter(m => m.captured);
-    const freeCaptures = captures.filter(m => {
-      game.move(m);
-      // Check if the square we moved to is attacked by opponent
-      const attacked = game.moves({ verbose: true }).some(r => r.to === m.to);
-      game.undo();
-      return !attacked;
-    });
-    if (freeCaptures.length > 0) {
-      // Pick highest value free capture
-      const vals = { p:1, n:3, b:3, r:5, q:9, k:0 };
-      freeCaptures.sort((a,b) => (vals[b.captured]||0) - (vals[a.captured]||0));
-      return freeCaptures[0];
-    }
-    // Otherwise add some noise and pick among decent moves
-    const scored = [];
-    for (const m of moves) {
-      game.move(m);
-      const val = -minimax(1, -Infinity, Infinity, false);
-      game.undo();
-      scored.push({ move: m, val });
-    }
-    scored.sort((a,b) => b.val - a.val);
-    const noisy = scored.map(s => ({ move: s.move, val: s.val + (Math.random()-0.5)*randomness }));
-    noisy.sort((a,b) => b.val - a.val);
-    return noisy[0].move;
-  }
-
-  // ── RIVAL / COMPETITOR / MASTER: minimax with scaled randomness ──
-  // Occasional mistake for rival
-  if (mistakeRate > 0 && Math.random() < mistakeRate) {
-    return moves[Math.floor(Math.random() * moves.length)];
-  }
-
-  const scored = [];
-  for (const move of moves) {
-    game.move(move);
-    const val = -minimax(searchDepth - 1, -Infinity, Infinity, false);
-    game.undo();
-    scored.push({ move, val });
-  }
-
-  scored.sort((a, b) => b.val - a.val);
-  if (randomness > 0) {
-    const noisy = scored.map(s => ({ move: s.move, val: s.val + (Math.random()-0.5)*randomness }));
-    noisy.sort((a,b) => b.val - a.val);
-    return noisy[0].move;
-  }
-  return scored[0].move;
-}
-
-function minimax(d, alpha, beta, isMax) {
-  if (d === 0 || game.game_over()) return evaluateBoard();
-  const moves = game.moves({ verbose: true });
-  if (isMax) {
-    let maxEval = -Infinity;
-    for (const m of moves) {
-      game.move(m);
-      maxEval = Math.max(maxEval, minimax(d-1, alpha, beta, false));
-      game.undo();
-      alpha = Math.max(alpha, maxEval);
-      if (beta <= alpha) break;
-    }
-    return maxEval;
-  } else {
-    let minEval = Infinity;
-    for (const m of moves) {
-      game.move(m);
-      minEval = Math.min(minEval, minimax(d-1, alpha, beta, true));
-      game.undo();
-      beta = Math.min(beta, minEval);
-      if (beta <= alpha) break;
-    }
-    return minEval;
-  }
-}
-
-function evaluateBoard() {
-  if (game.in_checkmate()) return game.turn() === 'b' ? 10000 : -10000;
-  if (game.in_draw()) return 0;
-  let score = 0;
-  const board = game.board();
-  for (let r = 0; r < 8; r++) {
-    for (let c = 0; c < 8; c++) {
-      const p = board[r][c];
-      if (!p) continue;
-      const val = PIECE_VALUES[p.type] * 100;
-      score += p.color === 'b' ? val : -val;
-    }
-  }
-  // small randomness for variety
-  score += (Math.random() - 0.5) * 10;
-  return score;
-}
+// Legacy placeholder — no longer used but kept for compatibility
+function getBestMove() { return null; }
+function minimax() { return 0; }
 
 // ── MOVE HISTORY ──
 function addMoveToHistory(move, color) {
@@ -1628,6 +1626,11 @@ function newGame() {
 
   game = new Chess();
   selectedSquare = null; possibleMoves = []; lastMove = null; moveHistory = [];
+  // Reset Stockfish for new game
+  if (stockfish && sfReady) {
+    stockfish.postMessage('ucinewgame');
+    configureStockfish();
+  }
   document.getElementById('movesTable').querySelector('tbody').innerHTML = '';
   document.getElementById('statusBanner').textContent = 'Make your first move to begin. You play as White.';
   document.getElementById('statusBanner').className = 'status-banner';
