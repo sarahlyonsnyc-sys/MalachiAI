@@ -1189,50 +1189,55 @@ function makePlayerMove(from, to) {
 
 // ══════════════════════════════════════════════════
 // STOCKFISH WASM ENGINE
-// Uses stockfish.js lite-single from nmrugg/stockfish.js
-// Loaded as Web Worker for non-blocking play
+// Uses stockfish.js loaded as inline blob worker (avoids CORS)
+// Falls back to chess-api.com REST API if WASM fails
 // ══════════════════════════════════════════════════
 
 let stockfish = null;
 let sfReady = false;
-let sfResolve = null; // resolve function for current move promise
+let sfResolve = null;
+const SF_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js';
 
-function initStockfish() {
+async function initStockfish() {
   try {
-    // Use the lite single-threaded WASM build (works everywhere, ~6MB)
-    stockfish = new Worker('https://cdn.jsdelivr.net/npm/stockfish@16.1.0/src/stockfish-16.1-lite-single.js');
+    // Method 1: Fetch the JS source and create a blob worker (bypasses CORS)
+    const resp = await fetch(SF_CDN);
+    const jsText = await resp.text();
+    const blob = new Blob([jsText], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    stockfish = new Worker(url);
     
     stockfish.onmessage = function(e) {
-      const line = e.data;
+      const line = typeof e.data === 'string' ? e.data : (e.data ? e.data.toString() : '');
       
-      if (line === 'uciok') {
+      if (line.includes('uciok')) {
         sfReady = true;
-        console.log('Stockfish ready');
+        console.log('Stockfish ready (blob worker)');
         configureStockfish();
       }
       
-      // Parse bestmove response
-      if (typeof line === 'string' && line.startsWith('bestmove')) {
+      if (line.startsWith('bestmove')) {
         const parts = line.split(' ');
-        const bestMove = parts[1];
-        if (sfResolve && bestMove && bestMove !== '(none)') {
-          sfResolve(bestMove);
+        const best = parts[1];
+        if (sfResolve && best && best !== '(none)') {
+          sfResolve(best);
           sfResolve = null;
         }
       }
     };
     
     stockfish.onerror = function(e) {
-      console.error('Stockfish error:', e);
+      console.warn('Stockfish worker error, will use API fallback:', e);
       sfReady = false;
+      stockfish = null;
     };
     
-    // Initialize UCI protocol
     stockfish.postMessage('uci');
     
   } catch(e) {
-    console.error('Failed to load Stockfish:', e);
+    console.warn('Stockfish blob load failed, using API fallback:', e);
     sfReady = false;
+    stockfish = null;
   }
 }
 
@@ -1240,41 +1245,60 @@ function configureStockfish() {
   if (!stockfish) return;
   const cfg = DIFFICULTY_LEVELS[currentDifficulty];
   
-  // UCI_LimitStrength + UCI_Elo gives the most accurate rating simulation
-  stockfish.postMessage('setoption name UCI_LimitStrength value true');
-  stockfish.postMessage(`setoption name UCI_Elo value ${cfg.elo}`);
+  // Stockfish 10 uses Skill Level (0-20) for strength limiting
   stockfish.postMessage(`setoption name Skill Level value ${cfg.skillLevel}`);
   stockfish.postMessage('setoption name Hash value 16');
-  stockfish.postMessage('setoption name Threads value 1');
   stockfish.postMessage('isready');
 }
 
 function getStockfishMove(fen, depth) {
-  return new Promise((resolve) => {
-    if (!stockfish || !sfReady) {
-      // Fallback: return a random legal move
-      const moves = game.moves({ verbose: true });
-      resolve(moves.length > 0 ? moves[Math.floor(Math.random() * moves.length)].from + moves[Math.floor(Math.random() * moves.length)].to : null);
+  return new Promise(async (resolve) => {
+    
+    // If Stockfish worker is available, use it
+    if (stockfish && sfReady) {
+      sfResolve = resolve;
+      stockfish.postMessage(`position fen ${fen}`);
+      stockfish.postMessage(`go depth ${depth}`);
+      
+      // Safety timeout
+      setTimeout(() => {
+        if (sfResolve) {
+          console.warn('Stockfish timeout, using API fallback');
+          sfResolve = null;
+          getAPIMove(fen, depth).then(resolve);
+        }
+      }, 8000);
       return;
     }
     
-    sfResolve = resolve;
-    
-    // Set position and search
-    stockfish.postMessage(`position fen ${fen}`);
-    stockfish.postMessage(`go depth ${depth}`);
-    
-    // Safety timeout — if Stockfish doesn't respond in 10s, use random move
-    setTimeout(() => {
-      if (sfResolve) {
-        const moves = game.moves({ verbose: true });
-        if (moves.length > 0) {
-          sfResolve(moves[0].from + moves[0].to);
-        }
-        sfResolve = null;
-      }
-    }, 10000);
+    // Fallback: Use chess-api.com (free Stockfish REST API)
+    const move = await getAPIMove(fen, depth);
+    resolve(move);
   });
+}
+
+async function getAPIMove(fen, depth) {
+  try {
+    const resp = await fetch('https://chess-api.com/v1', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fen: fen, depth: Math.min(depth, 12) })
+    });
+    const data = await resp.json();
+    if (data.move) {
+      return data.from + data.to + (data.promotion || '');
+    }
+  } catch(e) {
+    console.warn('Chess API fallback failed:', e);
+  }
+  
+  // Last resort: random legal move
+  const moves = game.moves({ verbose: true });
+  if (moves.length > 0) {
+    const m = moves[Math.floor(Math.random() * moves.length)];
+    return m.from + m.to;
+  }
+  return null;
 }
 
 // Initialize Stockfish on page load
