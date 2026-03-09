@@ -1200,13 +1200,14 @@ function createEngineWorker() {
   const workerCode = `
 importScripts('https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js');
 
+// Piece-square tables (indexed from white's perspective row 0=rank 8)
 const PST = {
-  p:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
-  n:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
-  b:[-20,-10,-10,-10,-10,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,10,10,10,10,0,-10,-10,5,5,10,10,5,5,-10,-10,0,10,10,10,10,0,-10,-10,10,10,10,10,10,10,-10,-10,5,0,0,0,0,5,-10,-20,-10,-10,-10,-10,-10,-10,-20],
-  r:[0,0,0,0,0,0,0,0,5,10,10,10,10,10,10,5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,0,0,0,5,5,0,0,0],
-  q:[-20,-10,-10,-5,-5,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,5,5,5,0,-10,-5,0,5,5,5,5,0,-5,0,0,5,5,5,5,0,-5,-10,5,5,5,5,5,0,-10,-10,0,5,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20],
-  k:[-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20]
+  p:[0,0,0,0,0,0,0,0, 50,50,50,50,50,50,50,50, 10,10,20,30,30,20,10,10, 5,5,10,25,25,10,5,5, 0,0,0,20,20,0,0,0, 5,-5,-10,0,0,-10,-5,5, 5,10,10,-20,-20,10,10,5, 0,0,0,0,0,0,0,0],
+  n:[-50,-40,-30,-30,-30,-30,-40,-50, -40,-20,0,0,0,0,-20,-40, -30,0,10,15,15,10,0,-30, -30,5,15,20,20,15,5,-30, -30,0,15,20,20,15,0,-30, -30,5,10,15,15,10,5,-30, -40,-20,0,5,5,0,-20,-40, -50,-40,-30,-30,-30,-30,-40,-50],
+  b:[-20,-10,-10,-10,-10,-10,-10,-20, -10,0,0,0,0,0,0,-10, -10,0,10,10,10,10,0,-10, -10,5,5,10,10,5,5,-10, -10,0,10,10,10,10,0,-10, -10,10,10,10,10,10,10,-10, -10,5,0,0,0,0,5,-10, -20,-10,-10,-10,-10,-10,-10,-20],
+  r:[0,0,0,0,0,0,0,0, 5,10,10,10,10,10,10,5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, -5,0,0,0,0,0,0,-5, 0,0,0,5,5,0,0,0],
+  q:[-20,-10,-10,-5,-5,-10,-10,-20, -10,0,0,0,0,0,0,-10, -10,0,5,5,5,5,0,-10, -5,0,5,5,5,5,0,-5, 0,0,5,5,5,5,0,-5, -10,5,5,5,5,5,0,-10, -10,0,5,0,0,0,0,-10, -20,-10,-10,-5,-5,-10,-10,-20],
+  k:[-30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -30,-40,-40,-50,-50,-40,-40,-30, -20,-30,-30,-40,-40,-30,-30,-20, -10,-20,-20,-20,-20,-20,-20,-10, 20,20,0,0,0,0,20,20, 20,30,10,0,0,10,30,20]
 };
 
 const BOOK = {
@@ -1223,185 +1224,180 @@ const BOOK = {
 let nodes = 0;
 let deadline = 0;
 const MAX_NODES = 2000000;
-const MAX_Q = 8;
 
-function ev(g) {
-  if (g.in_checkmate()) return g.turn()==='b' ? 99999 : -99999;
-  if (g.in_draw()||g.in_stalemate()) return 0;
-  let s=0; const b=g.board();
-  const pv={p:100,n:320,b:330,r:500,q:900,k:20000};
+// EVALUATION — the engine plays as BLACK, positive = good for black
+function evaluate(g) {
+  if (g.in_checkmate()) {
+    // Side to move is checkmated
+    return g.turn() === 'b' ? -99999 : 99999;
+  }
+  if (g.in_draw() || g.in_stalemate()) return 0;
   
-  // Track pawn files and piece counts for structure eval
-  const wPawnFiles=new Set(), bPawnFiles=new Set();
-  const wPawnRanks=[], bPawnRanks=[];
-  let wBishops=0, bBishops=0, wMinors=0, bMinors=0;
-  let wKingR=0, wKingC=0, bKingR=0, bKingC=0;
+  let score = 0;
+  const board = g.board();
+  const pieceVal = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000 };
   
-  for(let r=0;r<8;r++) for(let c=0;c<8;c++){
-    const p=b[r][c]; if(!p) continue;
-    const idx=p.color==='w'?(r*8+c):((7-r)*8+c);
-    const ps=PST[p.type]?PST[p.type][idx]:0;
-    s+=p.color==='b'?(pv[p.type]+ps):-(pv[p.type]+ps);
-    
-    // Track pawns
-    if(p.type==='p'){
-      if(p.color==='w'){wPawnFiles.add(c);wPawnRanks.push({r,c});}
-      else{bPawnFiles.add(c);bPawnRanks.push({r,c});}
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const p = board[r][c];
+      if (!p) continue;
+      const val = pieceVal[p.type];
+      const idx = p.color === 'w' ? (r * 8 + c) : ((7 - r) * 8 + c);
+      const pst = PST[p.type] ? PST[p.type][idx] : 0;
+      if (p.color === 'b') {
+        score += val + pst;
+      } else {
+        score -= val + pst;
+      }
     }
-    if(p.type==='b'){if(p.color==='w')wBishops++;else bBishops++;}
-    if(p.type==='n'||p.type==='b'){if(p.color==='w')wMinors++;else bMinors++;}
-    if(p.type==='k'){if(p.color==='w'){wKingR=r;wKingC=c;}else{bKingR=r;bKingC=c;}}
   }
   
-  // Bishop pair bonus (+50cp)
-  if(bBishops>=2) s+=50;
-  if(wBishops>=2) s-=50;
+  // Mobility bonus
+  const moves = g.moves().length;
+  score += (g.turn() === 'b' ? 1 : -1) * moves * 3;
   
-  // Doubled pawns penalty (-20cp each)
-  const wFileCounts={}, bFileCounts={};
-  wPawnRanks.forEach(p=>{wFileCounts[p.c]=(wFileCounts[p.c]||0)+1;});
-  bPawnRanks.forEach(p=>{bFileCounts[p.c]=(bFileCounts[p.c]||0)+1;});
-  for(const f in wFileCounts) if(wFileCounts[f]>1) s+=(wFileCounts[f]-1)*20;
-  for(const f in bFileCounts) if(bFileCounts[f]>1) s-=(bFileCounts[f]-1)*20;
-  
-  // Isolated pawns penalty (-15cp each)
-  wPawnRanks.forEach(p=>{
-    if(!wPawnFiles.has(p.c-1)&&!wPawnFiles.has(p.c+1)) s+=15;
-  });
-  bPawnRanks.forEach(p=>{
-    if(!bPawnFiles.has(p.c-1)&&!bPawnFiles.has(p.c+1)) s-=15;
-  });
-  
-  // Passed pawns bonus
-  bPawnRanks.forEach(p=>{
-    let passed=true;
-    for(const wp of wPawnRanks){
-      if(Math.abs(wp.c-p.c)<=1 && wp.r>p.r) passed=false;
-    }
-    if(passed) s+= 20 + (7-p.r)*15; // more advanced = bigger bonus
-  });
-  wPawnRanks.forEach(p=>{
-    let passed=true;
-    for(const bp of bPawnRanks){
-      if(Math.abs(bp.c-p.c)<=1 && bp.r<p.r) passed=false;
-    }
-    if(passed) s-= 20 + p.r*15;
-  });
-  
-  // King safety: penalize open files near king
-  for(let dc=-1;dc<=1;dc++){
-    const fc=bKingC+dc;
-    if(fc>=0&&fc<8&&!bPawnFiles.has(fc)) s-=20;
-    const fc2=wKingC+dc;
-    if(fc2>=0&&fc2<8&&!wPawnFiles.has(fc2)) s+=20;
-  }
-  
-  // Mobility: count legal moves (expensive but worth it for strength)
-  const mob=g.moves().length;
-  s+=(g.turn()==='b'?mob:-mob)*3;
-  
-  // Check bonus
-  if(g.in_check()) s+=(g.turn()==='w'?30:-30);
-  
-  return s;
+  return score;
 }
 
-function quiesce(g,a,b,d){
+// Quiescence search with depth limit
+function quiesce(g, alpha, beta, depth) {
   nodes++;
-  if(nodes>MAX_NODES||Date.now()>deadline) return ev(g);
-  const sp=ev(g);
-  if(sp>=b) return b;
-  if(sp>a) a=sp;
-  if(d<=0) return a;
-  const caps=g.moves({verbose:true}).filter(m=>m.captured);
-  const vl={p:1,n:3,b:3,r:5,q:9,k:0};
-  caps.sort((x,y)=>(vl[y.captured]||0)-(vl[x.captured]||0));
-  for(const m of caps){
+  if (nodes > MAX_NODES || Date.now() > deadline) return evaluate(g);
+  
+  const stand = evaluate(g);
+  if (stand >= beta) return beta;
+  if (stand > alpha) alpha = stand;
+  if (depth <= 0) return alpha;
+  
+  // Only search captures, ordered by value
+  const allMoves = g.moves({ verbose: true });
+  const captures = allMoves.filter(m => m.captured);
+  const vl = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+  captures.sort((a, b) => (vl[b.captured] || 0) - (vl[a.captured] || 0));
+  
+  for (const m of captures) {
     g.move(m);
-    const sc=-quiesce(g,-b,-a,d-1);
+    const val = -quiesce(g, -beta, -alpha, depth - 1);
     g.undo();
-    if(sc>=b) return b;
-    if(sc>a) a=sc;
+    if (val >= beta) return beta;
+    if (val > alpha) alpha = val;
   }
-  return a;
+  return alpha;
 }
 
-function ab(g,depth,a,b,isMax){
+// Alpha-beta with move ordering
+function search(g, depth, alpha, beta, maximizing) {
   nodes++;
-  if(nodes>MAX_NODES||Date.now()>deadline) return ev(g);
-  if(depth===0) return quiesce(g,a,b,MAX_Q);
-  if(g.game_over()) return ev(g);
-  const moves=g.moves({verbose:true});
-  const vl={p:1,n:3,b:3,r:5,q:9,k:0};
-  moves.sort((x,y)=>{
-    const xs=x.captured?(vl[x.captured]||0)*10-(vl[x.piece]||0):0;
-    const ys=y.captured?(vl[y.captured]||0)*10-(vl[y.piece]||0):0;
-    return ys-xs;
+  if (nodes > MAX_NODES || Date.now() > deadline) return evaluate(g);
+  if (depth === 0) return quiesce(g, alpha, beta, 6);
+  if (g.game_over()) return evaluate(g);
+  
+  const moves = g.moves({ verbose: true });
+  
+  // Move ordering: captures first (MVV-LVA), checks, then quiet moves
+  const vl = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+  moves.sort((a, b) => {
+    let as = 0, bs = 0;
+    if (a.captured) as += (vl[a.captured] || 0) * 10 - (vl[a.piece] || 0);
+    if (b.captured) bs += (vl[b.captured] || 0) * 10 - (vl[b.piece] || 0);
+    // Bonus for checks
+    g.move(a); if (g.in_check()) as += 50; g.undo();
+    return bs - as;
   });
-  if(isMax){
-    let mx=-Infinity;
-    for(const m of moves){g.move(m);const v=ab(g,depth-1,a,b,false);g.undo();mx=Math.max(mx,v);a=Math.max(a,v);if(b<=a)break;}
-    return mx;
+  
+  if (maximizing) {
+    let best = -Infinity;
+    for (const m of moves) {
+      g.move(m);
+      const val = search(g, depth - 1, alpha, beta, false);
+      g.undo();
+      best = Math.max(best, val);
+      alpha = Math.max(alpha, val);
+      if (beta <= alpha) break;
+    }
+    return best;
   } else {
-    let mn=Infinity;
-    for(const m of moves){g.move(m);const v=ab(g,depth-1,a,b,true);g.undo();mn=Math.min(mn,v);b=Math.min(b,v);if(b<=a)break;}
-    return mn;
+    let best = Infinity;
+    for (const m of moves) {
+      g.move(m);
+      const val = search(g, depth - 1, alpha, beta, true);
+      g.undo();
+      best = Math.min(best, val);
+      beta = Math.min(beta, val);
+      if (beta <= alpha) break;
+    }
+    return best;
   }
 }
 
 self.onmessage = function(e) {
-  const {fen, difficulty} = e.data;
+  const { fen, difficulty } = e.data;
   const g = new Chess(fen);
-  const moves = g.moves({verbose:true});
-  if(!moves.length){self.postMessage({move:null});return;}
-
-  // Opening book
-  if(['rival','competitor','master'].includes(difficulty)){
-    const key=fen.split(' ').slice(0,2).join(' ');
-    if(BOOK[key]){
-      const bm=BOOK[key][Math.floor(Math.random()*BOOK[key].length)];
-      self.postMessage({move:{from:bm.substring(0,2),to:bm.substring(2,4),promotion:bm.length>4?bm[4]:undefined}});
+  const moves = g.moves({ verbose: true });
+  if (!moves.length) { self.postMessage({ move: null }); return; }
+  
+  // Opening book for rival+
+  if (['rival','competitor','master'].includes(difficulty)) {
+    const key = fen.split(' ').slice(0, 2).join(' ');
+    if (BOOK[key]) {
+      const bm = BOOK[key][Math.floor(Math.random() * BOOK[key].length)];
+      self.postMessage({ move: { from: bm.substring(0,2), to: bm.substring(2,4), promotion: bm.length > 4 ? bm[4] : undefined } });
       return;
     }
   }
-
-  // Explorer: random
-  if(difficulty==='explorer'){
-    if(Math.random()<0.15){const c=moves.filter(m=>m.captured);if(c.length)return self.postMessage({move:c[Math.floor(Math.random()*c.length)]});}
-    self.postMessage({move:moves[Math.floor(Math.random()*moves.length)]});
+  
+  // Explorer: random with occasional capture
+  if (difficulty === 'explorer') {
+    if (Math.random() < 0.2) {
+      const caps = moves.filter(m => m.captured);
+      if (caps.length) { self.postMessage({ move: caps[Math.floor(Math.random() * caps.length)] }); return; }
+    }
+    self.postMessage({ move: moves[Math.floor(Math.random() * moves.length)] });
     return;
   }
-
-  // Challenger: depth 2 + noise
-  if(difficulty==='challenger'){
-    nodes=0;deadline=Date.now()+3000;
-    const sc=[];
-    for(const m of moves){g.move(m);const v=-ab(g,2,-Infinity,Infinity,true);g.undo();sc.push({move:m,val:v+(Math.random()-0.5)*80});}
-    sc.sort((a,b)=>b.val-a.val);
-    if(Math.random()<0.1&&sc.length>3) self.postMessage({move:sc[Math.floor(Math.random()*Math.min(4,sc.length))].move});
-    else self.postMessage({move:sc[0].move});
+  
+  // Challenger: depth 2, some noise
+  if (difficulty === 'challenger') {
+    nodes = 0; deadline = Date.now() + 3000;
+    const scored = [];
+    for (const m of moves) {
+      g.move(m);
+      const val = -search(g, 1, -Infinity, Infinity, true);
+      g.undo();
+      scored.push({ move: m, val: val + (Math.random() - 0.5) * 80 });
+    }
+    scored.sort((a, b) => b.val - a.val);
+    if (Math.random() < 0.1 && scored.length > 3) {
+      self.postMessage({ move: scored[Math.floor(Math.random() * Math.min(4, scored.length))].move });
+    } else {
+      self.postMessage({ move: scored[0].move });
+    }
     return;
   }
-
-  // Rival/Competitor/Master: deeper search
-  const sd={rival:5,competitor:5,master:6}[difficulty]||4;
-  const noise={rival:8,competitor:3,master:0}[difficulty]||0;
-  const blunder={rival:0.01,competitor:0,master:0}[difficulty]||0;
-
-  if(blunder>0&&Math.random()<blunder){self.postMessage({move:moves[Math.floor(Math.random()*moves.length)]});return;}
-
-  nodes=0;
-  deadline=Date.now()+{rival:5000,competitor:8000,master:12000}[difficulty]||5000;
-
-  const sc=[];
-  for(const m of moves){
+  
+  // Rival / Competitor / Master
+  const sd = { rival: 4, competitor: 4, master: 5 }[difficulty] || 4;
+  const noise = { rival: 8, competitor: 3, master: 0 }[difficulty] || 0;
+  const blunder = { rival: 0.02, competitor: 0, master: 0 }[difficulty] || 0;
+  
+  if (blunder > 0 && Math.random() < blunder) {
+    self.postMessage({ move: moves[Math.floor(Math.random() * moves.length)] });
+    return;
+  }
+  
+  nodes = 0;
+  deadline = Date.now() + { rival: 5000, competitor: 8000, master: 12000 }[difficulty] || 5000;
+  
+  const scored = [];
+  for (const m of moves) {
     g.move(m);
-    const v=-ab(g,sd-1,-Infinity,Infinity,true);
+    // Engine plays as BLACK, so after black moves, white is maximizing
+    const val = -search(g, sd - 1, -Infinity, Infinity, true);
     g.undo();
-    sc.push({move:m,val:v+(Math.random()-0.5)*noise});
+    scored.push({ move: m, val: val + (Math.random() - 0.5) * noise });
   }
-  sc.sort((a,b)=>b.val-a.val);
-  self.postMessage({move:sc[0].move});
+  scored.sort((a, b) => b.val - a.val);
+  self.postMessage({ move: scored[0].move });
 };
 `;
 
