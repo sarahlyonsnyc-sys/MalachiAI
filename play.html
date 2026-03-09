@@ -1317,10 +1317,19 @@ function evaluateBoard() {
 }
 
 // Quiescence search — resolves captures to avoid horizon effect
-function quiesce(alpha, beta) {
+let nodeCount = 0;
+let searchDeadline = 0;
+const MAX_NODES = 100000;  // hard cap to prevent freezing
+const MAX_QUIESCE_DEPTH = 4; // limit quiescence depth
+
+function quiesce(alpha, beta, qDepth) {
+  nodeCount++;
+  if (nodeCount > MAX_NODES || Date.now() > searchDeadline) return evaluateBoard();
+  
   const standPat = evaluateBoard();
   if (standPat >= beta) return beta;
   if (standPat > alpha) alpha = standPat;
+  if (qDepth <= 0) return alpha;
   
   const captures = game.moves({ verbose: true }).filter(m => m.captured);
   // MVV-LVA ordering
@@ -1329,7 +1338,7 @@ function quiesce(alpha, beta) {
   
   for (const m of captures) {
     game.move(m);
-    const score = -quiesce(-beta, -alpha);
+    const score = -quiesce(-beta, -alpha, qDepth - 1);
     game.undo();
     if (score >= beta) return beta;
     if (score > alpha) alpha = score;
@@ -1338,7 +1347,9 @@ function quiesce(alpha, beta) {
 }
 
 function alphaBeta(depth, alpha, beta, isMaximizing) {
-  if (depth === 0) return quiesce(alpha, beta);
+  nodeCount++;
+  if (nodeCount > MAX_NODES || Date.now() > searchDeadline) return evaluateBoard();
+  if (depth === 0) return quiesce(alpha, beta, MAX_QUIESCE_DEPTH);
   if (game.game_over()) return evaluateBoard();
   
   const moves = game.moves({ verbose: true });
@@ -1400,6 +1411,8 @@ function getBestMove() {
   
   // CHALLENGER: depth 2 search with high randomness
   if (currentDifficulty === 'challenger') {
+    nodeCount = 0;
+    searchDeadline = Date.now() + 2000;
     const scored = [];
     for (const m of moves) {
       game.move(m);
@@ -1415,13 +1428,12 @@ function getBestMove() {
     return scored[0].move;
   }
   
-  // RIVAL: depth 3-4 with moderate noise
-  // COMPETITOR: depth 4-5 with slight noise
-  // MASTER: depth 5-6, no noise, pure strength
+  // RIVAL: depth 3, COMPETITOR: depth 3-4, MASTER: depth 4
+  // Kept conservative to avoid UI freezing on main thread
   const searchDepth = {
-    rival: 3 + (game.moves().length < 20 ? 1 : 0),
-    competitor: 4 + (game.moves().length < 15 ? 1 : 0),
-    master: 5 + (game.moves().length < 12 ? 1 : 0),
+    rival: 3,
+    competitor: 3 + (game.moves().length < 20 ? 1 : 0),
+    master: 4,
   }[currentDifficulty] || 3;
   
   const noise = { rival: 40, competitor: 10, master: 0 }[currentDifficulty] || 0;
@@ -1431,6 +1443,10 @@ function getBestMove() {
   if (blunderRate > 0 && Math.random() < blunderRate) {
     return moves[Math.floor(Math.random() * moves.length)];
   }
+  
+  // Reset node counter and set time limit (3 seconds max)
+  nodeCount = 0;
+  searchDeadline = Date.now() + 3000;
   
   const scored = [];
   for (const m of moves) {
@@ -1486,7 +1502,6 @@ function aiMove() {
 
 // No external init needed — engine is self-contained
 function configureStockfish() {} // stub for compatibility
-function minimax() { return 0; }
 
 // ── MOVE HISTORY ──
 function addMoveToHistory(move, color) {
