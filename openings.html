@@ -929,7 +929,10 @@ function playOpponentQuizMove() {
     setQuizFeedback('', '');
     updateQuizProgress();
     renderQuizBoard();
-    if (quizIndex >= quizMoves.length) finishQuiz();
+    if (quizIndex >= quizMoves.length) {
+      if (drillMode) finishDrill();
+      else finishQuiz();
+    }
   }, 600);
 }
 
