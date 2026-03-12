@@ -2339,10 +2339,6 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSessio
 
 async function init() {
   renderBadges();
-  renderSidebar();
-  
-  // Render first lesson IMMEDIATELY so it's visible while auth loads
-  renderLesson(currentLesson);
 
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
@@ -2394,9 +2390,6 @@ async function init() {
       const pct = Math.min(100, (xp / 1000) * 100);
       document.getElementById('xpFill').style.width = pct + '%';
       document.getElementById('xpLabel').textContent = xp + ' XP';
-      
-      // Re-render sidebar to show completion checkmarks
-      renderSidebar();
     }
   } else {
     // Not logged in — show sign in button
@@ -2409,6 +2402,8 @@ async function init() {
     navLinks.appendChild(signInBtn);
   }
 
+  // Render sidebar and first lesson AFTER progress is loaded
+  renderSidebar();
   renderLesson(currentLesson);
 }
 
