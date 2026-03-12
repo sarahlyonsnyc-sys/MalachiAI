@@ -678,21 +678,37 @@ function startRematch() {
   moveTimes = [];
   gameStartTime = Date.now();
   moveStartTime = Date.now();
+  gameMode = 'online'; // ensure gameMode stays online
   
   document.getElementById('movesTable').querySelector('tbody').innerHTML = '';
-  document.getElementById('statusBanner').textContent = newColor === 'white' ? 'Your turn — make your first move.' : 'Waiting for opponent\'s first move...';
   document.getElementById('statusBanner').className = 'status-banner';
 
   myColor = newColor;
   document.getElementById('playerColorLabel').textContent = newColor === 'white' ? 'White ♙' : 'Black ♟';
   document.getElementById('opponentColor').textContent = newColor === 'white' ? 'Black ♟' : 'White ♙';
 
+  // Explicitly reset the thinking overlay
+  const overlay = document.getElementById('thinkingOverlay');
+  overlay.style.display = '';
+  if (newColor === 'white') {
+    // It's white's turn (game starts with white) and we ARE white — our turn
+    overlay.classList.remove('active');
+    document.getElementById('statusBanner').textContent = '♟ Your turn — make your first move.';
+    document.getElementById('playerCard').classList.add('active');
+    document.getElementById('aiCard').classList.remove('active');
+  } else {
+    // We're black — waiting for white (opponent) to move first
+    overlay.classList.add('active');
+    document.getElementById('statusBanner').textContent = '⏳ Waiting for ' + onlineOpponentName + '…';
+    document.getElementById('aiCard').classList.add('active');
+    document.getElementById('playerCard').classList.remove('active');
+  }
+
   buildLabels();
   renderBoard();
   updatePanels();
-  updateOnlineTurnUI();
   
-  // Reorder panels
+  // Reorder panels so your card is at bottom
   const panel = document.querySelector('.panel-left');
   const aiDiv = document.getElementById('aiCard').parentElement;
   const playerDiv = document.getElementById('playerCard').parentElement;
@@ -703,6 +719,8 @@ function startRematch() {
   } else {
     panel.insertBefore(aiDiv, panel.firstChild);
   }
+  
+  console.log('[Rematch] Started. myColor:', newColor, 'game.turn():', game.turn(), 'gameMode:', gameMode);
 }
 
 // ── HOST creates game ──
