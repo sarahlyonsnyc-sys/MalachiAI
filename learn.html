@@ -504,17 +504,23 @@ const LESSONS = [
           <div class="highlight-box">♞ Classic knight fork: place your knight so it attacks the king AND queen at the same time. The opponent must move their king out of check — and you take the queen for free!</div>
         </div>
       </div>
-      <div class="lesson-block">
+      <div class="lesson-block quiz-block" id="quiz-3">
         <div class="block-label">Puzzle — Find the Fork</div>
         <div class="puzzle-block">
           <div class="puzzle-board-wrap">
             <div id="board-puzzle-3"></div>
             <div class="puzzle-info">
               <p class="puzzle-prompt">White to move. Find the knight move that forks the Black king and queen at the same time. White wins a queen!</p>
-              <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
-                <button class="quiz-option" onclick="puzzleAnswer(3,0,0,'Nc7+ is the fork! The knight attacks both the king on e8 and the queen on a6. Black must escape check, and White takes the queen.')">Nc7+</button>
-                <button class="quiz-option" onclick="puzzleAnswer(3,1,0,'Nf4 doesn\'t attack both the king and queen. Look for a square where the knight hits e8 AND a6.')">Nf4</button>
-                <button class="quiz-option" onclick="puzzleAnswer(3,2,0,'Nd6 only attacks the king. A fork needs to attack TWO pieces at once. Try again — which square hits both e8 and a6?')">Nd6</button>
+              <div class="quiz-options" style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+                <button class="quiz-option" onclick="puzzleAnswer(3,0,0,'Nc7+ is the fork! The knight attacks both the king on e8 and the queen on a6. Black must escape check, and White takes the queen.')">
+                  <div class="option-letter">A</div> Nc7+
+                </button>
+                <button class="quiz-option" onclick="puzzleAnswer(3,1,0,'Nf4 doesn\'t attack both the king and queen. Look for a square where the knight hits e8 AND a6.')">
+                  <div class="option-letter">B</div> Nf4
+                </button>
+                <button class="quiz-option" onclick="puzzleAnswer(3,2,0,'Nd6 only attacks the king. A fork needs to attack TWO pieces at once. Try again — which square hits both e8 and a6?')">
+                  <div class="option-letter">C</div> Nd6
+                </button>
               </div>
               <div class="puzzle-hint-btn" onclick="showHint(3)" style="margin-top:16px;display:inline-block;padding:10px 20px;border:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Show Hint</div>
               <div class="puzzle-hint" id="hint-3">Look for a square where the knight can attack both the king AND queen in one move. The king is on e8, the queen is on a6.</div>
