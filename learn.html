@@ -2438,6 +2438,45 @@ async function saveProgress() {
 }
 
 init();
+
+// Backup progress loader — ensures saved progress shows even if init timing is off
+setTimeout(async () => {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const { data } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
+    if (!data) return;
+    
+    const cl = data.quiz_scores?.completed_lessons;
+    const needsUpdate = completed.size === 0 && (data.lessons_completed > 0 || (cl && cl.length > 0));
+    
+    if (needsUpdate) {
+      console.log('[Learn:Backup] Restoring progress — completed was empty but DB has data');
+      if (cl && Array.isArray(cl) && cl.length > 0) {
+        completed = new Set(cl);
+      } else if (data.lessons_completed > 0) {
+        completed = new Set(Array.from({length: data.lessons_completed}, (_, i) => i));
+      }
+      xp = data.xp || 0;
+      earnedBadges = new Set(Array.isArray(data.badges) ? data.badges : []);
+      
+      document.getElementById('statCompleted').textContent = completed.size;
+      document.getElementById('statXP').textContent = xp;
+      document.getElementById('statBadges').textContent = earnedBadges.size;
+      const pct = Math.min(100, (xp / 1000) * 100);
+      document.getElementById('xpFill').style.width = pct + '%';
+      document.getElementById('xpLabel').textContent = xp + ' XP';
+      
+      renderSidebar();
+      renderLesson(currentLesson);
+      console.log('[Learn:Backup] Restored:', [...completed], 'xp:', xp);
+    } else {
+      console.log('[Learn:Backup] No restore needed, completed:', [...completed]);
+    }
+  } catch(e) {
+    console.error('[Learn:Backup] Error:', e);
+  }
+}, 1500);
 </script>
 <script src="nav.js"></script>
 </body>
