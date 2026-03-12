@@ -1325,30 +1325,57 @@ function aiMove() {
 
   const thinkTime = cfg.thinkMin + Math.random() * (cfg.thinkMax - cfg.thinkMin);
   const apiDepth = { explorer: 1, challenger: 3, rival: 8, competitor: 12, master: 16 }[currentDifficulty] || 8;
+  const startTime = Date.now();
 
-  // Use Stockfish WASM via Web Worker
-  sfGetBestMove(game.fen(), apiDepth, thinkTime).then(result => {
-    let moved = false;
+  // Use chess-api.com — real Stockfish server-side
+  fetch('https://chess-api.com/v1', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      fen: game.fen(),
+      depth: apiDepth,
+      maxThinkingTime: { explorer: 50, challenger: 200, rival: 1000, competitor: 2000, master: 5000 }[currentDifficulty] || 1000
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, thinkTime - elapsed);
 
-    if (result && result.from && result.to) {
-      // Capture engine evaluation for blunder detection
-      if (result.eval !== null) {
-        moveEvals.push({ moveNum: moveHistory.length, eval: result.eval, mate: result.mate });
-      }
-      const moveObj = { from: result.from, to: result.to };
-      if (result.promotion) moveObj.promotion = result.promotion;
+    setTimeout(() => {
+      let moved = false;
 
-      // For explorer: 70% chance to ignore the best move and play random instead
-      // For challenger: 30% chance to play random
-      let useRandom = false;
-      if (currentDifficulty === 'explorer') useRandom = Math.random() < 0.70;
-      if (currentDifficulty === 'challenger') useRandom = Math.random() < 0.25;
+      if (data && data.from && data.to) {
+        // Capture engine evaluation for blunder detection
+        if (data.eval !== undefined || data.score !== undefined) {
+          moveEvals.push({ moveNum: moveHistory.length, eval: data.eval ?? data.score ?? null, mate: data.mate ?? null });
+        }
+        const moveObj = { from: data.from, to: data.to };
+        if (data.promotion) moveObj.promotion = data.promotion;
 
-      if (useRandom) {
-        const moves = game.moves({ verbose: true });
-        if (moves.length > 0) {
-          const rand = moves[Math.floor(Math.random() * moves.length)];
-          const move = game.move(rand);
+        // For explorer: 70% chance to ignore the best move and play random instead
+        // For challenger: 30% chance to play random
+        let useRandom = false;
+        if (currentDifficulty === 'explorer') useRandom = Math.random() < 0.70;
+        if (currentDifficulty === 'challenger') useRandom = Math.random() < 0.25;
+
+        if (useRandom) {
+          const moves = game.moves({ verbose: true });
+          if (moves.length > 0) {
+            const rand = moves[Math.floor(Math.random() * moves.length)];
+            const move = game.move(rand);
+            if (move) {
+              if (move.captured) SFX.play('capture'); else SFX.play('move');
+              if (game.in_check()) SFX.play('check');
+              lastMove = { from: move.from, to: move.to };
+              addMoveToHistory(move, 'b');
+              moved = true;
+            }
+          }
+        }
+
+        if (!moved) {
+          const move = game.move(moveObj);
           if (move) {
             if (move.captured) SFX.play('capture'); else SFX.play('move');
             if (game.in_check()) SFX.play('check');
@@ -1359,20 +1386,33 @@ function aiMove() {
         }
       }
 
+      // Fallback if API returned bad data
       if (!moved) {
-        const move = game.move(moveObj);
-        if (move) {
-          if (move.captured) SFX.play('capture'); else SFX.play('move');
-          if (game.in_check()) SFX.play('check');
-          lastMove = { from: move.from, to: move.to };
-          addMoveToHistory(move, 'b');
-          moved = true;
+        const moves = game.moves({ verbose: true });
+        if (moves.length > 0) {
+          const rand = moves[Math.floor(Math.random() * moves.length)];
+          const move = game.move(rand);
+          if (move) {
+            if (move.captured) SFX.play('capture'); else SFX.play('move');
+            lastMove = { from: move.from, to: move.to };
+            addMoveToHistory(move, 'b');
+          }
         }
       }
-    }
 
-    // Fallback if Stockfish returned bad data
-    if (!moved) {
+      document.getElementById('thinkingOverlay').classList.remove('active');
+      document.getElementById('aiCard').classList.remove('active');
+      document.getElementById('playerCard').classList.add('active');
+      document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Your Turn';
+      renderBoard();
+      checkGameOver();
+      moveStartTime = Date.now();
+    }, remaining);
+  })
+  .catch(err => {
+    console.error('Chess API error:', err);
+    // Fallback to random move on network error
+    setTimeout(() => {
       const moves = game.moves({ verbose: true });
       if (moves.length > 0) {
         const rand = moves[Math.floor(Math.random() * moves.length)];
@@ -1383,96 +1423,16 @@ function aiMove() {
           addMoveToHistory(move, 'b');
         }
       }
-    }
-
-    document.getElementById('thinkingOverlay').classList.remove('active');
-    document.getElementById('aiCard').classList.remove('active');
-    document.getElementById('playerCard').classList.add('active');
-    document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Your Turn';
-    renderBoard();
-    checkGameOver();
-    moveStartTime = Date.now();
+      document.getElementById('thinkingOverlay').classList.remove('active');
+      document.getElementById('aiCard').classList.remove('active');
+      document.getElementById('playerCard').classList.add('active');
+      document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Your Turn';
+      renderBoard();
+      checkGameOver();
+      moveStartTime = Date.now();
+    }, 500);
   });
 }
-
-// ── STOCKFISH WASM ENGINE ──
-let sfWorker = null;
-let sfResolve = null;
-let sfReady = false;
-
-function sfInit() {
-  try {
-    // Use stockfish.js single-threaded (no CORS needed)
-    sfWorker = new Worker('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
-    sfWorker.onmessage = function(e) {
-      const line = e.data;
-      if (line === 'uciok') {
-        sfReady = true;
-        sfWorker.postMessage('isready');
-      }
-      if (typeof line === 'string' && line.startsWith('bestmove')) {
-        const parts = line.split(' ');
-        const bestmove = parts[1];
-        if (bestmove && bestmove.length >= 4 && sfResolve) {
-          const result = {
-            from: bestmove.slice(0, 2),
-            to: bestmove.slice(2, 4),
-            promotion: bestmove.length > 4 ? bestmove[4] : null,
-            eval: sfLastEval,
-            mate: sfLastMate
-          };
-          sfResolve(result);
-          sfResolve = null;
-        }
-      }
-      // Parse eval from info lines
-      if (typeof line === 'string' && line.includes('score cp')) {
-        const cpMatch = line.match(/score cp (-?\d+)/);
-        if (cpMatch) sfLastEval = parseInt(cpMatch[1]) / 100;
-        sfLastMate = null;
-      }
-      if (typeof line === 'string' && line.includes('score mate')) {
-        const mateMatch = line.match(/score mate (-?\d+)/);
-        if (mateMatch) sfLastMate = parseInt(mateMatch[1]);
-        sfLastEval = null;
-      }
-    };
-    sfWorker.postMessage('uci');
-    console.log('[Stockfish] Initializing WASM engine...');
-  } catch(e) {
-    console.error('[Stockfish] Failed to init:', e);
-  }
-}
-
-let sfLastEval = null;
-let sfLastMate = null;
-
-function sfGetBestMove(fen, depth, minThinkTime) {
-  return new Promise((resolve) => {
-    const startTime = Date.now();
-    
-    if (!sfWorker || !sfReady) {
-      // Stockfish not ready — fall back to random move
-      console.warn('[Stockfish] Not ready, using random move');
-      setTimeout(() => resolve(null), minThinkTime);
-      return;
-    }
-    
-    sfResolve = (result) => {
-      const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, minThinkTime - elapsed);
-      setTimeout(() => resolve(result), remaining);
-    };
-    
-    sfLastEval = null;
-    sfLastMate = null;
-    sfWorker.postMessage('position fen ' + fen);
-    sfWorker.postMessage('go depth ' + depth);
-  });
-}
-
-// Initialize Stockfish on page load
-sfInit();
         if (move) {
           if (move.captured) SFX.play('capture'); else SFX.play('move');
           lastMove = { from: move.from, to: move.to };
