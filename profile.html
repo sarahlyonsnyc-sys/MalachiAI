@@ -258,6 +258,11 @@
     </div>
 
     <div class="section">
+      <div class="section-title">Academy Progress</div>
+      <div id="academyProgressContent"><div class="cogni-empty" style="padding:20px">No lessons completed yet — <a href="learn.html">start learning →</a></div></div>
+    </div>
+
+    <div class="section">
       <div class="section-title">Behavioral Insights</div>
       <div id="skillsSection">
         <div class="skill-row">
@@ -573,6 +578,7 @@ async function loadProfile() {
   // Puzzle & opening progress
   loadPuzzleProgress(behavior);
   loadOpeningProgress(behavior);
+  loadAcademyProgress(progress);
 }
 
 function setSkill(id, val) {
@@ -841,6 +847,61 @@ function drawProfileRadar(scores, prevScores) {
     ctx.beginPath(); ctx.moveTo(90,H-18); ctx.lineTo(104,H-18); ctx.stroke();
     ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.fillText('Latest', 108, H-14);
   }
+}
+
+function loadAcademyProgress(progress) {
+  const el = document.getElementById('academyProgressContent');
+  if (!progress) return;
+  
+  const lessonsCompleted = progress.lessons_completed || 0;
+  const xp = progress.xp || 0;
+  const badges = Array.isArray(progress.badges) ? progress.badges : [];
+  const completedLessons = progress.quiz_scores?.completed_lessons || [];
+  const totalLessons = 10;
+  
+  if (lessonsCompleted === 0 && xp === 0) return;
+  
+  const pct = Math.round((lessonsCompleted / totalLessons) * 100);
+  
+  const lessonNames = [
+    'The Board & Pieces', 'How Pieces Move', 'Special Moves', 'Check & Checkmate',
+    'Opening Principles', 'Basic Tactics', 'Piece Coordination', 'Pawn Structure',
+    'Endgame Basics', 'Putting It All Together'
+  ];
+  
+  el.innerHTML = `
+    <div class="prog-grid">
+      <div class="prog-stat">
+        <div class="prog-stat-val">${lessonsCompleted}/${totalLessons}</div>
+        <div class="prog-stat-lbl">Lessons Done</div>
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${xp}</div>
+        <div class="prog-stat-lbl">Total XP</div>
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${pct}%</div>
+        <div class="prog-stat-lbl">Course Progress</div>
+      </div>
+      <div class="prog-stat">
+        <div class="prog-stat-val">${badges.length}</div>
+        <div class="prog-stat-lbl">Badges Earned</div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <div style="margin-bottom:8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Lesson Completion</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+        ${lessonNames.map((name, i) => {
+          const done = completedLessons.includes(i);
+          return `<div style="background:${done ? '#1a2a1a' : '#111'};border:1px solid ${done ? '#4caf50' : 'var(--border)'};border-radius:6px;padding:8px 4px;text-align:center" title="${name}">
+            <div style="font-size:14px;margin-bottom:2px">${done ? '✓' : i + 1}</div>
+            <div style="font-family:'DM Mono',monospace;font-size:7px;color:${done ? '#4caf50' : 'var(--muted)'};line-height:1.2">${name.split(' ').slice(0,2).join(' ')}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    ${lessonsCompleted < totalLessons ? `<div style="margin-top:12px;text-align:center"><a href="learn.html" style="color:var(--gold);font-family:'DM Mono',monospace;font-size:11px">Continue Learning →</a></div>` : `<div style="margin-top:12px;text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:#4caf50">🏆 Course Complete!</div>`}
+  `;
 }
 
 function loadPuzzleProgress(behavior) {
