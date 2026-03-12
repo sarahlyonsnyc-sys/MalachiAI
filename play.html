@@ -620,7 +620,89 @@ function setupChannel(code) {
     handleOpponentResign();
   });
 
+  // Rematch system
+  onlineChannel.on('broadcast', { event: 'rematch-request' }, ({ payload }) => {
+    if (payload.from === myId) return;
+    console.log('[Rematch] Opponent wants rematch');
+    pendingRematch = true;
+    // If we also requested, start the rematch
+    if (myRematchRequested) {
+      startRematch();
+    } else {
+      // Show that opponent wants rematch
+      const btn = document.querySelector('#modalOverlay .modal-actions .rematch-btn');
+      if (btn) { btn.textContent = 'Opponent wants rematch — click to accept!'; btn.style.borderColor = 'var(--green)'; btn.style.color = 'var(--green)'; }
+    }
+  });
+
+  onlineChannel.on('broadcast', { event: 'rematch-start' }, ({ payload }) => {
+    if (payload.from === myId) return;
+    console.log('[Rematch] Starting rematch');
+    startRematch();
+  });
+
   return onlineChannel;
+}
+
+let pendingRematch = false;
+let myRematchRequested = false;
+
+function requestRematch() {
+  if (!onlineChannel) return;
+  myRematchRequested = true;
+  onlineChannel.send({ type:'broadcast', event:'rematch-request', payload:{ from: myId } });
+  
+  const btn = document.querySelector('#modalOverlay .modal-actions .rematch-btn');
+  if (btn) {
+    if (pendingRematch) {
+      // Both players want it — start!
+      onlineChannel.send({ type:'broadcast', event:'rematch-start', payload:{ from: myId } });
+      startRematch();
+    } else {
+      btn.textContent = 'Waiting for opponent...';
+      btn.disabled = true;
+    }
+  }
+}
+
+function startRematch() {
+  closeModal();
+  pendingRematch = false;
+  myRematchRequested = false;
+  
+  // Swap colors
+  const newColor = myColor === 'white' ? 'black' : 'white';
+  
+  game = new Chess();
+  selectedSquare = null; possibleMoves = []; lastMove = null; moveHistory = []; moveEvals = [];
+  moveTimes = [];
+  gameStartTime = Date.now();
+  moveStartTime = Date.now();
+  
+  document.getElementById('movesTable').querySelector('tbody').innerHTML = '';
+  document.getElementById('statusBanner').textContent = newColor === 'white' ? 'Your turn — make your first move.' : 'Waiting for opponent\'s first move...';
+  document.getElementById('statusBanner').className = 'status-banner';
+
+  myColor = newColor;
+  document.getElementById('playerColorLabel').textContent = newColor === 'white' ? 'White ♙' : 'Black ♟';
+  document.getElementById('opponentColor').textContent = newColor === 'white' ? 'Black ♟' : 'White ♙';
+
+  buildLabels();
+  renderBoard();
+  updatePanels();
+  updateOnlineTurnUI();
+  
+  // Reorder panels
+  const panel = document.querySelector('.panel-left');
+  const aiDiv = document.getElementById('aiCard').parentElement;
+  const playerDiv = document.getElementById('playerCard').parentElement;
+  const turnDiv = document.getElementById('turnIndicator');
+  if (newColor === 'black') {
+    panel.insertBefore(aiDiv, panel.firstChild);
+    panel.insertBefore(turnDiv, playerDiv);
+  } else {
+    panel.insertBefore(aiDiv, panel.firstChild);
+  }
 }
 
 // ── HOST creates game ──
@@ -875,6 +957,7 @@ const DIFFICULTY_LEVELS = {
 let currentDifficulty = 'explorer';
 let depth = 1;
 let moveHistory = [];
+let moveEvals = []; // track engine evaluations per position for blunder detection
 
 
 // ── PIECE SVGs (Lichess CBurnett style) ──
@@ -1230,6 +1313,10 @@ function aiMove() {
       let moved = false;
 
       if (data && data.from && data.to) {
+        // Capture engine evaluation for blunder detection
+        if (data.eval !== undefined || data.score !== undefined) {
+          moveEvals.push({ moveNum: moveHistory.length, eval: data.eval ?? data.score ?? null, mate: data.mate ?? null });
+        }
         const moveObj = { from: data.from, to: data.to };
         if (data.promotion) moveObj.promotion = data.promotion;
 
@@ -1409,21 +1496,47 @@ function checkGameOver() {
     overlay.classList.add('active');
 
     let playerWon = false;
+    const isOnline = gameMode === 'online';
+    const playerTurnChar = isOnline ? (myColor === 'white' ? 'w' : 'b') : 'w';
+    
     if (game.in_checkmate()) {
-      if (game.turn() === 'b') {
+      // The player whose turn it is has been checkmated (they lost)
+      if (game.turn() !== playerTurnChar) {
+        // It's NOT our turn = we delivered checkmate = we won
         icon.textContent = '♔'; title.textContent = 'You Win!';
-        const nextLevel = {explorer:'Challenger',challenger:'Rival',rival:'Competitor',competitor:'Master'}[currentDifficulty];
-        msg.textContent = nextLevel
-          ? 'Excellent! You beat ' + DIFFICULTY_LEVELS[currentDifficulty].label + '. Ready to try ' + nextLevel + '?'
-          : 'Incredible — you beat Master level. You are a chess master!';
+        if (isOnline) {
+          msg.textContent = 'Checkmate! You beat ' + onlineOpponentName + '!';
+        } else {
+          const nextLevel = {explorer:'Challenger',challenger:'Rival',rival:'Competitor',competitor:'Master'}[currentDifficulty];
+          msg.textContent = nextLevel
+            ? 'Excellent! You beat ' + DIFFICULTY_LEVELS[currentDifficulty].label + '. Ready to try ' + nextLevel + '?'
+            : 'Incredible — you beat Master level. You are a chess master!';
+        }
         playerWon = true;
       } else {
         icon.textContent = '♚'; title.textContent = 'Checkmate';
-        msg.textContent = "Malachi AI wins this round. Study the game and try again — every loss is a lesson.";
+        msg.textContent = isOnline
+          ? onlineOpponentName + ' wins this game. Good fight!'
+          : "Malachi AI wins this round. Study the game and try again — every loss is a lesson.";
       }
     } else if (game.in_draw()) {
       icon.textContent = '🤝'; title.textContent = 'Draw!';
       msg.textContent = game.in_stalemate() ? 'Stalemate — the game is a draw.' : 'The game ended in a draw.';
+    }
+
+    // Update modal buttons for online vs AI
+    const actionsEl = document.querySelector('#modalOverlay .modal-actions');
+    if (isOnline) {
+      actionsEl.innerHTML = `
+        <button class="btn-control primary rematch-btn" onclick="requestRematch()" style="padding:14px 32px;">Rematch ↻</button>
+        <button class="btn-control" onclick="closeModal()" style="padding:14px 32px;">Review</button>
+        <button class="btn-control" onclick="leaveOnlineGame(); closeModal(); document.getElementById('modeScreen').style.display='flex';" style="padding:14px 24px;font-size:10px;">Leave</button>
+      `;
+    } else {
+      actionsEl.innerHTML = `
+        <button class="btn-control primary" onclick="newGame(); closeModal();" style="padding:14px 32px;">Play Again</button>
+        <button class="btn-control" onclick="closeModal()" style="padding:14px 32px;">Review</button>
+      `;
     }
 
     // Save game data to Supabase
@@ -1535,6 +1648,106 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
     }
   }
 
+  // ── CHESS ANALYTICS ──
+  let gameAnalytics = {};
+  try {
+    const fullHistory = game.history({ verbose: true });
+    const playerMoves = fullHistory.filter((_, i) => i % 2 === 0); // white moves (player)
+    const opponentMoves = fullHistory.filter((_, i) => i % 2 === 1);
+    
+    // Game Phase Analysis (opening: moves 1-10, middlegame: 11-25, endgame: 26+)
+    const openingMoves = playerMoves.slice(0, 5); // player's first 5 moves
+    const middleMoves = playerMoves.slice(5, 13);
+    const endgameMoves = playerMoves.slice(13);
+    
+    const phaseMoveTimes = {
+      opening: timesToUse.slice(0, 5),
+      middlegame: timesToUse.slice(5, 13),
+      endgame: timesToUse.slice(13)
+    };
+    
+    const avgPhaseTime = (arr) => arr.length > 0 ? Math.round(arr.reduce((a,b) => a+b, 0) / arr.length) : 0;
+    
+    // Capture counting
+    const playerCaptures = playerMoves.filter(m => m.captured).length;
+    const opponentCaptures = opponentMoves.filter(m => m.captured).length;
+    
+    // Piece values for material analysis
+    const pieceVal = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+    const playerMaterialCaptured = playerMoves.filter(m => m.captured).reduce((s, m) => s + (pieceVal[m.captured] || 0), 0);
+    const opponentMaterialCaptured = opponentMoves.filter(m => m.captured).reduce((s, m) => s + (pieceVal[m.captured] || 0), 0);
+    const materialBalance = playerMaterialCaptured - opponentMaterialCaptured;
+    
+    // Check and checkmate counting
+    const playerChecks = playerMoves.filter(m => m.san.includes('+')).length;
+    const playerCheckmates = playerMoves.filter(m => m.san.includes('#')).length;
+    
+    // Castling detection
+    const playerCastled = playerMoves.some(m => m.san === 'O-O' || m.san === 'O-O-O');
+    const castleType = playerMoves.find(m => m.san === 'O-O') ? 'kingside' : playerMoves.find(m => m.san === 'O-O-O') ? 'queenside' : 'none';
+    
+    // Blunder detection from eval data
+    let blunders = 0;
+    let mistakes = 0;
+    let blunderPhase = { opening: 0, middlegame: 0, endgame: 0 };
+    if (moveEvals.length >= 2) {
+      for (let i = 1; i < moveEvals.length; i++) {
+        const prev = moveEvals[i-1].eval;
+        const curr = moveEvals[i].eval;
+        if (prev !== null && curr !== null) {
+          const swing = Math.abs(curr - prev);
+          const moveIdx = moveEvals[i].moveNum;
+          if (swing >= 3) { // 3+ pawn swing = blunder
+            blunders++;
+            if (moveIdx < 10) blunderPhase.opening++;
+            else if (moveIdx < 25) blunderPhase.middlegame++;
+            else blunderPhase.endgame++;
+          } else if (swing >= 1.5) { // 1.5+ = mistake
+            mistakes++;
+          }
+        }
+      }
+    }
+    
+    // Move diversity (unique squares used)
+    const uniqueFromSquares = new Set(playerMoves.map(m => m.from)).size;
+    const uniquePieces = new Set(playerMoves.map(m => m.piece)).size;
+    
+    // Detected opening name
+    const detectedOpening = bestMatch ? bestMatch.name : null;
+    const detectedOpeningEco = bestMatch ? bestMatch.eco : null;
+    
+    gameAnalytics = {
+      // Game phases
+      phases: {
+        opening: { moves: openingMoves.length, avgTime: avgPhaseTime(phaseMoveTimes.opening) },
+        middlegame: { moves: middleMoves.length, avgTime: avgPhaseTime(phaseMoveTimes.middlegame) },
+        endgame: { moves: endgameMoves.length, avgTime: avgPhaseTime(phaseMoveTimes.endgame) }
+      },
+      // Blunders & mistakes
+      blunders,
+      mistakes,
+      blunderPhase,
+      // Material
+      playerCaptures,
+      opponentCaptures,
+      materialBalance,
+      // Tactics
+      playerChecks,
+      playerCheckmates,
+      playerCastled,
+      castleType,
+      // Move quality
+      uniquePieces,
+      uniqueFromSquares,
+      // Opening
+      opening: detectedOpening,
+      openingEco: detectedOpeningEco,
+      // Evals (store last few for trend)
+      evalTrend: moveEvals.slice(-10).map(e => e.eval).filter(e => e !== null),
+    };
+  } catch(e) { console.warn('Game analytics error:', e); }
+
   gameHistory.push({
     date: gameDate,
     won: playerWon,
@@ -1543,7 +1756,10 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
     totalMoves,
     duration: gameDuration,
     difficulty: currentDifficulty,
-    times: timesToUse.slice(0, 60)  // per-move times for behavioral analysis
+    times: timesToUse.slice(0, 60),
+    analytics: gameAnalytics,
+    rating: newRating,
+    ratingChange
   });
 
   // Rating history for chart
@@ -1664,7 +1880,7 @@ function newGame() {
   gameAbandoned = false;
 
   game = new Chess();
-  selectedSquare = null; possibleMoves = []; lastMove = null; moveHistory = [];
+  selectedSquare = null; possibleMoves = []; lastMove = null; moveHistory = []; moveEvals = [];
   document.getElementById('movesTable').querySelector('tbody').innerHTML = '';
   document.getElementById('statusBanner').textContent = 'Make your first move to begin. You play as White.';
   document.getElementById('statusBanner').className = 'status-banner';
