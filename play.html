@@ -1433,22 +1433,6 @@ function aiMove() {
     }, 500);
   });
 }
-        if (move) {
-          if (move.captured) SFX.play('capture'); else SFX.play('move');
-          lastMove = { from: move.from, to: move.to };
-          addMoveToHistory(move, 'b');
-        }
-      }
-      document.getElementById('thinkingOverlay').classList.remove('active');
-      document.getElementById('aiCard').classList.remove('active');
-      document.getElementById('playerCard').classList.add('active');
-      document.getElementById('turnIndicator').querySelector('.turn-text').textContent = 'Your Turn';
-      renderBoard();
-      checkGameOver();
-      moveStartTime = Date.now();
-    }, 500);
-  });
-}
 
 // Stubs for compatibility
 function getBestMove() { return null; }
