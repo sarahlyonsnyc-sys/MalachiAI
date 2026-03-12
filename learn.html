@@ -2339,48 +2339,57 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSessio
 
 async function init() {
   renderBadges();
+  renderSidebar();
+  renderLesson(currentLesson);
 
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      const navLinks = document.querySelector('.nav-links');
+      const signInBtn = document.createElement('a');
+      signInBtn.href = 'login.html';
+      signInBtn.className = 'nav-link';
+      signInBtn.textContent = 'Sign In';
+      signInBtn.style.color = 'var(--gold)';
+      navLinks.appendChild(signInBtn);
+      return;
+    }
+
     // Get profile
     const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
     if (profile) {
-      // Show name in nav
       const navLinks = document.querySelector('.nav-links');
       const nameEl = document.createElement('span');
       nameEl.style.cssText = 'font-family:"DM Mono",monospace;font-size:11px;color:var(--gold);letter-spacing:0.08em;padding:8px 0;';
       nameEl.textContent = profile.username;
       navLinks.appendChild(nameEl);
 
-      // Show sign out button
       const signOutBtn = document.createElement('button');
       signOutBtn.className = 'nav-link';
       signOutBtn.textContent = 'Sign Out';
       signOutBtn.onclick = async () => { await sb.auth.signOut(); window.location.href = 'login.html'; };
       navLinks.appendChild(signOutBtn);
 
-      // Show dashboard link only for teachers/parents
       if (profile.role === 'teacher' || profile.role === 'parent') {
         document.getElementById('dashboardLink').style.display = 'inline-block';
       }
     }
 
     // Load saved progress
-    const { data, error: loadError } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
-    console.log('[Learn] Load progress:', data ? 'found' : 'not found', loadError ? loadError.message : '');
+    const { data } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
+    console.log('[Learn] Progress loaded:', data?.lessons_completed, 'lessons, completed_lessons:', data?.quiz_scores?.completed_lessons);
+    
     if (data) {
       xp = data.xp || 0;
-      console.log('[Learn] Raw data:', 'lessons_completed:', data.lessons_completed, 'xp:', data.xp, 'badges:', data.badges, 'completed_lessons:', data.quiz_scores?.completed_lessons);
       
       // Load completed lesson indices
-      if (data.quiz_scores && data.quiz_scores.completed_lessons && Array.isArray(data.quiz_scores.completed_lessons)) {
-        completed = new Set(data.quiz_scores.completed_lessons);
-        console.log('[Learn] Loaded completed from quiz_scores:', [...completed]);
+      const cl = data.quiz_scores?.completed_lessons;
+      if (cl && Array.isArray(cl) && cl.length > 0) {
+        completed = new Set(cl);
+        console.log('[Learn] Set completed from DB:', [...completed]);
       } else if (data.lessons_completed > 0) {
         completed = new Set(Array.from({length: data.lessons_completed}, (_, i) => i));
-        console.log('[Learn] Loaded completed from count fallback:', [...completed]);
-      } else {
-        console.log('[Learn] No completion data found');
+        console.log('[Learn] Set completed from count:', [...completed]);
       }
       
       earnedBadges = new Set(Array.isArray(data.badges) ? data.badges : []);
@@ -2390,21 +2399,14 @@ async function init() {
       const pct = Math.min(100, (xp / 1000) * 100);
       document.getElementById('xpFill').style.width = pct + '%';
       document.getElementById('xpLabel').textContent = xp + ' XP';
+      
+      // RE-RENDER sidebar and lesson now that we have data
+      renderSidebar();
+      renderLesson(currentLesson);
     }
-  } else {
-    // Not logged in — show sign in button
-    const navLinks = document.querySelector('.nav-links');
-    const signInBtn = document.createElement('a');
-    signInBtn.href = 'login.html';
-    signInBtn.className = 'nav-link';
-    signInBtn.textContent = 'Sign In';
-    signInBtn.style.color = 'var(--gold)';
-    navLinks.appendChild(signInBtn);
+  } catch(e) {
+    console.error('[Learn] Init error:', e);
   }
-
-  // Render sidebar and first lesson AFTER progress is loaded
-  renderSidebar();
-  renderLesson(currentLesson);
 }
 
 async function saveProgress() {
