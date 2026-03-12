@@ -512,9 +512,9 @@ const LESSONS = [
             <div class="puzzle-info">
               <p class="puzzle-prompt">White to move. Find the knight move that forks the Black king and queen at the same time. White wins a queen!</p>
               <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
-                <button class="quiz-option" onclick="puzzleAnswer(3,0,1,'✓ Nc7+ is the fork! The knight attacks both the king on e8 and the queen on a6. Black must escape check, and White takes the queen.')">Nc7+</button>
-                <button class="quiz-option" onclick="puzzleAnswer(3,1,1,'✓ Nc7+ is the fork! The knight attacks both the king on e8 and the queen on a6. Black must escape check, and White takes the queen.')">Nf4</button>
-                <button class="quiz-option" onclick="puzzleAnswer(3,2,1,'✓ Nc7+ is the fork! The knight attacks both the king on e8 and the queen on a6. Black must escape check, and White takes the queen.')">Nd6</button>
+                <button class="quiz-option" onclick="puzzleAnswer(3,0,0,'Nc7+ is the fork! The knight attacks both the king on e8 and the queen on a6. Black must escape check, and White takes the queen.')">Nc7+</button>
+                <button class="quiz-option" onclick="puzzleAnswer(3,1,0,'Nf4 doesn\'t attack both the king and queen. Look for a square where the knight hits e8 AND a6.')">Nf4</button>
+                <button class="quiz-option" onclick="puzzleAnswer(3,2,0,'Nd6 only attacks the king. A fork needs to attack TWO pieces at once. Try again — which square hits both e8 and a6?')">Nd6</button>
               </div>
               <div class="puzzle-hint-btn" onclick="showHint(3)" style="margin-top:16px;display:inline-block;padding:10px 20px;border:1px solid var(--border);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);">Show Hint</div>
               <div class="puzzle-hint" id="hint-3">Look for a square where the knight can attack both the king AND queen in one move. The king is on e8, the queen is on a6.</div>
@@ -838,13 +838,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">Where should your rook be placed relative to a passed pawn?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(9,0,1,'Behind the passed pawn! This is the most important rook endgame principle. The rook gains more and more power as the pawn pushes forward.')">
+          <button class="quiz-option" onclick="answerQuiz(9,0,1,'In front of the pawn actually blocks its advance. The best position is behind the pawn so the rook supports it as it pushes forward.')">
             <div class="option-letter">A</div> In front of it
           </button>
           <button class="quiz-option" onclick="answerQuiz(9,1,1,'Behind the passed pawn! This is the most important rook endgame principle. The rook gains more and more power as the pawn pushes forward.')">
             <div class="option-letter">B</div> Behind it
           </button>
-          <button class="quiz-option" onclick="answerQuiz(9,2,1,'Behind the passed pawn! This is the most important rook endgame principle. The rook gains more and more power as the pawn pushes forward.')">
+          <button class="quiz-option" onclick="answerQuiz(9,2,1,'The opposite side doesn\'t support the pawn\'s advance. Place your rook BEHIND the passed pawn for maximum support.')">
             <div class="option-letter">C</div> On the opposite side of the board
           </button>
         </div>
@@ -1585,13 +1585,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">You promote a pawn to a queen, but it creates stalemate. What should you have done instead?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(19,0,2,'Promote to a rook! A rook gives the same checkmate ability as a queen in most cases, but doesn\'t cover the extra squares that were causing stalemate. Always check for stalemate before promoting.')">
+          <button class="quiz-option" onclick="answerQuiz(19,0,1,'Keeping it as a pawn gives up your advantage. You want to promote — just choose the right piece to avoid stalemate.')">
             <div class="option-letter">A</div> Don't promote — keep it as a pawn
           </button>
-          <button class="quiz-option" onclick="answerQuiz(19,1,2,'Promote to a rook! A rook gives the same checkmate ability as a queen in most cases, but doesn\'t cover the extra squares that were causing stalemate. Always check for stalemate before promoting.')">
+          <button class="quiz-option" onclick="answerQuiz(19,1,1,'Promote to a rook! A rook gives the same checkmate ability as a queen in most cases, but doesn\'t cover the extra squares that were causing stalemate. Always check for stalemate before promoting.')">
             <div class="option-letter">B</div> Promote to a rook instead
           </button>
-          <button class="quiz-option" onclick="answerQuiz(19,2,2,'Promote to a rook! A rook gives the same checkmate ability as a queen in most cases, but doesn\'t cover the extra squares that were causing stalemate. Always check for stalemate before promoting.')">
+          <button class="quiz-option" onclick="answerQuiz(19,2,1,'Stalemate CAN be avoided by choosing a different promotion piece. The queen covers too many squares — try a rook instead.')">
             <div class="option-letter">C</div> The stalemate cannot be avoided
           </button>
         </div>
@@ -2338,74 +2338,101 @@ const { createClient } = supabase.createClient ? supabase : window.supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: true, storageKey: 'ccc-auth' } });
 
 async function init() {
+  console.log('[Learn:init] START');
   renderBadges();
   renderSidebar();
   renderLesson(currentLesson);
 
   try {
+    console.log('[Learn:init] Getting session...');
     const { data: { session } } = await sb.auth.getSession();
+    console.log('[Learn:init] Session:', session ? 'YES ' + session.user.id : 'NO');
+    
     if (!session) {
       const navLinks = document.querySelector('.nav-links');
-      const signInBtn = document.createElement('a');
-      signInBtn.href = 'login.html';
-      signInBtn.className = 'nav-link';
-      signInBtn.textContent = 'Sign In';
-      signInBtn.style.color = 'var(--gold)';
-      navLinks.appendChild(signInBtn);
+      if (navLinks) {
+        const signInBtn = document.createElement('a');
+        signInBtn.href = 'login.html';
+        signInBtn.className = 'nav-link';
+        signInBtn.textContent = 'Sign In';
+        signInBtn.style.color = 'var(--gold)';
+        navLinks.appendChild(signInBtn);
+      }
       return;
     }
 
-    // Get profile
+    console.log('[Learn:init] Loading profile...');
     const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+    console.log('[Learn:init] Profile:', profile?.username);
+    
     if (profile) {
       const navLinks = document.querySelector('.nav-links');
-      const nameEl = document.createElement('span');
-      nameEl.style.cssText = 'font-family:"DM Mono",monospace;font-size:11px;color:var(--gold);letter-spacing:0.08em;padding:8px 0;';
-      nameEl.textContent = profile.username;
-      navLinks.appendChild(nameEl);
+      if (navLinks) {
+        const nameEl = document.createElement('span');
+        nameEl.style.cssText = 'font-family:"DM Mono",monospace;font-size:11px;color:var(--gold);letter-spacing:0.08em;padding:8px 0;';
+        nameEl.textContent = profile.username;
+        navLinks.appendChild(nameEl);
 
-      const signOutBtn = document.createElement('button');
-      signOutBtn.className = 'nav-link';
-      signOutBtn.textContent = 'Sign Out';
-      signOutBtn.onclick = async () => { await sb.auth.signOut(); window.location.href = 'login.html'; };
-      navLinks.appendChild(signOutBtn);
+        const signOutBtn = document.createElement('button');
+        signOutBtn.className = 'nav-link';
+        signOutBtn.textContent = 'Sign Out';
+        signOutBtn.onclick = async () => { await sb.auth.signOut(); window.location.href = 'login.html'; };
+        navLinks.appendChild(signOutBtn);
+      }
 
       if (profile.role === 'teacher' || profile.role === 'parent') {
-        document.getElementById('dashboardLink').style.display = 'inline-block';
+        const dl = document.getElementById('dashboardLink');
+        if (dl) dl.style.display = 'inline-block';
       }
     }
 
-    // Load saved progress
-    const { data } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
-    console.log('[Learn] Progress loaded:', data?.lessons_completed, 'lessons, completed_lessons:', data?.quiz_scores?.completed_lessons);
+    console.log('[Learn:init] Loading progress...');
+    const { data, error } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
+    console.log('[Learn:init] Progress error:', error);
+    console.log('[Learn:init] Progress data:', data ? 'found' : 'null');
+    console.log('[Learn:init] lessons_completed:', data?.lessons_completed, 'xp:', data?.xp);
+    console.log('[Learn:init] completed_lessons:', data?.quiz_scores?.completed_lessons);
     
     if (data) {
       xp = data.xp || 0;
       
-      // Load completed lesson indices
       const cl = data.quiz_scores?.completed_lessons;
       if (cl && Array.isArray(cl) && cl.length > 0) {
         completed = new Set(cl);
-        console.log('[Learn] Set completed from DB:', [...completed]);
+        console.log('[Learn:init] ✅ Set completed from DB:', [...completed]);
       } else if (data.lessons_completed > 0) {
         completed = new Set(Array.from({length: data.lessons_completed}, (_, i) => i));
-        console.log('[Learn] Set completed from count:', [...completed]);
+        console.log('[Learn:init] ✅ Set completed from count:', [...completed]);
+      } else {
+        console.log('[Learn:init] ⚠ No completion data to load');
       }
       
       earnedBadges = new Set(Array.isArray(data.badges) ? data.badges : []);
-      document.getElementById('statCompleted').textContent = completed.size;
-      document.getElementById('statXP').textContent = xp;
-      document.getElementById('statBadges').textContent = earnedBadges.size;
-      const pct = Math.min(100, (xp / 1000) * 100);
-      document.getElementById('xpFill').style.width = pct + '%';
-      document.getElementById('xpLabel').textContent = xp + ' XP';
       
-      // RE-RENDER sidebar and lesson now that we have data
+      const statComp = document.getElementById('statCompleted');
+      const statXP = document.getElementById('statXP');
+      const statBadges = document.getElementById('statBadges');
+      const xpFill = document.getElementById('xpFill');
+      const xpLabel = document.getElementById('xpLabel');
+      
+      if (statComp) statComp.textContent = completed.size;
+      if (statXP) statXP.textContent = xp;
+      if (statBadges) statBadges.textContent = earnedBadges.size;
+      if (xpFill) {
+        const pct = Math.min(100, (xp / 1000) * 100);
+        xpFill.style.width = pct + '%';
+      }
+      if (xpLabel) xpLabel.textContent = xp + ' XP';
+      
+      // Re-render with loaded data
+      console.log('[Learn:init] Re-rendering sidebar and lesson with completed:', [...completed]);
       renderSidebar();
       renderLesson(currentLesson);
     }
+    
+    console.log('[Learn:init] DONE. completed:', [...completed], 'xp:', xp);
   } catch(e) {
-    console.error('[Learn] Init error:', e);
+    console.error('[Learn:init] CRASH:', e.message, e.stack);
   }
 }
 
