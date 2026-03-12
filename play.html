@@ -625,9 +625,14 @@ function setupChannel(code) {
     if (payload.from === myId) return;
     console.log('[Rematch] Opponent wants rematch');
     pendingRematch = true;
-    // If we also requested, start the rematch
+    // If we also requested, we're the second to agree — trigger it
     if (myRematchRequested) {
-      startRematch();
+      const iWasBlack = myColor === 'black';
+      onlineChannel.send({ type:'broadcast', event:'rematch-accept', payload:{ 
+        from: myId,
+        senderColor: iWasBlack ? 'white' : 'black'
+      }});
+      doRematch(iWasBlack ? 'white' : 'black');
     } else {
       // Show that opponent wants rematch
       const btn = document.querySelector('#modalOverlay .modal-actions .rematch-btn');
@@ -635,10 +640,12 @@ function setupChannel(code) {
     }
   });
 
-  onlineChannel.on('broadcast', { event: 'rematch-start' }, ({ payload }) => {
+  onlineChannel.on('broadcast', { event: 'rematch-accept' }, ({ payload }) => {
     if (payload.from === myId) return;
-    console.log('[Rematch] Starting rematch');
-    startRematch();
+    console.log('[Rematch] Accepted by opponent, their color:', payload.senderColor);
+    // Opponent told us their new color — we take the opposite
+    const myNewColor = payload.senderColor === 'white' ? 'black' : 'white';
+    doRematch(myNewColor);
   });
 
   return onlineChannel;
@@ -646,18 +653,25 @@ function setupChannel(code) {
 
 let pendingRematch = false;
 let myRematchRequested = false;
+let rematchInProgress = false;
 
 function requestRematch() {
-  if (!onlineChannel) return;
+  if (!onlineChannel || rematchInProgress) return;
   myRematchRequested = true;
   onlineChannel.send({ type:'broadcast', event:'rematch-request', payload:{ from: myId } });
   
   const btn = document.querySelector('#modalOverlay .modal-actions .rematch-btn');
   if (btn) {
     if (pendingRematch) {
-      // Both players want it — start!
-      onlineChannel.send({ type:'broadcast', event:'rematch-start', payload:{ from: myId } });
-      startRematch();
+      // Both players want it — the one who clicks second triggers the start
+      // Send rematch-accept with the new color assignments
+      // The player who was BLACK last game becomes WHITE (host of rematch)
+      const iWasBlack = myColor === 'black';
+      onlineChannel.send({ type:'broadcast', event:'rematch-accept', payload:{ 
+        from: myId, 
+        senderColor: iWasBlack ? 'white' : 'black'
+      }});
+      doRematch(iWasBlack ? 'white' : 'black');
     } else {
       btn.textContent = 'Waiting for opponent...';
       btn.disabled = true;
@@ -665,20 +679,20 @@ function requestRematch() {
   }
 }
 
-function startRematch() {
+function doRematch(newColor) {
+  if (rematchInProgress) return;
+  rematchInProgress = true;
+  
   closeModal();
   pendingRematch = false;
   myRematchRequested = false;
-  
-  // Swap colors
-  const newColor = myColor === 'white' ? 'black' : 'white';
   
   game = new Chess();
   selectedSquare = null; possibleMoves = []; lastMove = null; moveHistory = []; moveEvals = [];
   moveTimes = [];
   gameStartTime = Date.now();
   moveStartTime = Date.now();
-  gameMode = 'online'; // ensure gameMode stays online
+  gameMode = 'online';
   
   document.getElementById('movesTable').querySelector('tbody').innerHTML = '';
   document.getElementById('statusBanner').className = 'status-banner';
@@ -687,28 +701,27 @@ function startRematch() {
   document.getElementById('playerColorLabel').textContent = newColor === 'white' ? 'White ♙' : 'Black ♟';
   document.getElementById('opponentColor').textContent = newColor === 'white' ? 'Black ♟' : 'White ♙';
 
-  // Explicitly reset the thinking overlay
+  // Explicitly handle the thinking overlay
   const overlay = document.getElementById('thinkingOverlay');
-  overlay.style.display = '';
   if (newColor === 'white') {
-    // It's white's turn (game starts with white) and we ARE white — our turn
     overlay.classList.remove('active');
     document.getElementById('statusBanner').textContent = '♟ Your turn — make your first move.';
     document.getElementById('playerCard').classList.add('active');
     document.getElementById('aiCard').classList.remove('active');
+    document.querySelector('.turn-text').textContent = 'Your Turn';
   } else {
-    // We're black — waiting for white (opponent) to move first
     overlay.classList.add('active');
     document.getElementById('statusBanner').textContent = '⏳ Waiting for ' + onlineOpponentName + '…';
     document.getElementById('aiCard').classList.add('active');
     document.getElementById('playerCard').classList.remove('active');
+    document.querySelector('.turn-text').textContent = "Opponent's Turn";
   }
 
   buildLabels();
   renderBoard();
   updatePanels();
   
-  // Reorder panels so your card is at bottom
+  // Reorder panels
   const panel = document.querySelector('.panel-left');
   const aiDiv = document.getElementById('aiCard').parentElement;
   const playerDiv = document.getElementById('playerCard').parentElement;
@@ -721,6 +734,9 @@ function startRematch() {
   }
   
   console.log('[Rematch] Started. myColor:', newColor, 'game.turn():', game.turn(), 'gameMode:', gameMode);
+  
+  // Allow future rematches
+  setTimeout(() => { rematchInProgress = false; }, 1000);
 }
 
 // ── HOST creates game ──
