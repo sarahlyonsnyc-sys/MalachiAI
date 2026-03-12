@@ -2370,22 +2370,33 @@ async function init() {
     }
 
     // Load saved progress
-    const { data } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
+    const { data, error: loadError } = await sb.from('progress').select('*').eq('user_id', session.user.id).single();
+    console.log('[Learn] Load progress:', data ? 'found' : 'not found', loadError ? loadError.message : '');
     if (data) {
       xp = data.xp || 0;
-      // Load actual completed lesson indices if available, otherwise fall back to count
-      if (data.badges && Array.isArray(data.badges) && data.quiz_scores && data.quiz_scores.completed_lessons) {
+      console.log('[Learn] Raw data:', 'lessons_completed:', data.lessons_completed, 'xp:', data.xp, 'badges:', data.badges, 'completed_lessons:', data.quiz_scores?.completed_lessons);
+      
+      // Load completed lesson indices
+      if (data.quiz_scores && data.quiz_scores.completed_lessons && Array.isArray(data.quiz_scores.completed_lessons)) {
         completed = new Set(data.quiz_scores.completed_lessons);
-      } else {
+        console.log('[Learn] Loaded completed from quiz_scores:', [...completed]);
+      } else if (data.lessons_completed > 0) {
         completed = new Set(Array.from({length: data.lessons_completed}, (_, i) => i));
+        console.log('[Learn] Loaded completed from count fallback:', [...completed]);
+      } else {
+        console.log('[Learn] No completion data found');
       }
-      earnedBadges = new Set(data.badges || []);
+      
+      earnedBadges = new Set(Array.isArray(data.badges) ? data.badges : []);
       document.getElementById('statCompleted').textContent = completed.size;
       document.getElementById('statXP').textContent = xp;
       document.getElementById('statBadges').textContent = earnedBadges.size;
       const pct = Math.min(100, (xp / 1000) * 100);
       document.getElementById('xpFill').style.width = pct + '%';
       document.getElementById('xpLabel').textContent = xp + ' XP';
+      
+      // Re-render sidebar to show completion checkmarks
+      renderSidebar();
     }
   } else {
     // Not logged in — show sign in button
