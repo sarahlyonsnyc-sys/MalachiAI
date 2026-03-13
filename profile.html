@@ -857,16 +857,20 @@ function loadAcademyProgress(progress) {
   const xp = progress.xp || 0;
   const badges = Array.isArray(progress.badges) ? progress.badges : [];
   const completedLessons = progress.quiz_scores?.completed_lessons || [];
-  const totalLessons = 10;
+  const totalLessons = 21;
   
   if (lessonsCompleted === 0 && xp === 0) return;
   
   const pct = Math.round((lessonsCompleted / totalLessons) * 100);
   
   const lessonNames = [
-    'The Board & Pieces', 'How Pieces Move', 'Special Moves', 'Check & Checkmate',
-    'Opening Principles', 'Basic Tactics', 'Piece Coordination', 'Pawn Structure',
-    'Endgame Basics', 'Putting It All Together'
+    'Meet the Pieces', 'The Chessboard', 'Check & Draw',
+    'The Fork', 'The Pin', 'The Skewer',
+    'Opening Principles', "Scholar's Mate",
+    'King & Pawn Endgames', 'Rook Endgames',
+    'Italian Game', 'Spanish Opening', 'Sicilian Defense', "Queen's Gambit",
+    'Discovered Attack', 'Back Rank Mate', 'Zwischenzug',
+    'En Passant', 'Castling Rules', 'Pawn Promotion', '50-Move Rule'
   ];
   
   el.innerHTML = `
@@ -890,7 +894,7 @@ function loadAcademyProgress(progress) {
     </div>
     <div style="margin-top:12px">
       <div style="margin-bottom:8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted)">Lesson Completion</div>
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
         ${lessonNames.map((name, i) => {
           const done = completedLessons.includes(i);
           return `<div style="background:${done ? '#1a2a1a' : '#111'};border:1px solid ${done ? '#4caf50' : 'var(--border)'};border-radius:6px;padding:8px 4px;text-align:center" title="${name}">

@@ -354,11 +354,13 @@ let earnedBadges = new Set();
 // ── CURRICULUM DATA ──
 const BADGES = [
   { id:'first_step', icon:'👣', label:'First Step', desc:'Complete your first lesson', req: () => completed.size >= 1 },
-  { id:'pawn_star',  icon:'♟', label:'Pawn Star',  desc:'Complete the Basics module', req: () => completed.has(0) && completed.has(1) && completed.has(2) },
-  { id:'tactician',  icon:'⚔️', label:'Tactician',  desc:'Complete the Tactics module', req: () => completed.has(3) && completed.has(4) && completed.has(5) },
-  { id:'strategist', icon:'🧠', label:'Strategist', desc:'Complete the Openings module', req: () => completed.has(6) && completed.has(7) },
-  { id:'endgame',    icon:'👑', label:'Endgame King', desc:'Complete the Endgames module', req: () => completed.has(8) && completed.has(9) },
-  { id:'scholar',    icon:'🎓', label:'Scholar',    desc:'Complete all 10 lessons', req: () => completed.size >= 10 },
+  { id:'pawn_star',  icon:'♟', label:'Pawn Star',  desc:'Complete all Basics lessons', req: () => completed.has(0) && completed.has(1) && completed.has(2) },
+  { id:'tactician',  icon:'⚔️', label:'Tactician',  desc:'Complete all Tactics lessons', req: () => completed.has(3) && completed.has(4) && completed.has(5) && completed.has(14) && completed.has(15) && completed.has(16) },
+  { id:'strategist', icon:'🧠', label:'Strategist', desc:'Complete all Opening lessons', req: () => completed.has(6) && completed.has(7) && completed.has(10) && completed.has(11) && completed.has(12) && completed.has(13) },
+  { id:'endgame',    icon:'👑', label:'Endgame King', desc:'Complete all Endgame lessons', req: () => completed.has(8) && completed.has(9) },
+  { id:'secrets',    icon:'🔮', label:'Rule Master', desc:'Complete all Secret Rules lessons', req: () => completed.has(17) && completed.has(18) && completed.has(19) && completed.has(20) },
+  { id:'halfway',    icon:'⭐', label:'Halfway There', desc:'Complete 10 lessons', req: () => completed.size >= 10 },
+  { id:'scholar',    icon:'🎓', label:'Scholar',    desc:'Complete all 21 lessons', req: () => completed.size >= 21 },
 ];
 
 const LESSONS = [
@@ -2409,7 +2411,7 @@ function showComplete() {
     <div class="complete-screen show">
       <div class="complete-icon">♔</div>
       <h2>Course Complete!</h2>
-      <p>You've completed all 10 lessons in the Classical Chess Collegium Academy. You've earned ${xp} XP and ${earnedBadges.size} badges. Now go practice what you've learned!</p>
+      <p>You've completed all ${LESSONS.length} lessons in the Classical Chess Collegium Academy. You've earned ${xp} XP and ${earnedBadges.size} badges. Now go practice what you've learned!</p>
       <a href="play.html"><button class="btn-primary" style="margin-right:12px">Play a Game →</button></a>
       <button class="btn-ghost" onclick="goToLesson(0)">Review Lessons</button>
     </div>`;
