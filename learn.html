@@ -552,13 +552,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">A knight is pinned to the king by a bishop. Can the knight move?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(4,0,1,'Correct! An absolute pin means the piece legally CANNOT move — doing so would put the king in check, which is illegal.')">
+          <button class="quiz-option" onclick="answerQuiz(4,0,0,'Correct! An absolute pin means the piece legally CANNOT move — doing so would put the king in check, which is illegal.')">
             <div class="option-letter">A</div> No — moving would put the king in check
           </button>
-          <button class="quiz-option" onclick="answerQuiz(4,1,1,'Correct! An absolute pin means the piece legally CANNOT move — doing so would put the king in check, which is illegal.')">
+          <button class="quiz-option" onclick="answerQuiz(4,1,0,'Not quite. When a piece is pinned to the king (absolute pin), it CANNOT legally move because it would expose the king to check.')">
             <div class="option-letter">B</div> Yes, it can always move
           </button>
-          <button class="quiz-option" onclick="answerQuiz(4,2,1,'Correct! An absolute pin means the piece legally CANNOT move — doing so would put the king in check, which is illegal.')">
+          <button class="quiz-option" onclick="answerQuiz(4,2,0,'Not quite. An absolute pin means the piece cannot move at all — even to capture. Moving would expose the king to check.')">
             <div class="option-letter">C</div> Only if it captures something
           </button>
         </div>
@@ -587,13 +587,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">In a skewer, which piece is attacked first?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(5,0,2,'Correct! In a skewer, you attack the MORE valuable piece first (like the king or queen), forcing it to move and exposing something behind it.')">
+          <button class="quiz-option" onclick="answerQuiz(5,0,1,'Correct! In a skewer, you attack the MORE valuable piece first (like the king or queen), forcing it to move and exposing something behind it.')">
             <div class="option-letter">A</div> The less valuable piece
           </button>
-          <button class="quiz-option" onclick="answerQuiz(5,1,2,'Correct! In a skewer, you attack the MORE valuable piece first (like the king or queen), forcing it to move and exposing something behind it.')">
+          <button class="quiz-option" onclick="answerQuiz(5,1,1,'Correct! In a skewer, you attack the MORE valuable piece first (like the king or queen), forcing it to move and exposing something behind it.')">
             <div class="option-letter">B</div> The more valuable piece
           </button>
-          <button class="quiz-option" onclick="answerQuiz(5,2,2,'Correct! In a skewer, you attack the MORE valuable piece first (like the king or queen), forcing it to move and exposing something behind it.')">
+          <button class="quiz-option" onclick="answerQuiz(5,2,1,'Correct! In a skewer, you attack the MORE valuable piece first (like the king or queen), forcing it to move and exposing something behind it.')">
             <div class="option-letter">C</div> Both at the same time
           </button>
         </div>
@@ -754,13 +754,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">Black just played 3...Nf6 — White's queen is on h5, bishop on c4. What's the best move?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(7,0,1,'Qxf7#! The queen captures on f7, protected by the bishop on c4. The Black king is in check with no escape — checkmate in 4 moves! This is the Scholar\\'s Mate.')">
+          <button class="quiz-option" onclick="answerQuiz(7,0,0,'Qxf7#! The queen captures on f7, protected by the bishop on c4. The Black king is in check with no escape — checkmate in 4 moves! This is the Scholar\\'s Mate.')">
             <div class="option-letter">A</div> 4.Qxf7# — Checkmate!
           </button>
-          <button class="quiz-option" onclick="answerQuiz(7,1,1,'Qxf7#! The queen captures on f7, protected by the bishop on c4. The Black king is in check with no escape — checkmate in 4 moves! This is the Scholar\\'s Mate.')">
+          <button class="quiz-option" onclick="answerQuiz(7,1,0,'Qxf7#! The queen captures on f7, protected by the bishop on c4. The Black king is in check with no escape — checkmate in 4 moves! This is the Scholar\\'s Mate.')">
             <div class="option-letter">B</div> 4.Nf3 — develop the knight
           </button>
-          <button class="quiz-option" onclick="answerQuiz(7,2,1,'Qxf7#! The queen captures on f7, protected by the bishop on c4. The Black king is in check with no escape — checkmate in 4 moves! This is the Scholar\\'s Mate.')">
+          <button class="quiz-option" onclick="answerQuiz(7,2,0,'Qxf7#! The queen captures on f7, protected by the bishop on c4. The Black king is in check with no escape — checkmate in 4 moves! This is the Scholar\\'s Mate.')">
             <div class="option-letter">C</div> 4.Qxe5 — take the pawn
           </button>
         </div>
@@ -967,13 +967,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">Which square does the Italian Game bishop on c4 threaten?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(10,0,1,'f7! The bishop on c4 stares directly at f7 — Black\\'s weakest square at the start, only defended by the king. This is the whole point of the Italian Game!')">
+          <button class="quiz-option" onclick="answerQuiz(10,0,0,'f7! The bishop on c4 stares directly at f7 — Black\\'s weakest square at the start, only defended by the king. This is the whole point of the Italian Game!')">
             <div class="option-letter">A</div> f7 — Black's weakest square
           </button>
-          <button class="quiz-option" onclick="answerQuiz(10,1,1,'f7! The bishop on c4 stares directly at f7 — Black\\'s weakest square at the start, only defended by the king. This is the whole point of the Italian Game!')">
+          <button class="quiz-option" onclick="answerQuiz(10,1,0,'f7! The bishop on c4 stares directly at f7 — Black\\'s weakest square at the start, only defended by the king. This is the whole point of the Italian Game!')">
             <div class="option-letter">B</div> d5 — the center
           </button>
-          <button class="quiz-option" onclick="answerQuiz(10,2,1,'f7! The bishop on c4 stares directly at f7 — Black\\'s weakest square at the start, only defended by the king. This is the whole point of the Italian Game!')">
+          <button class="quiz-option" onclick="answerQuiz(10,2,0,'f7! The bishop on c4 stares directly at f7 — Black\\'s weakest square at the start, only defended by the king. This is the whole point of the Italian Game!')">
             <div class="option-letter">C</div> e8 — the king directly
           </button>
         </div>
@@ -1084,13 +1084,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">In the Ruy López, why does White play Bb5?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(11,0,1,'Correct! Bb5 pins or pressures the Nc6 which is defending Black\\'s e5 pawn. If the knight has to move, e5 becomes vulnerable!')">
+          <button class="quiz-option" onclick="answerQuiz(11,0,0,'Correct! Bb5 pins or pressures the Nc6 which is defending Black\\'s e5 pawn. If the knight has to move, e5 becomes vulnerable!')">
             <div class="option-letter">A</div> To pressure the knight that defends e5
           </button>
-          <button class="quiz-option" onclick="answerQuiz(11,1,1,'Correct! Bb5 pins or pressures the Nc6 which is defending Black\\'s e5 pawn. If the knight has to move, e5 becomes vulnerable!')">
+          <button class="quiz-option" onclick="answerQuiz(11,1,0,'Correct! Bb5 pins or pressures the Nc6 which is defending Black\\'s e5 pawn. If the knight has to move, e5 becomes vulnerable!')">
             <div class="option-letter">B</div> To immediately capture on c6
           </button>
-          <button class="quiz-option" onclick="answerQuiz(11,2,1,'Correct! Bb5 pins or pressures the Nc6 which is defending Black\\'s e5 pawn. If the knight has to move, e5 becomes vulnerable!')">
+          <button class="quiz-option" onclick="answerQuiz(11,2,0,'Correct! Bb5 pins or pressures the Nc6 which is defending Black\\'s e5 pawn. If the knight has to move, e5 becomes vulnerable!')">
             <div class="option-letter">C</div> To attack f7 directly
           </button>
         </div>
@@ -1203,13 +1203,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">Why is 1...c5 so powerful in the Sicilian?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(12,0,1,'Exactly! c5 fights for d4 without letting White have a symmetric pawn center. This creates unbalanced positions where both sides can win!')">
+          <button class="quiz-option" onclick="answerQuiz(12,0,0,'Exactly! c5 fights for d4 without letting White have a symmetric pawn center. This creates unbalanced positions where both sides can win!')">
             <div class="option-letter">A</div> It fights for d4 without being symmetric — both sides attack
           </button>
-          <button class="quiz-option" onclick="answerQuiz(12,1,1,'Exactly! c5 fights for d4 without letting White have a symmetric pawn center. This creates unbalanced positions where both sides can win!')">
+          <button class="quiz-option" onclick="answerQuiz(12,1,0,'Exactly! c5 fights for d4 without letting White have a symmetric pawn center. This creates unbalanced positions where both sides can win!')">
             <div class="option-letter">B</div> It immediately defends the king
           </button>
-          <button class="quiz-option" onclick="answerQuiz(12,2,1,'Exactly! c5 fights for d4 without letting White have a symmetric pawn center. This creates unbalanced positions where both sides can win!')">
+          <button class="quiz-option" onclick="answerQuiz(12,2,0,'Exactly! c5 fights for d4 without letting White have a symmetric pawn center. This creates unbalanced positions where both sides can win!')">
             <div class="option-letter">C</div> It copies White's pawn structure
           </button>
         </div>
@@ -1407,13 +1407,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">What is a "luft" and why is it important?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(15,0,1,'Correct! Luft means moving a pawn to give the king an escape square. Without it, your king is trapped on the back rank and vulnerable to checkmate by a rook or queen.')">
+          <button class="quiz-option" onclick="answerQuiz(15,0,0,'Correct! Luft means moving a pawn to give the king an escape square. Without it, your king is trapped on the back rank and vulnerable to checkmate by a rook or queen.')">
             <div class="option-letter">A</div> A pawn move that gives the king an escape square
           </button>
-          <button class="quiz-option" onclick="answerQuiz(15,1,1,'Correct! Luft means moving a pawn to give the king an escape square. Without it, your king is trapped on the back rank and vulnerable to checkmate by a rook or queen.')">
+          <button class="quiz-option" onclick="answerQuiz(15,1,0,'Correct! Luft means moving a pawn to give the king an escape square. Without it, your king is trapped on the back rank and vulnerable to checkmate by a rook or queen.')">
             <div class="option-letter">B</div> A type of pawn sacrifice in the opening
           </button>
-          <button class="quiz-option" onclick="answerQuiz(15,2,1,'Correct! Luft means moving a pawn to give the king an escape square. Without it, your king is trapped on the back rank and vulnerable to checkmate by a rook or queen.')">
+          <button class="quiz-option" onclick="answerQuiz(15,2,0,'Correct! Luft means moving a pawn to give the king an escape square. Without it, your king is trapped on the back rank and vulnerable to checkmate by a rook or queen.')">
             <div class="option-letter">C</div> Moving the king to safety before castling
           </button>
         </div>
@@ -1448,13 +1448,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">What makes a Zwischenzug so effective psychologically?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(16,0,2,'Exactly! The opponent calculates the expected sequence and thinks they know what is coming. When you play an unexpected move first, they must throw out all their calculations and start over — often under time pressure.')">
+          <button class="quiz-option" onclick="answerQuiz(16,0,1,'Exactly! The opponent calculates the expected sequence and thinks they know what is coming. When you play an unexpected move first, they must throw out all their calculations and start over — often under time pressure.')">
             <div class="option-letter">A</div> It captures the most valuable piece
           </button>
-          <button class="quiz-option" onclick="answerQuiz(16,1,2,'Exactly! The opponent calculates the expected sequence and thinks they know what is coming. When you play an unexpected move first, they must throw out all their calculations and start over — often under time pressure.')">
+          <button class="quiz-option" onclick="answerQuiz(16,1,1,'Exactly! The opponent calculates the expected sequence and thinks they know what is coming. When you play an unexpected move first, they must throw out all their calculations and start over — often under time pressure.')">
             <div class="option-letter">B</div> It breaks the opponent\'s expected calculation
           </button>
-          <button class="quiz-option" onclick="answerQuiz(16,2,2,'Exactly! The opponent calculates the expected sequence and thinks they know what is coming. When you play an unexpected move first, they must throw out all their calculations and start over — often under time pressure.')">
+          <button class="quiz-option" onclick="answerQuiz(16,2,1,'Exactly! The opponent calculates the expected sequence and thinks they know what is coming. When you play an unexpected move first, they must throw out all their calculations and start over — often under time pressure.')">
             <div class="option-letter">C</div> It always gives check
           </button>
         </div>
@@ -1546,13 +1546,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">Your king has never moved, but your kingside rook moved earlier and came back. Can you castle kingside?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(18,0,1,'No castling! Once the rook moves — even if it returns to its original square — the right to castle with that rook is permanently lost. The rule is about whether the piece has ever moved, not where it currently is.')">
+          <button class="quiz-option" onclick="answerQuiz(18,0,0,'No castling! Once the rook moves — even if it returns to its original square — the right to castle with that rook is permanently lost. The rule is about whether the piece has ever moved, not where it currently is.')">
             <div class="option-letter">A</div> No — the rook already moved, so castling rights are lost
           </button>
-          <button class="quiz-option" onclick="answerQuiz(18,1,1,'No castling! Once the rook moves — even if it returns to its original square — the right to castle with that rook is permanently lost. The rule is about whether the piece has ever moved, not where it currently is.')">
+          <button class="quiz-option" onclick="answerQuiz(18,1,0,'No castling! Once the rook moves — even if it returns to its original square — the right to castle with that rook is permanently lost. The rule is about whether the piece has ever moved, not where it currently is.')">
             <div class="option-letter">B</div> Yes — the rook is back on its starting square
           </button>
-          <button class="quiz-option" onclick="answerQuiz(18,2,1,'No castling! Once the rook moves — even if it returns to its original square — the right to castle with that rook is permanently lost. The rule is about whether the piece has ever moved, not where it currently is.')">
+          <button class="quiz-option" onclick="answerQuiz(18,2,0,'No castling! Once the rook moves — even if it returns to its original square — the right to castle with that rook is permanently lost. The rule is about whether the piece has ever moved, not where it currently is.')">
             <div class="option-letter">C</div> Only if no pieces are between them
           </button>
         </div>
@@ -1639,13 +1639,13 @@ const LESSONS = [
         <div class="block-label">Quick Check</div>
         <div class="quiz-question">You're losing badly. You find a way to give check every move and the position repeats three times. What can you claim?</div>
         <div class="quiz-options">
-          <button class="quiz-option" onclick="answerQuiz(20,0,1,'A draw by threefold repetition! If the same position occurs three times (same player to move, same rights), either player can claim a draw. This is how grandmasters escape lost positions with perpetual check.')">
+          <button class="quiz-option" onclick="answerQuiz(20,0,0,'A draw by threefold repetition! If the same position occurs three times (same player to move, same rights), either player can claim a draw. This is how grandmasters escape lost positions with perpetual check.')">
             <div class="option-letter">A</div> A draw by threefold repetition
           </button>
-          <button class="quiz-option" onclick="answerQuiz(20,1,1,'A draw by threefold repetition! If the same position occurs three times (same player to move, same rights), either player can claim a draw. This is how grandmasters escape lost positions with perpetual check.')">
+          <button class="quiz-option" onclick="answerQuiz(20,1,0,'A draw by threefold repetition! If the same position occurs three times (same player to move, same rights), either player can claim a draw. This is how grandmasters escape lost positions with perpetual check.')">
             <div class="option-letter">B</div> Nothing — you still lose
           </button>
-          <button class="quiz-option" onclick="answerQuiz(20,2,1,'A draw by threefold repetition! If the same position occurs three times (same player to move, same rights), either player can claim a draw. This is how grandmasters escape lost positions with perpetual check.')">
+          <button class="quiz-option" onclick="answerQuiz(20,2,0,'A draw by threefold repetition! If the same position occurs three times (same player to move, same rights), either player can claim a draw. This is how grandmasters escape lost positions with perpetual check.')">
             <div class="option-letter">C</div> A win by perpetual check
           </button>
         </div>
