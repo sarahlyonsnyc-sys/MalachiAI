@@ -2516,6 +2516,7 @@ async function init() {
       console.log('[Learn:init] Re-rendering sidebar and lesson with completed:', [...completed]);
       renderSidebar();
       renderLesson(currentLesson);
+      renderBadges();
     }
     
     console.log('[Learn:init] DONE. completed:', [...completed], 'xp:', xp);
@@ -2584,6 +2585,7 @@ setTimeout(async () => {
       
       renderSidebar();
       renderLesson(currentLesson);
+      renderBadges();
       console.log('[Learn:Backup] Restored:', [...completed], 'xp:', xp);
     } else {
       console.log('[Learn:Backup] No restore needed, completed:', [...completed]);
