@@ -188,14 +188,17 @@
     .block-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; }
 
     /* DIAGRAM BOARD */
-    .diagram-board { display:inline-grid; grid-template-columns:repeat(8,48px); grid-template-rows:repeat(8,48px); border:2px solid var(--gold); box-shadow:0 0 40px rgba(201,168,76,0.1); margin-bottom:8px; }
-    .diagram-board.small { grid-template-columns:repeat(8,38px); grid-template-rows:repeat(8,38px); }
-    .dsq { display:flex; align-items:center; justify-content:center; font-size:26px; }
-    .diagram-board.small .dsq { font-size:20px; }
-    .dsq.dl { background:#e8d5a3; }
-    .dsq.dd { background:#8b6914; }
-    .dsq.highlight { background:rgba(201,168,76,0.5) !important; }
+    .diagram-board { display:inline-grid; grid-template-columns:auto repeat(8,48px) auto; grid-template-rows:auto repeat(8,48px) auto; box-shadow:0 4px 20px rgba(0,0,0,0.3); margin-bottom:8px; border-radius:4px; overflow:hidden; }
+    .diagram-board.small { grid-template-columns:auto repeat(8,38px) auto; grid-template-rows:auto repeat(8,38px) auto; }
+    .dsq { display:flex; align-items:center; justify-content:center; font-size:32px; line-height:1; user-select:none; }
+    .diagram-board.small .dsq { font-size:24px; }
+    .dsq.dl { background:#F0D9B5; }
+    .dsq.dd { background:#B58863; }
+    .dsq.highlight { background:rgba(201,168,76,0.55) !important; }
     .dsq.red-hl { background:rgba(220,50,80,0.4) !important; }
+    .board-rank-label { display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); width:20px; background:transparent; }
+    .board-file-label { display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); height:20px; background:transparent; }
+    .board-corner { width:20px; height:20px; }
     .diagram-caption { font-family:'DM Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:0.08em; margin-top:8px; }
 
     /* TEXT CONTENT */
@@ -1688,9 +1691,38 @@ function renderDiagram(containerId, pieces, highlights = []) {
   if (!el) return;
   el.className = 'diagram-board';
   el.innerHTML = '';
+  
+  const files = 'abcdefgh';
+  
+  // Top-left corner
+  const corner1 = document.createElement('div');
+  corner1.className = 'board-corner';
+  el.appendChild(corner1);
+  
+  // File labels (top)
+  for (let fi = 0; fi < 8; fi++) {
+    const label = document.createElement('div');
+    label.className = 'board-file-label';
+    label.textContent = files[fi];
+    el.appendChild(label);
+  }
+  
+  // Top-right corner
+  const corner2 = document.createElement('div');
+  corner2.className = 'board-corner';
+  el.appendChild(corner2);
+  
+  // Board rows with rank labels
   for (let rank = 8; rank >= 1; rank--) {
+    // Left rank label
+    const leftLabel = document.createElement('div');
+    leftLabel.className = 'board-rank-label';
+    leftLabel.textContent = rank;
+    el.appendChild(leftLabel);
+    
+    // Squares
     for (let fi = 0; fi < 8; fi++) {
-      const file = 'abcdefgh'[fi];
+      const file = files[fi];
       const sq = file + rank;
       const isLight = (fi + rank) % 2 !== 0;
       const div = document.createElement('div');
@@ -1699,7 +1731,31 @@ function renderDiagram(containerId, pieces, highlights = []) {
       if (pieces[sq]) div.textContent = pieces[sq];
       el.appendChild(div);
     }
+    
+    // Right rank label
+    const rightLabel = document.createElement('div');
+    rightLabel.className = 'board-rank-label';
+    rightLabel.textContent = rank;
+    el.appendChild(rightLabel);
   }
+  
+  // Bottom-left corner
+  const corner3 = document.createElement('div');
+  corner3.className = 'board-corner';
+  el.appendChild(corner3);
+  
+  // File labels (bottom)
+  for (let fi = 0; fi < 8; fi++) {
+    const label = document.createElement('div');
+    label.className = 'board-file-label';
+    label.textContent = files[fi];
+    el.appendChild(label);
+  }
+  
+  // Bottom-right corner
+  const corner4 = document.createElement('div');
+  corner4.className = 'board-corner';
+  el.appendChild(corner4);
 }
 
 function renderStartingBoard(containerId) {
