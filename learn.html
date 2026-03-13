@@ -1686,6 +1686,22 @@ function showHint(id) {
 }
 
 // ── BOARD DIAGRAMS ──
+// Chess piece images (Chess.com neo style)
+const PIECE_IMGS = {
+  '♔': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wk.png',
+  '♕': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wq.png',
+  '♖': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wr.png',
+  '♗': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wb.png',
+  '♘': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wn.png',
+  '♙': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/wp.png',
+  '♚': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bk.png',
+  '♛': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bq.png',
+  '♜': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/br.png',
+  '♝': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bb.png',
+  '♞': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bn.png',
+  '♟': 'https://images.chesscomfiles.com/chess-themes/pieces/neo/150/bp.png',
+};
+
 function renderDiagram(containerId, pieces, highlights = []) {
   const el = document.getElementById(containerId);
   if (!el) return;
@@ -1728,7 +1744,15 @@ function renderDiagram(containerId, pieces, highlights = []) {
       const div = document.createElement('div');
       div.className = 'dsq ' + (isLight ? 'dl' : 'dd');
       if (highlights.includes(sq)) div.classList.add('highlight');
-      if (pieces[sq]) div.textContent = pieces[sq];
+      if (pieces[sq] && PIECE_IMGS[pieces[sq]]) {
+        const img = document.createElement('img');
+        img.src = PIECE_IMGS[pieces[sq]];
+        img.alt = pieces[sq];
+        img.style.cssText = 'width:85%;height:85%;object-fit:contain;pointer-events:none;';
+        div.appendChild(img);
+      } else if (pieces[sq]) {
+        div.textContent = pieces[sq];
+      }
       el.appendChild(div);
     }
     
