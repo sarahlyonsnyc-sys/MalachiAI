@@ -1602,10 +1602,13 @@ function checkGameOver() {
     const isOnline = gameMode === 'online';
     const playerTurnChar = isOnline ? (myColor === 'white' ? 'w' : 'b') : 'w';
     
+    console.log('[GAMEOVER] turn:', game.turn(), 'playerTurnChar:', playerTurnChar, 'myColor:', myColor, 'isOnline:', isOnline, 'checkmate:', game.in_checkmate(), 'draw:', game.in_draw());
+    
     if (game.in_checkmate()) {
       // The player whose turn it is has been checkmated (they lost)
       if (game.turn() !== playerTurnChar) {
         // It's NOT our turn = we delivered checkmate = we won
+        console.log('[GAMEOVER] Result: WE WON');
         icon.textContent = '♔'; title.textContent = 'You Win!';
         if (isOnline) {
           msg.textContent = 'Checkmate! You beat ' + onlineOpponentName + '!';
@@ -1617,12 +1620,14 @@ function checkGameOver() {
         }
         playerWon = true;
       } else {
+        console.log('[GAMEOVER] Result: WE LOST');
         icon.textContent = '♚'; title.textContent = 'Checkmate';
         msg.textContent = isOnline
           ? onlineOpponentName + ' wins this game. Good fight!'
           : "Malachi AI wins this round. Study the game and try again — every loss is a lesson.";
       }
     } else if (game.in_draw()) {
+      console.log('[GAMEOVER] Result: DRAW');
       icon.textContent = '🤝'; title.textContent = 'Draw!';
       msg.textContent = game.in_stalemate() ? 'Stalemate — the game is a draw.' : 'The game ended in a draw.';
     }
@@ -1671,13 +1676,13 @@ async function saveGameData(playerWon, abandoned, passedTimes, passedAvgTime) {
   const gameHistory = behaviorData.game_history || [];
   const gameDate = new Date().toISOString();
 
-  // ── ELO UPDATE (separate from game history saving) ──
+  // ── ELO UPDATE (only for AI games, not online multiplayer) ──
   let ratingChange = 0;
   let newRating = currentChessRating;
   const isProvisional = ratedGamesCount < PROVISIONAL_GAMES;
   let provisionalResults = behaviorData.provisional_results || [];
 
-  if (totalMoves >= 2) {
+  if (totalMoves >= 2 && gameMode !== 'online') {
     const aiElo = DIFFICULTY_ELO[currentDifficulty] || 1000;
 
     if (isProvisional) {
