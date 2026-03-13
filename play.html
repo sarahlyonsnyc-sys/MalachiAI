@@ -1292,8 +1292,10 @@ function makePlayerMove(from, to) {
   const isPromotion = piece && piece.type === 'p' && 
     ((piece.color === 'w' && to[1] === '8') || (piece.color === 'b' && to[1] === '1'));
 
+  console.log('[PROMO] piece:', piece?.type, 'color:', piece?.color, 'to:', to, 'isPromotion:', isPromotion);
+
   if (isPromotion) {
-    // Show promotion selection popup
+    console.log('[PROMO] Showing promotion popup');
     showPromotionPopup(from, to, piece.color);
     return;
   }
@@ -1304,59 +1306,53 @@ function makePlayerMove(from, to) {
 function showPromotionPopup(from, to, color) {
   const isWhite = color === 'w';
   const pieces = isWhite 
-    ? [{ piece: 'q', symbol: '♕' }, { piece: 'r', symbol: '♖' }, { piece: 'b', symbol: '♗' }, { piece: 'n', symbol: '♘' }]
-    : [{ piece: 'q', symbol: '♛' }, { piece: 'r', symbol: '♜' }, { piece: 'b', symbol: '♝' }, { piece: 'n', symbol: '♞' }];
+    ? [{ piece: 'q', symbol: '♕', name: 'Queen' }, { piece: 'r', symbol: '♖', name: 'Rook' }, { piece: 'b', symbol: '♗', name: 'Bishop' }, { piece: 'n', symbol: '♘', name: 'Knight' }]
+    : [{ piece: 'q', symbol: '♛', name: 'Queen' }, { piece: 'r', symbol: '♜', name: 'Rook' }, { piece: 'b', symbol: '♝', name: 'Bishop' }, { piece: 'n', symbol: '♞', name: 'Knight' }];
   
-  // Get the position of the target square on the board for popup placement
-  const board = document.getElementById('chessboard');
-  const boardRect = board.getBoundingClientRect();
-  const sqSize = boardRect.width / 8;
-  const flipped = (gameMode === 'online' && myColor === 'black');
-  const fileIdx = flipped ? 7 - 'abcdefgh'.indexOf(to[0]) : 'abcdefgh'.indexOf(to[0]);
-  const rankIdx = flipped ? parseInt(to[1]) - 1 : 8 - parseInt(to[1]);
+  // Create backdrop
+  const backdrop = document.createElement('div');
+  backdrop.id = 'promotionBackdrop';
+  backdrop.style.cssText = 'position:fixed;inset:0;z-index:99;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;';
   
+  // Create popup
   const popup = document.createElement('div');
   popup.id = 'promotionPopup';
-  popup.style.cssText = `
-    position:absolute; z-index:100;
-    left:${boardRect.left + fileIdx * sqSize}px;
-    top:${boardRect.top + rankIdx * sqSize}px;
-    display:flex; flex-direction:column;
-    background:#1a1a1a; border:2px solid var(--gold);
-    border-radius:8px; box-shadow:0 8px 32px rgba(0,0,0,0.8);
-    overflow:hidden;
-  `;
+  popup.style.cssText = 'background:#111;border:2px solid var(--gold,#C9A84C);border-radius:12px;padding:16px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.8);';
+  
+  const title = document.createElement('div');
+  title.textContent = 'PROMOTE TO';
+  title.style.cssText = 'font-family:"DM Mono",monospace;font-size:10px;letter-spacing:0.15em;color:#C9A84C;margin-bottom:12px;';
+  popup.appendChild(title);
+  
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;';
   
   pieces.forEach(p => {
     const btn = document.createElement('button');
-    btn.style.cssText = `
-      width:${sqSize}px; height:${sqSize}px;
-      display:flex; align-items:center; justify-content:center;
-      font-size:${sqSize * 0.7}px; background:#1a1a1a; border:none;
-      cursor:pointer; transition:background 0.15s; color:#fff;
-    `;
+    btn.style.cssText = 'width:64px;height:64px;display:flex;align-items:center;justify-content:center;font-size:40px;background:#1a1a1a;border:1px solid #333;border-radius:8px;cursor:pointer;transition:all 0.15s;';
     btn.textContent = p.symbol;
-    btn.onmouseover = () => btn.style.background = '#2a2210';
-    btn.onmouseout = () => btn.style.background = '#1a1a1a';
+    btn.title = p.name;
+    btn.onmouseover = () => { btn.style.background = '#2a2210'; btn.style.borderColor = '#C9A84C'; };
+    btn.onmouseout = () => { btn.style.background = '#1a1a1a'; btn.style.borderColor = '#333'; };
     btn.onclick = () => {
-      document.getElementById('promotionPopup').remove();
+      console.log('[PROMO] Selected:', p.name);
+      document.getElementById('promotionBackdrop')?.remove();
       executeMove(from, to, p.piece);
     };
-    popup.appendChild(btn);
+    row.appendChild(btn);
   });
   
-  // Add backdrop to cancel
-  const backdrop = document.createElement('div');
-  backdrop.id = 'promotionBackdrop';
-  backdrop.style.cssText = 'position:fixed;inset:0;z-index:99;background:rgba(0,0,0,0.4);';
-  backdrop.onclick = () => {
-    document.getElementById('promotionPopup')?.remove();
-    document.getElementById('promotionBackdrop')?.remove();
-    clearSelection();
+  popup.appendChild(row);
+  backdrop.appendChild(popup);
+  
+  backdrop.onclick = (e) => {
+    if (e.target === backdrop) {
+      backdrop.remove();
+      clearSelection();
+    }
   };
   
   document.body.appendChild(backdrop);
-  document.body.appendChild(popup);
 }
 
 function executeMove(from, to, promotion) {
