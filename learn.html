@@ -1795,7 +1795,7 @@ function renderStartingBoard(containerId) {
 
 function renderForkPuzzle(containerId) {
   renderDiagram(containerId, {
-    e8:'♚', a6:'♛', e5:'♘', h2:'♔'
+    e8:'♚', a6:'♛', d5:'♘', h1:'♔'
   }, ['c7']);
 }
 
@@ -1825,7 +1825,7 @@ function renderLessonBoard(idx) {
     }, ['g8','g2']),
     // 3 — The Fork: Nc7+ hits king on e8 and queen on a6
     () => renderDiagram(id, {
-      e8:B.K, a6:B.Q, e5:W.N, h1:W.K,
+      e8:B.K, a6:B.Q, d5:W.N, h1:W.K,
     }, ['c7']),
     // 4 — The Pin: Bb5 pins Nc6 to King on e8
     () => renderDiagram(id, {
