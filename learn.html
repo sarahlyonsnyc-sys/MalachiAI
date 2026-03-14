@@ -579,7 +579,7 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 2 — Tactics</div>
       <h2 class="lesson-title">The Skewer</h2>
       <p class="lesson-desc">A skewer is like a pin in reverse — you attack a valuable piece directly, forcing it to move, and capture the less valuable piece hiding behind it.</p>
-      <div class="lesson-board-wrap"><div id="lb-5"></div><div class="lesson-board-info"><div class="lesson-board-title">Rook Skewer</div><div class="lesson-board-desc">White's rook attacks the Black king on e8. The king <strong>must move</strong> — revealing the rook on e5 behind it. White captures it for free.</div></div></div>
+      <div class="lesson-board-wrap"><div id="lb-5"></div><div class="lesson-board-info"><div class="lesson-board-title">Rook Skewer</div><div class="lesson-board-desc">White's rook on e1 attacks the Black king on e5. The king <strong>must move</strong> — revealing the Black rook on e8 behind it. White captures it for free.</div></div></div>
       
       <div class="lesson-block">
         <div class="lesson-text">
@@ -1832,11 +1832,11 @@ function renderLessonBoard(idx) {
       e8:B.K, c6:B.N, e7:B.P,
       b5:W.B, e1:W.K,
     }, ['c6']),
-    // 5 — The Skewer: rook skewers king, hits rook behind
+    // 5 — The Skewer: rook skewers king on e5, hits rook on e8 behind
     () => renderDiagram(id, {
-      e8:B.K, e5:B.R,
+      e5:B.K, e8:B.R,
       e1:W.R, a1:W.K,
-    }, ['e8']),
+    }, ['e5']),
     // 6 — Opening Principles: after 1.e4 e5 2.Nf3 Nc6 3.Bc4
     () => renderDiagram(id, {
       e8:B.K, c6:B.N, e7:B.P,
