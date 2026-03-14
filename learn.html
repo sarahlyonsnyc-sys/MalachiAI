@@ -1348,7 +1348,7 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 7 — Tactics: More Patterns</div>
       <h2 class="lesson-title">The Discovered Attack</h2>
       <p class="lesson-desc">Move one piece to unleash a surprise attack from another. Discovered attacks are devastating because the opponent has to deal with two threats at once.</p>
-      <div class="lesson-board-wrap"><div id="lb-14"></div><div class="lesson-board-info"><div class="lesson-board-title">Discovered Attack</div><div class="lesson-board-desc">White moves the knight on d4, <strong>uncovering</strong> the bishop's attack on the Black queen. The knight also attacks something else simultaneously — a double threat.</div></div></div>
+      <div class="lesson-board-wrap"><div id="lb-14"></div><div class="lesson-board-info"><div class="lesson-board-title">Discovered Attack</div><div class="lesson-board-desc">White moves the knight off d4, <strong>uncovering</strong> the bishop on b2's diagonal attack on the Black queen on g7. The knight also attacks something else simultaneously — a double threat.</div></div></div>
       
       <div class="lesson-block">
         <div class="lesson-text">
@@ -1889,11 +1889,11 @@ function renderLessonBoard(idx) {
       a2:W.P,b2:W.P,e2:W.P,f2:W.P,g2:W.P,h2:W.P,
       d4:W.P, c4:W.P, e1:W.K,
     }, ['c4','d5']),
-    // 14 — Discovered Attack: bishop uncovers rook hitting queen
+    // 14 — Discovered Attack: knight moves off diagonal, bishop hits queen
     () => renderDiagram(id, {
-      d8:B.Q, e8:B.K,
-      d4:W.N, b2:W.B, e1:W.R, g1:W.K,
-    }, ['d4','d8']),
+      g7:B.Q, e8:B.K, f8:B.R,
+      d4:W.N, b2:W.B, g1:W.K,
+    }, ['d4','g7']),
     // 15 — Back Rank Mate
     () => renderDiagram(id, {
       g8:B.K, f7:B.P, g7:B.P, h7:B.P,
