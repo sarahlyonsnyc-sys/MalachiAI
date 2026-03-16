@@ -1434,7 +1434,7 @@ const LESSONS = [
       <div class="lesson-eyebrow">Module 7 — Tactics: More Patterns</div>
       <h2 class="lesson-title">Zwischenzug — The In-Between Move</h2>
       <p class="lesson-desc">German for "in-between move." Instead of playing the expected move, you play a surprise shot first. One of the most mind-bending tactics in chess.</p>
-      <div class="lesson-board-wrap"><div id="lb-16"></div><div class="lesson-board-info"><div class="lesson-board-title">In-Between Check</div><div class="lesson-board-desc">Instead of recapturing, White plays an <strong>intermediate check</strong> gaining tempo before returning to the expected sequence.</div></div></div>
+      <div class="lesson-board-wrap"><div id="lb-16"></div><div class="lesson-board-info"><div class="lesson-board-title">In-Between Check</div><div class="lesson-board-desc">Black just captured on d5. White could recapture with the bishop — but instead plays <strong>Bxf7+!</strong> first, checking the king. After the king moves, White THEN takes on d5, winning an extra pawn. The in-between move gained a free tempo.</div></div></div>
       
       <div class="lesson-block">
         <div class="lesson-text">
@@ -1899,11 +1899,11 @@ function renderLessonBoard(idx) {
       g8:B.K, f7:B.P, g7:B.P, h7:B.P,
       e8:W.R, g1:W.K,
     }, ['e8','g8']),
-    // 16 — Zwischenzug: White has a zwischenzug check before recapturing
+    // 16 — Zwischenzug: Black just took on d5, White plays Bxf7+ before recapturing
     () => renderDiagram(id, {
-      e8:B.K, d5:B.N,
-      d1:W.Q, g5:W.B, e1:W.K,
-    }, ['g5','d8']),
+      e8:B.K, d5:B.N, f7:B.P, g7:B.P, h7:B.P, a8:B.R,
+      c4:W.B, d1:W.Q, e1:W.K,
+    }, ['c4','f7']),
     // 17 — En Passant: e5 pawn can capture d5 pawn en passant to d6
     () => renderDiagram(id, {
       e8:B.K, d5:B.P,
