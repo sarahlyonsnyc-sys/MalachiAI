@@ -1906,9 +1906,9 @@ function renderLessonBoard(idx) {
     }, ['c4','f7']),
     // 17 — En Passant: e5 pawn can capture d5 pawn en passant to d6
     () => renderDiagram(id, {
-      e8:B.K, d5:B.P,
+      d5:B.P,
       e5:W.P, e1:W.K,
-    }, ['d5','d6']),
+    }, ['d6']),
     // 18 — Castling: before kingside castle
     () => renderDiagram(id, {
       e8:B.K,
