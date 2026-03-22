@@ -216,7 +216,7 @@ document.addEventListener('mousemove', e => {
 const OPENINGS = [
   // ═══ E-PAWN OPENINGS (e4) ═══
   {
-    eco:'C20', name:"King's Pawn Game", category:"e4 Openings",
+    eco:'C20', side:'w', name:"King's Pawn Game", category:"e4 Openings",
     moves:['e2e4','e7e5'],
     desc:"The foundation of open chess. Both sides fight for the center immediately.",
     ideas:["Control d4 and d5 with pawns","Develop knights before bishops","Castle early to protect the king"],
@@ -229,7 +229,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'C50', name:'Italian Game', category:'e4 Openings',
+    eco:'C50', side:'w', name:'Italian Game', category:'e4 Openings',
     moves:['e2e4','e7e5','g1f3','b8c6','f1c4'],
     desc:"One of the oldest openings — simple, principled, and deadly in the right hands. The bishop eyes f7.",
     ideas:["Aim the bishop at f7 — the weakest square","Control the center with pawns","Prepare to castle kingside quickly"],
@@ -242,7 +242,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'C60', name:'Spanish Opening (Ruy López)', category:'e4 Openings',
+    eco:'C60', side:'w', name:'Spanish Opening (Ruy López)', category:'e4 Openings',
     moves:['e2e4','e7e5','g1f3','b8c6','f1b5'],
     desc:"The most played opening by World Champions for 500 years. Subtle pressure on e5.",
     ideas:["Pressure the Nc6 that defends e5","Long-term squeeze of Black's position","Castle queenside for attacking chances"],
@@ -256,7 +256,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'B20', name:'Sicilian Defense', category:'e4 Openings',
+    eco:'B20', side:'b', name:'Sicilian Defense', category:'e4 Openings',
     moves:['e2e4','c7c5'],
     desc:"The sharpest and most popular response to 1.e4. Black creates immediate imbalance.",
     ideas:["Fight for d4 without giving White a free tempo","Create queenside counterplay","Unbalanced positions with winning chances for both sides"],
@@ -272,7 +272,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'C00', name:'French Defense', category:'e4 Openings',
+    eco:'C00', side:'b', name:'French Defense', category:'e4 Openings',
     moves:['e2e4','e7e6'],
     desc:"Solid and strategic. Black creates a pawn chain and counterattacks White's center.",
     ideas:["Build a solid pawn structure","Attack White's center with ...c5","Use the c8 bishop carefully — it can become bad"],
@@ -286,7 +286,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'B10', name:'Caro-Kann Defense', category:'e4 Openings',
+    eco:'B10', side:'b', name:'Caro-Kann Defense', category:'e4 Openings',
     moves:['e2e4','c7c6'],
     desc:"Solid and resilient. Black prepares d5 with the c-pawn, keeping the light-squared bishop active.",
     ideas:["Prepare ...d5 to contest the center","Keep the c8 bishop outside the pawn chain","Solid structure — hard to attack"],
@@ -300,7 +300,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'C40', name:"King's Gambit", category:'e4 Openings',
+    eco:'C40', side:'w', name:"King's Gambit", category:'e4 Openings',
     moves:['e2e4','e7e5','f2f4'],
     desc:"The most romantic opening in chess history. White sacrifices a pawn for rapid development and a kingside attack.",
     ideas:["Open the f-file for the rook","Rapid piece development after exf4","Seize the center and attack before Black consolidates"],
@@ -313,7 +313,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'C44', name:"Scotch Game", category:'e4 Openings',
+    eco:'C44', side:'w', name:"Scotch Game", category:'e4 Openings',
     moves:['e2e4','e7e5','g1f3','b8c6','d2d4'],
     desc:"Kasparov's revival of this classical opening. White immediately opens the center.",
     ideas:["Open the center immediately with d4","Active piece play after exd4","Avoid the slow maneuvering of the Spanish"],
@@ -326,7 +326,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'C46', name:'Four Knights Game', category:'e4 Openings',
+    eco:'C46', side:'w', name:'Four Knights Game', category:'e4 Openings',
     moves:['e2e4','e7e5','g1f3','b8c6','b1c3','g8f6'],
     desc:"Symmetrical development. Both sides bring out all their knights before committing pawns.",
     ideas:["Develop all pieces before pushing pawns","Maintain symmetry or break it strategically","Natural development following all opening principles"],
@@ -339,7 +339,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'B01', name:'Scandinavian Defense', category:'e4 Openings',
+    eco:'B01', side:'b', name:'Scandinavian Defense', category:'e4 Openings',
     moves:['e2e4','d7d5'],
     desc:"Black immediately challenges the center. Aggressive and direct — the queen comes out early.",
     ideas:["Contest the center from move 1","Queen comes out early to d5 or d6","Solid but requires precise play to avoid harassment"],
@@ -352,7 +352,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'B07', name:'Pirc Defense', category:'e4 Openings',
+    eco:'B07', side:'b', name:'Pirc Defense', category:'e4 Openings',
     moves:['e2e4','d7d6','d2d4','g8f6','b1c3','g7g6'],
     desc:"Hypermodern strategy. Black lets White build a center, then attacks it from the flanks.",
     ideas:["Let White have the center","Attack it with ...c5 or ...e5 later","Fianchetto bishop on g7 controls the long diagonal"],
@@ -366,7 +366,7 @@ const OPENINGS = [
 
   // ═══ d-PAWN OPENINGS (d4) ═══
   {
-    eco:'D00', name:"Queen's Pawn Game", category:'d4 Openings',
+    eco:'D00', side:'w', name:"Queen's Pawn Game", category:'d4 Openings',
     moves:['d2d4','d7d5'],
     desc:"The foundation of closed chess. Slower, more strategic battles than 1.e4.",
     ideas:["Control the center with d4","Develop pieces toward the center","Plan queenside or kingside attacks based on pawn structure"],
@@ -379,7 +379,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'D06', name:"Queen's Gambit", category:'d4 Openings',
+    eco:'D06', side:'w', name:"Queen's Gambit", category:'d4 Openings',
     moves:['d2d4','d7d5','c2c4'],
     desc:"The most classic opening in chess. White offers a pawn to gain central control.",
     ideas:["Offer c4 pawn to gain e4 push","Not a real gambit — White almost always regains the pawn","Central control through d4 + e4"],
@@ -394,7 +394,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'D10', name:'Slav Defense', category:'d4 Openings',
+    eco:'D10', side:'b', name:'Slav Defense', category:'d4 Openings',
     moves:['d2d4','d7d5','c2c4','c7c6'],
     desc:"Black supports the d5 pawn with c6, keeping the c8 bishop outside the pawn chain.",
     ideas:["Support d5 with c6","Keep the c8 bishop active — it stays outside the chain","Solid structure, counterplay with ...dxc4 and ...b5"],
@@ -407,7 +407,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'E60', name:"King's Indian Defense", category:'d4 Openings',
+    eco:'E60', side:'b', name:"King's Indian Defense", category:'d4 Openings',
     moves:['d2d4','g8f6','c2c4','g7g6'],
     desc:"Dynamic and aggressive. Black allows White a big center, then counterattacks with ...e5.",
     ideas:["Let White build the center","Attack with ...e5 or ...c5","Fianchetto bishop becomes a monster on g7"],
@@ -420,7 +420,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'E00', name:"Nimzo-Indian Defense", category:'d4 Openings',
+    eco:'E00', side:'b', name:"Nimzo-Indian Defense", category:'d4 Openings',
     moves:['d2d4','g8f6','c2c4','e7e6','b1c3','f8b4'],
     desc:"One of Black's best responses. The bishop pins the knight and prevents e4.",
     ideas:["Pin the Nc3 with Bb4","Prevent White from playing e4","Double White's pawns after ...Bxc3"],
@@ -433,7 +433,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'E20', name:"Catalan Opening", category:'d4 Openings',
+    eco:'E20', side:'w', name:"Catalan Opening", category:'d4 Openings',
     moves:['d2d4','g8f6','c2c4','e7e6','g2g3'],
     desc:"White combines the Queen's Gambit with a kingside fianchetto for long-term pressure.",
     ideas:["Fianchetto the bishop to g2","Long-term pressure on the c4-a8 diagonal","Solid queenside control combined with kingside safety"],
@@ -445,7 +445,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'A45', name:"Trompowsky Attack", category:'d4 Openings',
+    eco:'A45', side:'w', name:"Trompowsky Attack", category:'d4 Openings',
     moves:['d2d4','g8f6','c1g5'],
     desc:"Unusual and tricky. White immediately attacks the knight, avoiding theory.",
     ideas:["Avoid heavily theoretical lines","Create immediate problems for Black","Exchange the knight for the bishop to double pawns"],
@@ -457,7 +457,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'A10', name:'English Opening', category:'d4 Openings',
+    eco:'A10', side:'w', name:'English Opening', category:'d4 Openings',
     moves:['c2c4'],
     desc:"The third most popular first move. Flexible and hypermodern — fight for d5 from the flank.",
     ideas:["Control d5 with the c-pawn","Flexibility — can transpose to many openings","Popular at grandmaster level for avoiding Black's preparation"],
@@ -472,7 +472,7 @@ const OPENINGS = [
 
   // ═══ FLANK OPENINGS ═══
   {
-    eco:'A00', name:"Reti Opening", category:'Flank Openings',
+    eco:'A00', side:'w', name:"Reti Opening", category:'Flank Openings',
     moves:['g1f3'],
     desc:"Hypermodern king's knight opening. Delays central pawns and fights for the center with pieces.",
     ideas:["Control the center with pieces, not pawns","Fianchetto the bishop for long diagonal control","Flexible — transpose to many structures"],
@@ -484,7 +484,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'A07', name:"King's Indian Attack", category:'Flank Openings',
+    eco:'A07', side:'w', name:"King's Indian Attack", category:'Flank Openings',
     moves:['g1f3','d7d5','g2g3'],
     desc:"White builds the same structure as the King's Indian but with the colors reversed.",
     ideas:["Build a solid kingside structure","Attack later with e4 and f4","Flexible — works against many Black setups"],
@@ -497,7 +497,7 @@ const OPENINGS = [
 
   // ═══ GAMBIT OPENINGS ═══
   {
-    eco:'C21', name:"Danish Gambit", category:'Gambits',
+    eco:'C21', side:'w', name:"Danish Gambit", category:'Gambits',
     moves:['e2e4','e7e5','d2d4','e5d4','c2c3'],
     desc:"White sacrifices two pawns for a massive lead in development and a devastating attack.",
     ideas:["Sacrifice two pawns for two open files","Rapid development — pieces come out with tempo","Attack the king before Black can consolidate"],
@@ -508,7 +508,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'A57', name:'Benko Gambit', category:'Gambits',
+    eco:'A57', side:'b', name:'Benko Gambit', category:'Gambits',
     moves:['d2d4','g8f6','c2c4','c7c5','d4d5','b7b5'],
     desc:"Black sacrifices a pawn for lasting queenside pressure and open files.",
     ideas:["Sacrifice b5 pawn for open a and b files","Long-term queenside pressure","Rooks become very powerful on open files"],
@@ -520,7 +520,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'D30', name:'Budapest Gambit', category:'Gambits',
+    eco:'D30', side:'b', name:'Budapest Gambit', category:'Gambits',
     moves:['d2d4','g8f6','c2c4','e7e5'],
     desc:"A surprise weapon. Black immediately attacks the center with a pawn sacrifice.",
     ideas:["Immediate counterattack against d4","Gambit pawn for active piece play","Tricky tactics if White is unprepared"],
@@ -533,7 +533,7 @@ const OPENINGS = [
 
   // ═══ DEFENSES ═══
   {
-    eco:'A41', name:"Grünfeld Defense", category:'Defenses',
+    eco:'A41', side:'b', name:"Grünfeld Defense", category:'Defenses',
     moves:['d2d4','g8f6','c2c4','g7g6','b1c3','d7d5'],
     desc:"Black allows White a big center, then attacks it head-on with ...d5.",
     ideas:["Allow White a center, then destroy it","Active piece play especially on g7 diagonal","The g7 bishop becomes a monster attacking d4"],
@@ -545,7 +545,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'E40', name:'Dutch Defense', category:'Defenses',
+    eco:'E40', side:'b', name:'Dutch Defense', category:'Defenses',
     moves:['d2d4','f7f5'],
     desc:"Aggressive from move one. Black immediately fights for the kingside.",
     ideas:["Control the e4 square","Kingside attack with ...f5-f4","Very double-edged — risky but exciting"],
@@ -557,7 +557,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'E10', name:"Benoni Defense", category:'Defenses',
+    eco:'E10', side:'b', name:"Benoni Defense", category:'Defenses',
     moves:['d2d4','g8f6','c2c4','c7c5','d4d5'],
     desc:"Dynamic and imbalanced. Black accepts a backward pawn for active counterplay.",
     ideas:["Accept pawn imbalance for active play","Attack on the kingside with ...f5","The c5 break is always in the air"],
@@ -569,7 +569,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'B00', name:"Owen's Defense", category:'Defenses',
+    eco:'B00', side:'b', name:"Owen's Defense", category:'Defenses',
     moves:['e2e4','b7b6'],
     desc:"Unorthodox and tricky. Black fianchettoes the queen's bishop to attack the center.",
     ideas:["Fianchetto the queen's bishop","Attack the center from the flank","Surprise weapon against unprepared opponents"],
@@ -580,7 +580,7 @@ const OPENINGS = [
     ]
   },
   {
-    eco:'B06', name:'Modern Defense', category:'Defenses',
+    eco:'B06', side:'b', name:'Modern Defense', category:'Defenses',
     moves:['e2e4','g7g6'],
     desc:"Pure hypermodern play. Black avoids the center entirely, planning to attack it later.",
     ideas:["Let White build any center they want","Attack it from range with the g7 bishop","Very flexible — transpose to Pirc, KID, or more"],
@@ -860,7 +860,7 @@ function renderQuizBoard(hintSq) {
 function onQuizSquareClick(sq) {
   if (quizWaitingForOpponent) return;
   const piece = quizGame.get(sq);
-  const playerColor = quizMoves.length > 0 && quizMoves[0] ? 'w' : 'w'; // always white for now
+  const playerColor = (currentOpening && currentOpening.side) || 'w';
 
   if (!quizSelectedSq) {
     if (piece && piece.color === quizGame.turn()) {
@@ -896,15 +896,11 @@ function onQuizSquareClick(sq) {
       return;
     }
 
-    // Play opponent response if next move exists
-    if (quizGame.turn() !== 'w' || (quizIndex < quizMoves.length)) {
-      // Check if this is opponent's turn
-      const nextCorrect = quizMoves[quizIndex];
-      if (nextCorrect && quizGame.turn() !== quizGame.turn()) {
-        playOpponentQuizMove();
-      } else if (quizGame.turn() === 'b') {
-        playOpponentQuizMove();
-      }
+    // Play opponent response if it's opponent's turn
+    const playerSide = (currentOpening && currentOpening.side) || 'w';
+    const opponentColor = playerSide === 'w' ? 'b' : 'w';
+    if (quizGame.turn() === opponentColor) {
+      playOpponentQuizMove();
     }
   } else {
     // Wrong
@@ -943,9 +939,11 @@ function setQuizFeedback(msg, color) {
 
 function updateQuizProgress() {
   const el = document.getElementById('quizProgress');
-  // Count only player moves (White moves = even index moves 0,2,4...)
-  const playerMoves = quizMoves.filter((_,i) => i%2===0);
-  const playerDone  = quizMoves.slice(0,quizIndex).filter((_,i) => i%2===0).length;
+  const playerSide = (currentOpening && currentOpening.side) || 'w';
+  // White plays even indices (0,2,4...), Black plays odd indices (1,3,5...)
+  const playerParity = playerSide === 'w' ? 0 : 1;
+  const playerMoves = quizMoves.filter((_,i) => i%2===playerParity);
+  const playerDone  = quizMoves.slice(0,quizIndex).filter((_,i) => i%2===playerParity).length;
   if (el) el.textContent = `Move ${playerDone} of ${playerMoves.length}`;
 }
 
@@ -959,11 +957,23 @@ function startQuiz() {
   quizSelectedSq = null;
   quizWaitingForOpponent = false;
 
+  // Determine which color the student plays
+  const playerSide = currentOpening.side || 'w';
+
   document.getElementById('quizOpeningLabel').textContent = currentOpening.eco + ' — ' + currentOpening.name;
   document.getElementById('quizTitle').textContent = 'Reproduce the Opening';
-  document.getElementById('quizSubtitle').textContent = 'You play White. Make the correct opening moves from memory.';
+  document.getElementById('quizSubtitle').textContent =
+    playerSide === 'w'
+      ? 'You play White. Make the correct opening moves from memory.'
+      : 'You play Black. Make the correct opening moves from memory.';
   setQuizFeedback('', '');
   updateQuizProgress();
+
+  // If Black opening, White plays first automatically
+  if (playerSide === 'b') {
+    // Auto-play White's first move
+    setTimeout(() => playOpponentQuizMove(), 400);
+  }
 
   const overlay = document.getElementById('quizOverlay');
   overlay.style.display = 'flex';
@@ -971,8 +981,10 @@ function startQuiz() {
 }
 
 function finishQuiz() {
-  const playerMoveCount = quizMoves.filter((_,i)=>i%2===0).length;
-  const playerCorrect   = quizMoves.slice(0,quizIndex).filter((_,i)=>i%2===0).length;
+  const playerSide = (currentOpening && currentOpening.side) || 'w';
+  const playerParity = playerSide === 'w' ? 0 : 1;
+  const playerMoveCount = quizMoves.filter((_,i)=>i%2===playerParity).length;
+  const playerCorrect   = quizMoves.slice(0,quizIndex).filter((_,i)=>i%2===playerParity).length;
   const pct = playerMoveCount > 0 ? Math.round((playerCorrect/playerMoveCount)*100) : 0;
 
   document.getElementById('quizTitle').textContent = pct === 100 ? '🏆 Perfect!' : pct >= 70 ? '✓ Well done!' : 'Keep Practicing';
@@ -1022,7 +1034,9 @@ function startDrill() {
   drillErrors = 0;
   startQuiz(); // reuse quiz infrastructure
   document.getElementById('quizTitle').textContent = 'Drill Mode';
-  document.getElementById('quizSubtitle').textContent = 'No hints. ' + DRILL_MAX_ERRORS + ' wrong moves = fail. Play perfectly.';
+  const playerSide = (currentOpening && currentOpening.side) || 'w';
+  document.getElementById('quizSubtitle').textContent =
+    `You play ${playerSide === 'w' ? 'White' : 'Black'}. No hints. ${DRILL_MAX_ERRORS} wrong moves = fail. Play perfectly.`;
 }
 
 // Override quiz click handler for drill mode
@@ -1054,7 +1068,9 @@ onQuizSquareClick = function(sq) {
     updateQuizProgress();
     renderQuizBoard();
     if (quizIndex >= quizMoves.length) { finishDrill(); return; }
-    if (quizGame.turn() === 'b') playOpponentQuizMove();
+    const playerSide = (currentOpening && currentOpening.side) || 'w';
+    const opponentColor = playerSide === 'w' ? 'b' : 'w';
+    if (quizGame.turn() === opponentColor) playOpponentQuizMove();
   } else {
     drillErrors++;
     quizTotal++;
@@ -1069,7 +1085,9 @@ onQuizSquareClick = function(sq) {
 };
 
 function finishDrill() {
-  const playerMoveCount = quizMoves.filter((_,i)=>i%2===0).length;
+  const playerSide = (currentOpening && currentOpening.side) || 'w';
+  const playerParity = playerSide === 'w' ? 0 : 1;
+  const playerMoveCount = quizMoves.filter((_,i)=>i%2===playerParity).length;
   const playerCorrect = quizScore;
   const pct = playerMoveCount > 0 ? Math.round((playerCorrect/playerMoveCount)*100) : 0;
   const passed = drillErrors < DRILL_MAX_ERRORS && pct >= 80;
